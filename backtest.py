@@ -13,8 +13,6 @@ def run_backtest (DEVICE, INITIAL_CAPITAL, SPLIT_DATE, LOOKBACK, MAX_LEVERAGE, c
     model.eval()
     portfolio_values = [INITIAL_CAPITAL]
     benchmark_values = [INITIAL_CAPITAL]
-
-    # Store daily weights
     daily_weights = []
     start_index = features.index.get_indexer([pd.to_datetime(SPLIT_DATE)], method='bfill')[0]
     test_dates = returns.index[start_index:]
