@@ -7,6 +7,8 @@ def run_walkforward_test_with_validation(compute_features,create_sequences,split
 ):
     print("[Walk-Forward] Starting walk-forward test with validation...")
     features, returns = compute_features(TICKERS,START_DATE,END_DATE,FEATURES)
+    features.index = pd.to_datetime(features.index)
+    returns.index = pd.to_datetime(returns.index)
     all_dates = features.index
     test_start_index = all_dates.get_indexer([SPLIT_DATE], method="bfill")[0]
     walkforward_results = []
