@@ -21,9 +21,9 @@ grid = {
     "FEATURES": feature_sets,       
     "MAX_LEVERAGE": [1.0], 
     "LAYER_COUNT": [3],
-    "DROPOUT": [0.25,0.3,0.35], 
-    "LEARNING_WARMUP": [380,400,420,440,460],#>=300
-    "DECAY":[0.0125,0.015,0.0175], #0.01
+    "DROPOUT": [0.3], #0.3
+    "LEARNING_WARMUP": [460,500,540],#>=300
+    "DECAY":[0.0175,0.02,0.0225], #0.01775
     #"LOSS_MIN_MEAN": [0.005],
     #"LOSS_RETURN_PENALTY": [0.4],
     
