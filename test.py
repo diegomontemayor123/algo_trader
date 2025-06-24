@@ -66,7 +66,7 @@ def run_experiment(index, total, params):
             weights = {}
             if matches:
                 ticker, wmin, _, wmax = matches[-1]
-                weights[f"{ticker}_delta"] = float(wmax) - float(wmin)
+                weights[f"{ticker}_w_delta"] = float(wmax) - float(wmin)
             return weights
         sharpe = extract_metric("Sharpe Ratio", output)
         cagr = extract_metric("Cagr", output)
