@@ -14,7 +14,7 @@ def run_backtest (DEVICE, INITIAL_CAPITAL, SPLIT_DATE, LOOKBACK, MAX_LEVERAGE, c
 
     # Store daily weights
     daily_weights = []
-    start_index = features.index.get_indexer([SPLIT_DATE], method='bfill')[0]
+    start_index = features.index.get_indexer([pd.to_datetime(SPLIT_DATE)], method='bfill')[0]
     test_dates = returns.index[start_index:]
     asset_names = returns.columns
     for i in range(start_index - LOOKBACK, len(features) - LOOKBACK):
