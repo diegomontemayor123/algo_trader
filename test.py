@@ -14,16 +14,16 @@ grid = {
     "SPLIT_DATE": ["2023-01-01"],   
     "VAL_SPLIT": [0.2], 
     "PREDICT_DAYS": [1], #1,3 
-    "LOOKBACK": [50,60,70,80,90,100], #>=52
-    "EPOCHS": [8], 
+    "LOOKBACK": [80], #70-90
+    "EPOCHS": [20], 
     "MAX_HEADS": [20], 
-    "BATCH_SIZE": [30,40,50,60,70,80,90,100], #>=30
+    "BATCH_SIZE": [60], #60-80
     "FEATURES": feature_sets,       
-    "MAX_LEVERAGE": [2.0], 
+    "MAX_LEVERAGE": [1.0], 
     "LAYER_COUNT": [3],
-    "DROPOUT": [0.2], #>=0.2
-    "LEARNING_WARMUP": [350],#>=300
-    "DECAY":[0.01], #0.01
+    "DROPOUT": [0.2,0.3,0.4,0.5], #>=0.2
+    "LEARNING_WARMUP": [250,300,350,400],#>=300
+    "DECAY":[0.005,0.01,0.015,0.02], #0.01
     #"LOSS_MIN_MEAN": [0.005],
     #"LOSS_RETURN_PENALTY": [0.4],
     
