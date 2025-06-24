@@ -11,7 +11,7 @@ from compute_features import *
 from torch.optim.lr_scheduler import _LRScheduler
 
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
-EARLY_STOP_PATIENCE = 3
+EARLY_STOP_PATIENCE = 2
 INITIAL_CAPITAL = 100.0
 TICKERS = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'NVDA', 'TSLA']
 START_DATE = '2012-01-01'
@@ -26,8 +26,8 @@ BATCH_SIZE = int(os.environ.get("BATCH_SIZE", 60))
 FEATURES = os.environ.get("FEATURES", "ret,vol,log_ret,rolling_ret,volume").split(",")
 MAX_LEVERAGE = float(os.environ.get("MAX_LEVERAGE", 1.0))
 LAYER_COUNT = int(os.environ.get("LAYER_COUNT", 6))
-DROPOUT = float(os.environ.get("DROPOUT", 0.2))
-LEARNING_WARMUP = int(os.environ.get("LEARNING_WARMUP", 350))
+DROPOUT = float(os.environ.get("DROPOUT", 0.3))
+LEARNING_WARMUP = int(os.environ.get("LEARNING_WARMUP", 460))
 DECAY = float(os.environ.get("DECAY", 0.0175))
 
 FEATURE_ATTENTION_ENABLED = bool(int(os.environ.get("FEATURE_ATTENTION_ENABLED", 0)))
