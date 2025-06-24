@@ -14,10 +14,10 @@ grid = {
     "SPLIT_DATE": ["2023-01-01"],   
     "VAL_SPLIT": [0.2], 
     "PREDICT_DAYS": [1], #1,3 
-    "LOOKBACK": [50,75,100], #>=52
+    "LOOKBACK": [50,60,70,80,90,100], #>=52
     "EPOCHS": [8], 
     "MAX_HEADS": [20], 
-    "BATCH_SIZE": [30,80,100], #>=30
+    "BATCH_SIZE": [30,40,50,60,70,80,90,100], #>=30
     "FEATURES": feature_sets,       
     "MAX_LEVERAGE": [2.0], 
     "LAYER_COUNT": [3],
@@ -66,7 +66,7 @@ def run_experiment(index, total, params):
             weights = {}
             if matches:
                 ticker, wmin, _, wmax = matches[-1]
-                weights[f"{ticker}_w_delta"] = float(wmax) - float(wmin)
+                weights[f"{ticker}_delta"] = float(wmax) - float(wmin)
             return weights
         sharpe = extract_metric("Sharpe Ratio", output)
         cagr = extract_metric("Cagr", output)
