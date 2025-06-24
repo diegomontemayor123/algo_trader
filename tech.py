@@ -18,24 +18,28 @@ START_DATE = '2012-01-01'
 END_DATE = '2025-06-01'
 SPLIT_DATE = pd.Timestamp(os.environ.get("SPLIT_DATE", "2023-01-01"))
 VAL_SPLIT = float(os.environ.get("VAL_SPLIT", 0.2)) 
-PREDICT_DAYS = int(os.environ.get("PREDICT_DAYS", 1))
+PREDICT_DAYS = int(os.environ.get("PREDICT_DAYS", 3))
 LOOKBACK = int(os.environ.get("LOOKBACK", 80))
 EPOCHS = int(os.environ.get("EPOCHS", 20))
 MAX_HEADS = int(os.environ.get("MAX_HEADS", 20))
 BATCH_SIZE = int(os.environ.get("BATCH_SIZE", 60))
 FEATURES = os.environ.get("FEATURES", "ret,vol,log_ret,rolling_ret,volume").split(",")
 MAX_LEVERAGE = float(os.environ.get("MAX_LEVERAGE", 1.0))
-LAYER_COUNT = int(os.environ.get("LAYER_COUNT", 3))
+LAYER_COUNT = int(os.environ.get("LAYER_COUNT", 6))
 DROPOUT = float(os.environ.get("DROPOUT", 0.2))
 LEARNING_WARMUP = int(os.environ.get("LEARNING_WARMUP", 350))
-DECAY = float(os.environ.get("DECAY", 0.01))
-#LOSS_MIN_MEAN = float(os.environ.get("LOSS_MIN_MEAN", 0.005)) #.02 returns are 'high'
-#LOSS_RETURN_PENALTY = float(os.environ.get("LOSS_RETURN_PENALTY", 1))
+DECAY = float(os.environ.get("DECAY", 0.0175))
+
+FEATURE_ATTENTION_ENABLED = bool(int(os.environ.get("FEATURE_ATTENTION_ENABLED", 0)))
+L2_PENALTY_ENABLED = bool(int(os.environ.get("L2_PENALTY_ENABLED", 0)))
+RETURN_PENALTY_ENABLED = bool(int(os.environ.get("RETURN_PENALTY_ENABLED", 0)))
+LOSS_MIN_MEAN = float(os.environ.get("LOSS_MIN_MEAN", 0.005)) #.02 returns are 'high'
+LOSS_RETURN_PENALTY = float(os.environ.get("LOSS_RETURN_PENALTY", 1))
 
 WALKFORWARD_ENABLED = bool(int(os.environ.get("WALKFWD_ENABLED", 0)))
 WALKFORWARD_STEP_SIZE = int(os.environ.get("WALKFWD_STEP", 60))
 WALKFORWARD_TRAIN_WINDOW = int(os.environ.get("WALKFWD_WNDW", 365))
-#Variables to add weight decay 
+#Variables to add -
 
 class MarketDataset(Dataset):
     def __init__(self, features, returns):
@@ -52,6 +56,7 @@ class TransformerTrader(nn.Module):
         self.num_heads = num_heads
         self.seq_len = seq_len
         self.pos_embedding = nn.Parameter(torch.randn(1, seq_len, input_dim))
+        self.feature_weights = nn.Parameter(torch.ones(input_dim)) 
         encoder_layer = nn.TransformerEncoderLayer(
             d_model=input_dim,
             nhead=num_heads,
@@ -65,6 +70,7 @@ class TransformerTrader(nn.Module):
             nn.Dropout(dropout),
             nn.Linear(64, len(TICKERS)))
     def forward(self, x):
+        x = x * self.feature_weights * FEATURE_ATTENTION_ENABLED
         x = x + self.pos_embedding  
         encoded = self.transformer_encoder(x)
         last_hidden = encoded[:, -1, :]  
@@ -145,10 +151,10 @@ class DifferentiableSharpeLoss(nn.Module):
         std_return = torch.std(returns) + 1e-6 
         sharpe_ratio = mean_return / std_return
 
-        #low_return_penalty = torch.clamp(LOSS_MIN_MEAN - mean_return, min=0.0)  
-        loss = -sharpe_ratio #+ LOSS_RETURN_PENALTY * low_return_penalty  
-        #l2_penalty = sum(p.pow(2.0).sum() for p in model.parameters())
-        #loss += self.l2_lambda * l2_penalty
+        low_return_penalty = torch.clamp(LOSS_MIN_MEAN - mean_return, min=0.0)  
+        loss = -sharpe_ratio + LOSS_RETURN_PENALTY * low_return_penalty * RETURN_PENALTY_ENABLED
+        l2_penalty = sum(p.pow(2.0).sum() for p in model.parameters())
+        loss += self.l2_lambda * l2_penalty * L2_PENALTY_ENABLED
         return loss
 
 class TransformerLRScheduler(_LRScheduler):
