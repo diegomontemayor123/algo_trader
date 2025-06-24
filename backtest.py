@@ -6,6 +6,8 @@ import pandas as pd
 def run_backtest (DEVICE, INITIAL_CAPITAL, SPLIT_DATE, LOOKBACK, MAX_LEVERAGE, compute_features, normalize_features,calculate_performance_metrics, TICKERS,START_DATE,END_DATE,FEATURES,model=None, plot=False,weights_csv_path="daily_portfolio_weights.csv", ):
     print("[Backtest] Starting backtest...")
     features, returns = compute_features(TICKERS,START_DATE,END_DATE,FEATURES)
+    features.index = pd.to_datetime(features.index)
+    returns.index = pd.to_datetime(returns.index)
     if model is None:
         raise ValueError("Model must be passed to run_backtest() to avoid checkpoint mismatch.")
     model.eval()
