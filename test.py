@@ -13,19 +13,23 @@ feature_sets = ["ret,vol,log_ret,rolling_ret,volume",
 grid = {
     "SPLIT_DATE": ["2023-01-01"],   
     "VAL_SPLIT": [0.2], 
-    "PREDICT_DAYS": [1,3,5,7], #1,3 
+    "PREDICT_DAYS": [3], #3 
     "LOOKBACK": [80], #70-90
     "EPOCHS": [20], 
     "MAX_HEADS": [20], 
     "BATCH_SIZE": [60], #60-80
     "FEATURES": feature_sets,       
     "MAX_LEVERAGE": [1.0], 
-    "LAYER_COUNT": [3,6,9],
+    "LAYER_COUNT": [6],
     "DROPOUT": [0.3], #0.3
     "LEARNING_WARMUP": [460],#460
-    "DECAY":[0.0175,0.02,0.0225], #0.01775
-    #"LOSS_MIN_MEAN": [0.005],
-    #"LOSS_RETURN_PENALTY": [0.4],
+    "DECAY":[0.0175], #0.0175
+    
+    "FEATURE_ATTENTION_ENABLED": [0,1],
+    "L2_PENALTY_ENABLED": [0,1],
+    "RETURN_PENALTY_ENABLED": [0],
+    "LOSS_MIN_MEAN": [0.005],
+    "LOSS_RETURN_PENALTY": [0.4],
     
     "WALKFWD_ENABLED": [0],
     "WALKFWD_STEP": [60],
