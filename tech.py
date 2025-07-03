@@ -33,8 +33,8 @@ DECAY = float(os.environ.get("DECAY", 0.0175))
 FEATURE_ATTENTION_ENABLED = bool(int(os.environ.get("FEATURE_ATTENTION_ENABLED", 0)))
 L2_PENALTY_ENABLED = bool(int(os.environ.get("L2_PENALTY_ENABLED", 0)))
 RETURN_PENALTY_ENABLED = bool(int(os.environ.get("RETURN_PENALTY_ENABLED", 0)))
-LOSS_MIN_MEAN = float(os.environ.get("LOSS_MIN_MEAN", 0.005)) #.02 returns are 'high'
-LOSS_RETURN_PENALTY = float(os.environ.get("LOSS_RETURN_PENALTY", 1))
+LOSS_MIN_MEAN = float(os.environ.get("LOSS_MIN_MEAN", 0.05)) #.02 returns are 'high'
+LOSS_RETURN_PENALTY = float(os.environ.get("LOSS_RETURN_PENALTY", 0.8))
 
 WALKFORWARD_ENABLED = bool(int(os.environ.get("WALKFWD_ENABLED", 0)))
 WALKFORWARD_STEP_SIZE = int(os.environ.get("WALKFWD_STEP", 60))
