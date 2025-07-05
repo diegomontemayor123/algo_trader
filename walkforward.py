@@ -1,9 +1,9 @@
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
-from algo_trader.model import TransformerTrader
-from algo_trader.data import MarketDataset
-from algo_trader.utils import get_data_splits, evaluate_model
+from .model import TransformerTrader
+from .data import MarketDataset
+from .utils import get_data_splits, evaluate_model
 
 def train_one_epoch(model, dataloader, criterion, optimizer, device):
     model.train()
