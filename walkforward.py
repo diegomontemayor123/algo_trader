@@ -64,9 +64,16 @@ def run_walkforward_test_with_validation(
 
         train_seq, train_tgt, val_seq, val_tgt = split_train_validation(sequences, targets)
         print(f"[Walk-Forward] Train samples: {len(train_seq)}, Validation samples: {len(val_seq)}")
+        
+        train_dataset = MarketDataset(
+            torch.tensor(np.array(train_seq)), 
+            torch.tensor(np.array(train_tgt))
+        )
+        val_dataset = MarketDataset(
+            torch.tensor(np.array(val_seq)), 
+            torch.tensor(np.array(val_tgt))
+        )
 
-        train_dataset = MarketDataset(torch.tensor(train_seq), torch.tensor(train_tgt))
-        val_dataset = MarketDataset(torch.tensor(val_seq), torch.tensor(val_tgt))
 
         train_loader = DataLoader(train_dataset, batch_size=min(BATCH_SIZE, len(train_dataset)), shuffle=True)
         val_loader = DataLoader(val_dataset, batch_size=min(BATCH_SIZE, len(val_dataset)), shuffle=False)
