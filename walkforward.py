@@ -1,130 +1,107 @@
-import torch
 import numpy as np
-import pandas as pd
+import torch
 from torch.utils.data import DataLoader
+from algo_trader.model import TransformerTrader
+from algo_trader.data import MarketDataset
+from algo_trader.utils import get_data_splits, evaluate_model
 
-def run_walkforward_test_with_validation(
-    compute_features,
-    create_sequences,
-    split_train_validation,
-    MarketDataset,
-    create_model,
-    train_model_with_validation,
-    normalize_features,
-    calculate_performance_metrics,
-    SPLIT_DATE,
-    WALKFORWARD_STEP_SIZE,
-    WALKFORWARD_TRAIN_WINDOW,
-    LOOKBACK,
-    PREDICT_DAYS,
-    BATCH_SIZE,
-    INITIAL_CAPITAL,
-    MAX_LEVERAGE,
-    DEVICE,
-    TICKERS,
-    START_DATE,
-    END_DATE,
-    FEATURES
-):
-    print("[Walk-Forward] Starting walk-forward test with validation...")
+def train_one_epoch(model, dataloader, criterion, optimizer, device):
+    model.train()
+    total_loss = 0
+    for X_batch, y_batch in dataloader:
+        X_batch, y_batch = X_batch.to(device), y_batch.to(device)
+        optimizer.zero_grad()
+        output = model(X_batch)
+        loss = criterion(output, y_batch)
+        loss.backward()
+        optimizer.step()
+        total_loss += loss.item() * X_batch.size(0)
+    return total_loss / len(dataloader.dataset)
 
-    features, returns = compute_features(TICKERS, START_DATE, END_DATE, FEATURES)
-    features.index = pd.to_datetime(features.index)
-    returns.index = pd.to_datetime(returns.index)
-    all_dates = features.index
+def validate(model, dataloader, criterion, device):
+    model.eval()
+    total_loss = 0
+    with torch.no_grad():
+        for X_batch, y_batch in dataloader:
+            X_batch, y_batch = X_batch.to(device), y_batch.to(device)
+            output = model(X_batch)
+            loss = criterion(output, y_batch)
+            total_loss += loss.item() * X_batch.size(0)
+    return total_loss / len(dataloader.dataset)
 
-    test_start_index = all_dates.get_indexer([SPLIT_DATE], method="bfill")[0]
-    walkforward_results = []
-    model_input_dim = features.shape[1]
+def test(model, X_test, y_test, criterion, device):
+    model.eval()
+    X_test = torch.tensor(np.array(X_test)).to(device)
+    y_test = torch.tensor(np.array(y_test)).to(device)
+    with torch.no_grad():
+        output = model(X_test)
+        loss = criterion(output, y_test).item()
+    return loss, output.cpu().numpy()
 
-    for step in range(test_start_index, len(all_dates) - LOOKBACK - PREDICT_DAYS, WALKFORWARD_STEP_SIZE):
-        train_start_date = all_dates[step - WALKFORWARD_TRAIN_WINDOW] if step - WALKFORWARD_TRAIN_WINDOW > 0 else all_dates[0]
-        train_end_date = all_dates[step]
-        test_start_date = all_dates[step + LOOKBACK]
-        test_end_date = all_dates[min(step + LOOKBACK + WALKFORWARD_STEP_SIZE, len(all_dates) - 1)]
+def run_walkforward(features, returns, walkforward_splits, input_dim=84, heads=14, device='cuda'):
+    criterion = torch.nn.MSELoss()
+    results = []
 
-        print(f"\n[Walk-Forward] Training: {train_start_date.date()} to {train_end_date.date()}")
-        print(f"[Walk-Forward] Testing: {test_start_date.date()} to {test_end_date.date()}")
+    for i, (train_idx, val_idx, test_idx) in enumerate(walkforward_splits):
+        print(f"\n[Walk-Forward] Period {i+1}:")
+        print(f"Training: {features.index[train_idx[0]]} to {features.index[train_idx[-1]]}")
+        print(f"Validation: {features.index[val_idx[0]]} to {features.index[val_idx[-1]]}")
+        print(f"Testing: {features.index[test_idx[0]]} to {features.index[test_idx[-1]]}")
 
-        train_mask = (features.index >= train_start_date) & (features.index < train_end_date)
-        train_features = features.loc[train_mask]
-        train_returns = returns.loc[train_mask]
+        X_train, y_train = features.iloc[train_idx].values, returns.iloc[train_idx].values
+        X_val, y_val = features.iloc[val_idx].values, returns.iloc[val_idx].values
+        X_test, y_test = features.iloc[test_idx].values, returns.iloc[test_idx].values
 
-        if len(train_features) < LOOKBACK + PREDICT_DAYS:
-            print("[Walk-Forward] Insufficient training data, skipping...")
-            continue
+        train_dataset = MarketDataset(torch.tensor(np.array(X_train), dtype=torch.float32),
+                                      torch.tensor(np.array(y_train), dtype=torch.float32))
+        val_dataset = MarketDataset(torch.tensor(np.array(X_val), dtype=torch.float32),
+                                    torch.tensor(np.array(y_val), dtype=torch.float32))
 
-        train_start_idx = 0
-        train_end_idx = len(train_features)
-        sequences, targets, _ = create_sequences(train_features, train_returns, train_start_idx, train_end_idx)
+        train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+        val_loader = DataLoader(val_dataset, batch_size=32)
 
-        if len(sequences) == 0:
-            print("[Walk-Forward] No valid sequences created, skipping...")
-            continue
+        model = TransformerTrader(input_dim=input_dim, heads=heads, device=device).to(device)
+        optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
-        train_seq, train_tgt, val_seq, val_tgt = split_train_validation(sequences, targets)
-        print(f"[Walk-Forward] Train samples: {len(train_seq)}, Validation samples: {len(val_seq)}")
-        
-        train_dataset = MarketDataset(
-            torch.tensor(np.array(train_seq)), 
-            torch.tensor(np.array(train_tgt))
-        )
-        val_dataset = MarketDataset(
-            torch.tensor(np.array(val_seq)), 
-            torch.tensor(np.array(val_tgt))
-        )
+        best_val_loss = float('inf')
+        epochs_no_improve = 0
+        max_epochs = 5
+        patience = 2
 
+        for epoch in range(max_epochs):
+            train_loss = train_one_epoch(model, train_loader, criterion, optimizer, device)
+            val_loss = validate(model, val_loader, criterion, device)
 
-        train_loader = DataLoader(train_dataset, batch_size=min(BATCH_SIZE, len(train_dataset)), shuffle=True)
-        val_loader = DataLoader(val_dataset, batch_size=min(BATCH_SIZE, len(val_dataset)), shuffle=False)
+            print(f"[Training] Epoch {epoch+1}/{max_epochs} - Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f}")
 
-        model = create_model(model_input_dim)
-        trained_model = train_model_with_validation(model, train_loader, val_loader, epochs=5)
+            if val_loss < best_val_loss:
+                best_val_loss = val_loss
+                epochs_no_improve = 0
+                best_model_state = model.state_dict()
+            else:
+                epochs_no_improve += 1
+                if epochs_no_improve >= patience:
+                    print("[Training] Early stopping triggered.")
+                    break
 
-        test_mask = (features.index >= test_start_date) & (features.index <= test_end_date)
-        test_features = features.loc[test_mask]
-        test_returns = returns.loc[test_mask]
-        portfolio_values = [INITIAL_CAPITAL]
+        # Load best model for testing
+        model.load_state_dict(best_model_state)
 
-        trained_model.eval()
-        with torch.no_grad():
-            for i in range(len(test_features) - LOOKBACK):
-                feature_window = test_features.iloc[i:i + LOOKBACK].values.astype(np.float32)
-                normalized_window = normalize_features(feature_window)
-                input_tensor = torch.tensor(normalized_window).unsqueeze(0).to(DEVICE)
+        # Test evaluation
+        test_loss, test_preds = test(model, X_test, y_test, criterion, device)
+        print(f"[Testing] Test Loss: {test_loss:.4f}")
 
-                raw_weights = trained_model(input_tensor).cpu().numpy().flatten()
-                weight_sum = np.sum(np.abs(raw_weights)) + 1e-6
-                scaling_factor = min(MAX_LEVERAGE / weight_sum, 1.0)
-                final_weights = raw_weights * scaling_factor
+        results.append({
+            'period': i + 1,
+            'train_range': (features.index[train_idx[0]], features.index[train_idx[-1]]),
+            'val_range': (features.index[val_idx[0]], features.index[val_idx[-1]]),
+            'test_range': (features.index[test_idx[0]], features.index[test_idx[-1]]),
+            'test_loss': test_loss,
+            'test_predictions': test_preds
+        })
 
-                period_returns = test_returns.iloc[i + LOOKBACK].values
-                portfolio_return = np.dot(final_weights, period_returns)
-                portfolio_values.append(portfolio_values[-1] * (1 + portfolio_return))
+    print("\n=== Walk-Forward Test Summary ===")
+    for res in results:
+        print(f"Period {res['period']}: Test Loss={res['test_loss']:.4f} | Test Range={res['test_range'][0]} to {res['test_range'][1]}")
 
-        if len(portfolio_values) > 1:
-            period_metrics = calculate_performance_metrics(portfolio_values)
-            print(f"[Walk-Forward] Period Performance:")
-            print(f"  CAGR: {period_metrics['cagr']:.2%}")
-            print(f"  Sharpe: {period_metrics['sharpe_ratio']:.2f}")
-            print(f"  Max Drawdown: {period_metrics['max_drawdown']:.2%}")
-            walkforward_results.append({
-                'start_date': test_start_date,
-                'end_date': test_end_date,
-                'cagr': period_metrics['cagr'],
-                'sharpe_ratio': period_metrics['sharpe_ratio'],
-                'max_drawdown': period_metrics['max_drawdown']
-            })
-
-    if walkforward_results:
-        avg_cagr = np.mean([r['cagr'] for r in walkforward_results])
-        avg_sharpe = np.mean([r['sharpe_ratio'] for r in walkforward_results])
-        avg_drawdown = np.mean([r['max_drawdown'] for r in walkforward_results])
-
-        print(f"\n[Walk-Forward] === Aggregate Results Across All Periods ===")
-        print(f"  Average CAGR: {avg_cagr:.2%}")
-        print(f"  Average Sharpe Ratio: {avg_sharpe:.2f}")
-        print(f"  Average Max Drawdown: {avg_drawdown:.2%}")
-        print(f"  Number of Test Periods: {len(walkforward_results)}")
-    else:
-        print("[Walk-Forward] No valid test periods completed.")
+    return results
