@@ -10,6 +10,11 @@ from compute_features import compute_features, normalize_features
 from walkforward import create_sequences, split_train_validation
 from model import MarketDataset, create_model, train_model_with_validation, calculate_performance_metrics
 
+# === Configuration Flags ===
+LOAD_EXISTING_MODEL = True
+SAVED_MODEL_PATH = "walkforward_model.pth"
+SAVE_MODEL = not LOAD_EXISTING_MODEL
+
 # Set seed for reproducibility
 SEED = 42
 random.seed(SEED)
@@ -78,10 +83,10 @@ def run_walkforward_test_with_validation(config):
         train_loader = DataLoader(train_dataset, batch_size=min(config["BATCH_SIZE"], len(train_dataset)), shuffle=True)
         val_loader = DataLoader(val_dataset, batch_size=min(config["BATCH_SIZE"], len(val_dataset)), shuffle=False)
 
-        if config.get("LOAD_EXISTING_MODEL", False) and os.path.exists(config["SAVED_MODEL_PATH"]):
-            print(f"[Walk-Forward] Loading model from {config['SAVED_MODEL_PATH']}")
+        if LOAD_EXISTING_MODEL and os.path.exists(SAVED_MODEL_PATH):
+            print(f"[Walk-Forward] Loading model from {SAVED_MODEL_PATH}")
             trained_model = create_model(model_input_dim, **extract_model_kwargs(config))
-            trained_model.load_state_dict(torch.load(config["SAVED_MODEL_PATH"], map_location=DEVICE))
+            trained_model.load_state_dict(torch.load(SAVED_MODEL_PATH, map_location=DEVICE))
             trained_model.to(DEVICE)
         else:
             model = create_model(model_input_dim, **extract_model_kwargs(config))
@@ -94,9 +99,9 @@ def run_walkforward_test_with_validation(config):
                 loss_return_penalty=config["LOSS_RETURN_PENALTY"],
                 device=DEVICE,
             )
-            if config.get("SAVE_MODEL", True):
-                torch.save(trained_model.state_dict(), config["SAVED_MODEL_PATH"])
-                print(f"[Walk-Forward] Saved model to {config['SAVED_MODEL_PATH']}")
+            if SAVE_MODEL:
+                torch.save(trained_model.state_dict(), SAVED_MODEL_PATH)
+                print(f"[Walk-Forward] Saved model to {SAVED_MODEL_PATH}")
 
         # Evaluation loop
         test_mask = (features.index >= test_start) & (features.index <= test_end)
@@ -159,15 +164,6 @@ def extract_model_kwargs(config):
 if __name__ == "__main__":
     with open("best_hyperparameters.json", "r") as f:
         raw_params = json.load(f)
-
-    # Clean up features list
     if isinstance(raw_params.get("FEATURES"), str):
         raw_params["FEATURES"] = [f.strip() for f in raw_params["FEATURES"].split(",") if f.strip()]
-
-    # Add defaults for any optional params
-    raw_params.setdefault("SAVED_MODEL_PATH", "walkforward_model.pth")
-    raw_params.setdefault("LOAD_EXISTING_MODEL", False)
-    raw_params.setdefault("SAVE_MODEL", True)
-    raw_params.setdefault("MAX_LEVERAGE", 1.0)
-
     run_walkforward_test_with_validation(raw_params)

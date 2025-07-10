@@ -1,10 +1,10 @@
 
 import pandas as pd
-from features_factory import add_volume
+from features import add_volume
 import os
 import pandas as pd
 import yfinance as yf
-from features_factory import FTR_FUNC
+from features import FTR_FUNC
 
 PRICE_CACHE_FILE = "cached_prices.csv"
 
