@@ -3,15 +3,14 @@ import numpy as np
 import pandas as pd
 from torch.utils.data import DataLoader
 from compute_features import compute_features, normalize_features
-from model import MarketDataset, create_model, train_model_with_validation, calculate_performance_metrics, INITIAL_CAPITAL, START_DATE, END_DATE, TICKERS, DEVICE, SEED
+from model import MarketDataset, split_train_validation,create_sequences,create_model, train_model_with_validation, calculate_performance_metrics, INITIAL_CAPITAL, START_DATE, END_DATE, TICKERS, DEVICE, SEED
 random.seed(SEED)
 np.random.seed(SEED)
 torch.manual_seed(SEED)
 if torch.cuda.is_available():
     torch.cuda.manual_seed_all(SEED)
 
-LOAD_EXISTING_MODEL = True
-SAVED_MODEL_PATH = "trained_model.pth"
+MODEL_PATH = "walkforward_trained_model.pth"
 
 def run_walkforward_test_with_validation(config):
     print("[Walk-Forward] Starting walk-forward test with validation...")
@@ -41,39 +40,20 @@ def run_walkforward_test_with_validation(config):
             print("[Walk-Forward] Insufficient training data, skipping...")
             continue
         sequences, targets, _ = create_sequences(
-            train_features, train_returns, 0, len(train_features),
-            lookback=config["LOOKBACK"], predict_days=config["PREDICT_DAYS"]
-        )
+            train_features, train_returns, 0, len(train_features))
         if len(sequences) == 0:
             print("[Walk-Forward] No valid sequences created, skipping...")
             continue
-
-        train_seq, train_tgt, val_seq, val_tgt = split_train_validation(
-            sequences, targets, val_split=config["VAL_SPLIT"]
-        )
+        train_seq, train_tgt, val_seq, val_tgt = split_train_validation(sequences, targets)
         train_dataset = MarketDataset(torch.tensor(train_seq), torch.tensor(train_tgt))
         val_dataset = MarketDataset(torch.tensor(val_seq), torch.tensor(val_tgt))
         train_loader = DataLoader(train_dataset, batch_size=min(config["BATCH_SIZE"], len(train_dataset)), shuffle=True)
         val_loader = DataLoader(val_dataset, batch_size=min(config["BATCH_SIZE"], len(val_dataset)), shuffle=False)
-        if LOAD_EXISTING_MODEL and os.path.exists(SAVED_MODEL_PATH):
-            print(f"[Walk-Forward] Loading model from {SAVED_MODEL_PATH}")
-            trained_model = create_model(model_input_dim, **extract_model_kwargs(config))
-            trained_model.load_state_dict(torch.load(SAVED_MODEL_PATH, map_location=DEVICE))
-            trained_model.to(DEVICE)
-        else:
-            model = create_model(model_input_dim, **extract_model_kwargs(config))
-            trained_model = train_model_with_validation(
-                model, train_loader, val_loader,
-                epochs=config["EPOCHS"],
-                warmup_frac=config["WARMUP_FRAC"],
-                decay=config["DECAY"],
-                loss_min_mean=config["LOSS_MIN_MEAN"],
-                loss_return_penalty=config["LOSS_RETURN_PENALTY"],
-                device=DEVICE,
-            )
-            if not LOAD_EXISTING_MODEL:
-                torch.save(trained_model.state_dict(), SAVED_MODEL_PATH)
-                print(f"[Walk-Forward] Saved model to {SAVED_MODEL_PATH}")
+        model = create_model(model_input_dim)
+        trained_model = train_model_with_validation(
+        model, train_loader, val_loader,epochs=config["EPOCHS"])
+        torch.save(trained_model.state_dict(), MODEL_PATH)
+        print(f"[Walk-Forward] Saved model to {MODEL_PATH}")
         test_mask = (features.index >= test_start) & (features.index <= test_end)
         test_features = features.loc[test_mask]
         test_returns = returns.loc[test_mask]
@@ -97,13 +77,7 @@ def run_walkforward_test_with_validation(config):
             print(f"  CAGR: {metrics['cagr']:.2%}")
             print(f"  Sharpe: {metrics['sharpe_ratio']:.2f}")
             print(f"  Max Drawdown: {metrics['max_drawdown']:.2%}")
-            walkforward_results.append({
-                'start_date': test_start,
-                'end_date': test_end,
-                'cagr': metrics['cagr'],
-                'sharpe_ratio': metrics['sharpe_ratio'],
-                'max_drawdown': metrics['max_drawdown'],
-            })
+            walkforward_results.append({'start_date': test_start,'end_date': test_end,'cagr': metrics['cagr'],'sharpe_ratio': metrics['sharpe_ratio'],'max_drawdown': metrics['max_drawdown'],})
     if walkforward_results:
         avg_cagr = np.mean([r['cagr'] for r in walkforward_results])
         avg_sharpe = np.mean([r['sharpe_ratio'] for r in walkforward_results])
@@ -116,14 +90,7 @@ def run_walkforward_test_with_validation(config):
     else:
         print("[Walk-Forward] No valid test periods completed.")
 def extract_model_kwargs(config):
-    return {
-        "layer_count": config["LAYER_COUNT"],
-        "dropout": config["DROPOUT"],
-        "max_heads": config["MAX_HEADS"],
-        "feature_attention_enabled": config.get("FEATURE_ATTENTION_ENABLED", False),
-        "l2_penalty_enabled": config.get("L2_PENALTY_ENABLED", False),
-        "return_penalty_enabled": config.get("RETURN_PENALTY_ENABLED", False),
-    }
+    return {"layer_count": config["LAYER_COUNT"],"dropout": config["DROPOUT"],"max_heads": config["MAX_HEADS"],"feature_attention_enabled": config.get("FEATURE_ATTENTION_ENABLED", False),"l2_penalty_enabled": config.get("L2_PENALTY_ENABLED", False),"return_penalty_enabled": config.get("RETURN_PENALTY_ENABLED", False),}
 if __name__ == "__main__":
     with open("best_hyperparameters.json", "r") as f:
         raw_params = json.load(f)
