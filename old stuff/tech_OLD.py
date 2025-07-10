@@ -188,7 +188,7 @@ class RollingSharpeLoss:
 
 # === Training with validation and early stopping ===
 def train_model():
-    print("[Train] Starting training...")
+   # print("[Train] Starting training...")
     feats, rets = get_features()
     train_ds, val_ds = prepare_datasets(feats, rets)
     train_loader = DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
@@ -200,7 +200,7 @@ def train_model():
     patience_counter = 0
 
     for epoch in range(EPOCHS):
-        print(f"[Train] Epoch {epoch+1}/{EPOCHS}")
+       # print(f"[Train] Epoch {epoch+1}/{EPOCHS}")
         model.train()
         loss_fn.reset()
         train_losses = []
@@ -301,7 +301,7 @@ def backtest():
     plt.grid(True)
     plt.tight_layout()
     plt.savefig("transformer_equity_curve.png")
-    print("[Backtest] Saved transformer_equity_curve.png")
+    #print("[Backtest] Saved transformer_equity_curve.png")
 
     weights_records = []
     for i in range(len(feats) - LOOKBACK):
@@ -315,7 +315,7 @@ def backtest():
         weights = clipped / abs_sum * MAX_LEVERAGE if abs_sum > 0 else clipped
         weights_records.append(pd.Series(weights, index=TICKERS, name=rets.index[i + LOOKBACK]))
     pd.DataFrame(weights_records).round(4).to_csv("transformer_weights.csv")
-    print("[Backtest] Saved daily weights to transformer_weights.csv")
+    #print("[Backtest] Saved daily weights to transformer_weights.csv")
 
 def compute_metrics(portfolio):
     rets = pd.Series(portfolio).pct_change().dropna()
