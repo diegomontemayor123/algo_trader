@@ -11,30 +11,30 @@ feature_sets = ["ret,vol,log_ret,rolling_ret,volume",
 ]
 
 grid = {
-    "SPLIT_DATE": ["2023-01-01"],   
-    "VAL_SPLIT": [0.2], 
-    "PREDICT_DAYS": [3], #3 
-    "LOOKBACK": [80], #70-90
-    "EPOCHS": [20], 
-    "MAX_HEADS": [20], 
-    "BATCH_SIZE": [60], #60-80
-    "FEATURES": feature_sets,       
-    "MAX_LEVERAGE": [1.0], 
+    "SPLIT_DATE": ["2023-01-01"],
+    "VAL_SPLIT": [0.2],
+    "PREDICT_DAYS": [3],
+    "LOOKBACK": [80],
+    "EPOCHS": [20],
+    "MAX_HEADS": [20],
+    "BATCH_SIZE": [60],
+    "FEATURES": feature_sets,
+    "MAX_LEVERAGE": [1.0],
     "LAYER_COUNT": [6],
-    "DROPOUT": [0.3], #0.3
-    "LEARNING_WARMUP": [460],#460
-    "DECAY":[0.0175], #0.0175
-    
+    "DROPOUT": [0.3],
+    #"LEARNING_WARMUP": [460],  # Remove this
+    "WARMUP_FRAC": [0.1],       # Add this instead
+    "DECAY": [0.0175],
     "FEATURE_ATTENTION_ENABLED": [1],
-    "L2_PENALTY_ENABLED": [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    "L2_PENALTY_ENABLED": [1]*24,
     "RETURN_PENALTY_ENABLED": [1],
-    "LOSS_MIN_MEAN": [0.007],#0.007
+    "LOSS_MIN_MEAN": [0.007],
     "LOSS_RETURN_PENALTY": [0.7],
-    
     "WALKFWD_ENABLED": [0],
     "WALKFWD_STEP": [60],
     "WALKFWD_WNDW": [365],
-    } 
+}
+
 
 param_combos = list(product(*grid.values()))
 param_keys = list(grid.keys())

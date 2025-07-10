@@ -1,4 +1,5 @@
-import os, torch
+import os
+import torch
 import numpy as np
 import pandas as pd
 import torch.nn as nn
@@ -9,6 +10,7 @@ from walkforward import run_walkforward_test_with_validation
 from backtest import run_backtest
 from compute_features import *
 from torch.optim.lr_scheduler import _LRScheduler
+import matplotlib.pyplot as plt
 
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 EARLY_STOP_PATIENCE = 2
@@ -16,8 +18,9 @@ INITIAL_CAPITAL = 100.0
 TICKERS = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'NVDA', 'TSLA']
 START_DATE = '2012-01-01'
 END_DATE = '2025-06-01'
+
 SPLIT_DATE = pd.Timestamp(os.environ.get("SPLIT_DATE", "2023-01-01"))
-VAL_SPLIT = float(os.environ.get("VAL_SPLIT", 0.2)) 
+VAL_SPLIT = float(os.environ.get("VAL_SPLIT", 0.2))
 PREDICT_DAYS = int(os.environ.get("PREDICT_DAYS", 3))
 LOOKBACK = int(os.environ.get("LOOKBACK", 80))
 EPOCHS = int(os.environ.get("EPOCHS", 20))
@@ -27,19 +30,20 @@ FEATURES = os.environ.get("FEATURES", "ret,vol,log_ret,rolling_ret,volume").spli
 MAX_LEVERAGE = float(os.environ.get("MAX_LEVERAGE", 1.0))
 LAYER_COUNT = int(os.environ.get("LAYER_COUNT", 6))
 DROPOUT = float(os.environ.get("DROPOUT", 0.3))
-LEARNING_WARMUP = int(os.environ.get("LEARNING_WARMUP", 50)) #460 before
 DECAY = float(os.environ.get("DECAY", 0.0175))
 
 FEATURE_ATTENTION_ENABLED = bool(int(os.environ.get("FEATURE_ATTENTION_ENABLED", 1)))
 L2_PENALTY_ENABLED = bool(int(os.environ.get("L2_PENALTY_ENABLED", 1)))
 RETURN_PENALTY_ENABLED = bool(int(os.environ.get("RETURN_PENALTY_ENABLED", 1)))
-LOSS_MIN_MEAN = float(os.environ.get("LOSS_MIN_MEAN", 0.007)) #.02 returns are 'high'
+LOSS_MIN_MEAN = float(os.environ.get("LOSS_MIN_MEAN", 0.007))
 LOSS_RETURN_PENALTY = float(os.environ.get("LOSS_RETURN_PENALTY", 0.7))
 
 WALKFORWARD_ENABLED = bool(int(os.environ.get("WALKFWD_ENABLED", 0)))
 WALKFORWARD_STEP_SIZE = int(os.environ.get("WALKFWD_STEP", 60))
 WALKFORWARD_TRAIN_WINDOW = int(os.environ.get("WALKFWD_WNDW", 365))
-#Variables to add -
+
+# New: Learning warmup fraction (fraction of total training steps)
+WARMUP_FRAC = float(os.environ.get("WARMUP_FRAC", 0.1))  # Default 10%
 
 class MarketDataset(Dataset):
     def __init__(self, features, returns):
@@ -56,7 +60,7 @@ class TransformerTrader(nn.Module):
         self.num_heads = num_heads
         self.seq_len = seq_len
         self.pos_embedding = nn.Parameter(torch.randn(1, seq_len, input_dim))
-        self.feature_weights = nn.Parameter(torch.ones(input_dim)) 
+        self.feature_weights = nn.Parameter(torch.ones(input_dim))
         encoder_layer = nn.TransformerEncoderLayer(
             d_model=input_dim,
             nhead=num_heads,
@@ -68,12 +72,13 @@ class TransformerTrader(nn.Module):
             nn.Linear(input_dim, 64),
             nn.PReLU(),
             nn.Dropout(dropout),
-            nn.Linear(64, len(TICKERS)))
+            nn.Linear(64, len(TICKERS))
+        )
     def forward(self, x):
         x = x * self.feature_weights * FEATURE_ATTENTION_ENABLED
-        x = x + self.pos_embedding  
+        x = x + self.pos_embedding
         encoded = self.transformer_encoder(x)
-        last_hidden = encoded[:, -1, :]  
+        last_hidden = encoded[:, -1, :]
         weights = self.mlp_head(last_hidden)
         return weights
 
@@ -83,6 +88,8 @@ def calculate_heads(input_dim):
             if input_dim % heads == 0:
                 num_heads = heads
                 break
+    else:
+        num_heads = MAX_HEADS
     return num_heads
 
 def create_model(input_dimension):
@@ -116,7 +123,7 @@ def create_sequences(features, returns, start_idx=0, end_idx=None):
             print(f"[Sequence][Warning] Future returns length mismatch at index {i}: {future_returns.shape}")
         sequences.append(normalized_window)
         targets.append(future_returns)
-        indices.append(features.index[i + LOOKBACK])  
+        indices.append(features.index[i + LOOKBACK])
     return sequences, targets, indices
 
 def prepare_main_datasets(features, returns):
@@ -148,17 +155,17 @@ class DifferentiableSharpeLoss(nn.Module):
     def forward(self, portfolio_weights, target_returns, model=None):
         returns = (portfolio_weights * target_returns).sum(dim=1)
         mean_return = torch.mean(returns)
-        std_return = torch.std(returns) + 1e-6 
+        std_return = torch.std(returns) + 1e-6
         sharpe_ratio = mean_return / std_return
 
-        low_return_penalty = torch.clamp(LOSS_MIN_MEAN - mean_return, min=0.0)  
+        low_return_penalty = torch.clamp(LOSS_MIN_MEAN - mean_return, min=0.0)
         loss = -sharpe_ratio + LOSS_RETURN_PENALTY * low_return_penalty * RETURN_PENALTY_ENABLED
         l2_penalty = sum(p.pow(2.0).sum() for p in model.parameters())
         loss += self.l2_lambda * l2_penalty * L2_PENALTY_ENABLED
         return loss
 
 class TransformerLRScheduler(_LRScheduler):
-    def __init__(self, optimizer, d_model, warmup_steps=LEARNING_WARMUP, last_epoch=-1):
+    def __init__(self, optimizer, d_model, warmup_steps=50, last_epoch=-1):
         self.d_model = d_model
         self.warmup_steps = warmup_steps
         super().__init__(optimizer, last_epoch)
@@ -168,29 +175,36 @@ class TransformerLRScheduler(_LRScheduler):
         lr = scale * min(step ** (-0.5), step * (self.warmup_steps ** -1.5))
         return [lr for _ in self.optimizer.param_groups]
 
-import matplotlib.pyplot as plt
-import numpy as np
-import torch
-
 def train_model_with_validation(model, train_loader, val_loader, epochs=EPOCHS):
     weight_decay = DECAY
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=weight_decay)  # lr ignored if scheduler
-    learning_scheduler = TransformerLRScheduler(optimizer, d_model=model.mlp_head[0].in_features)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=weight_decay)
+
+    # Calculate total training steps and warmup steps dynamically
+    total_steps = epochs * len(train_loader)
+    learning_warmup_steps = int(total_steps * WARMUP_FRAC)
+    print(f"[Scheduler] Total steps: {total_steps}, LEARNING_WARMUP steps: {learning_warmup_steps}")
+
+    learning_scheduler = TransformerLRScheduler(optimizer, d_model=model.mlp_head[0].in_features, warmup_steps=learning_warmup_steps)
     loss_function = DifferentiableSharpeLoss()
+
     best_val_loss = float('inf')
     patience_counter = 0
-    lrs = [] 
+    lrs = []
+
     for epoch in range(epochs):
         print(f"[Training] Epoch {epoch+1}/{epochs}")
         model.train()
         train_losses = []
+
         for batch_features, batch_returns in train_loader:
             batch_features = batch_features.to(DEVICE, non_blocking=True)
             batch_returns = batch_returns.to(DEVICE, non_blocking=True)
+
             raw_weights = model(batch_features)
             abs_sum = torch.sum(torch.abs(raw_weights), dim=1, keepdim=True) + 1e-6
             scaling_factor = torch.clamp(MAX_LEVERAGE / abs_sum, max=1.0)
             normalized_weights = raw_weights * scaling_factor
+
             loss = loss_function(normalized_weights, batch_returns, model)
             if torch.isnan(loss) or torch.isinf(loss):
                 print("[Training][Error] Loss is NaN or Inf during training step")
@@ -206,20 +220,24 @@ def train_model_with_validation(model, train_loader, val_loader, epochs=EPOCHS):
             if nan_grads:
                 print("[Training][Error] Stopping training due to invalid gradients")
                 break
+
             optimizer.step()
             learning_scheduler.step()
+
             current_lr = optimizer.param_groups[0]['lr']
             lrs.append(current_lr)
             train_losses.append(loss.item())
+
         avg_train_loss = np.mean(train_losses)
 
-        # Validation
+        # Validation phase
         model.eval()
         val_portfolio_returns = []
         with torch.no_grad():
             for batch_features, batch_returns in val_loader:
                 batch_features = batch_features.to(DEVICE, non_blocking=True)
                 batch_returns = batch_returns.to(DEVICE, non_blocking=True)
+
                 raw_weights = model(batch_features)
                 weight_sum = torch.sum(torch.abs(raw_weights), dim=1, keepdim=True) + 1e-6
                 scaling_factor = torch.clamp(MAX_LEVERAGE / weight_sum, max=1.0)
@@ -244,7 +262,7 @@ def train_model_with_validation(model, train_loader, val_loader, epochs=EPOCHS):
                 print("[Training] Early stopping due to val loss plateau")
                 break
 
-    # Save learning rate schedule plot to PNG
+    # Save learning rate schedule plot
     plt.figure(figsize=(10, 4))
     plt.plot(lrs)
     plt.title('Learning Rate Schedule During Training')
@@ -258,18 +276,20 @@ def train_model_with_validation(model, train_loader, val_loader, epochs=EPOCHS):
 
     return model
 
-
 def train_main_model():
-    features, returns = compute_features(TICKERS,START_DATE,END_DATE,FEATURES)
+    features, returns = compute_features(TICKERS, START_DATE, END_DATE, FEATURES)
     train_dataset, val_dataset, test_dataset = prepare_main_datasets(features, returns)
+
     train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
     val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=4)
+
     model = create_model(train_dataset[0][0].shape[1])
+
     trained_model = train_model_with_validation(model, train_loader, val_loader)
     return trained_model
 
 def calculate_performance_metrics(equity_curve):
-    equity_curve = pd.Series(equity_curve).dropna()  
+    equity_curve = pd.Series(equity_curve).dropna()
     if equity_curve.isna().any():
         print("[Performance] Warning: NaNs detected in equity curve after dropna (should not happen)")
     returns = equity_curve.pct_change().dropna()
@@ -284,8 +304,19 @@ def calculate_performance_metrics(equity_curve):
 
 if __name__ == "__main__":
     if WALKFORWARD_ENABLED:
-        run_walkforward_test_with_validation(compute_features,create_sequences,split_train_validation,MarketDataset,create_model,train_model_with_validation,normalize_features,calculate_performance_metrics,SPLIT_DATE,WALKFORWARD_STEP_SIZE,WALKFORWARD_TRAIN_WINDOW,LOOKBACK,PREDICT_DAYS,BATCH_SIZE,INITIAL_CAPITAL,MAX_LEVERAGE,DEVICE,TICKERS,START_DATE,END_DATE,FEATURES)
+        run_walkforward_test_with_validation(
+            compute_features, create_sequences, split_train_validation,
+            MarketDataset, create_model, train_model_with_validation,
+            normalize_features, calculate_performance_metrics,
+            SPLIT_DATE, WALKFORWARD_STEP_SIZE, WALKFORWARD_TRAIN_WINDOW,
+            LOOKBACK, PREDICT_DAYS, BATCH_SIZE, INITIAL_CAPITAL,
+            MAX_LEVERAGE, DEVICE, TICKERS, START_DATE, END_DATE,
+            FEATURES
+        )
     else:
         trained_model = train_main_model()
-        run_backtest(DEVICE,INITIAL_CAPITAL,SPLIT_DATE,LOOKBACK,MAX_LEVERAGE,compute_features,normalize_features,calculate_performance_metrics,TICKERS,START_DATE,END_DATE,FEATURES,trained_model,plot=True)
-
+        run_backtest(
+            DEVICE, INITIAL_CAPITAL, SPLIT_DATE, LOOKBACK, MAX_LEVERAGE,
+            compute_features, normalize_features, calculate_performance_metrics,
+            TICKERS, START_DATE, END_DATE, FEATURES, trained_model, plot=True
+        )

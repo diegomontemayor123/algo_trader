@@ -3,12 +3,12 @@ from optuna.samplers import TPESampler
 
 def run_experiment(trial):
     config = {
-        "SPLIT_DATE": "2023-01-01",  # fixed, not tuned
-        "VAL_SPLIT": 0.2,            # fixed, not tuned
-        "PREDICT_DAYS": 3,           # fixed, not tuned
+        "SPLIT_DATE": "2023-01-01",
+        "VAL_SPLIT": 0.2,
+        "PREDICT_DAYS": 3,
         "LOOKBACK": trial.suggest_int("LOOKBACK", 50, 120),
-        "EPOCHS": 20,                # fixed, not tuned
-        "MAX_HEADS": 20,             # fixed, not tuned
+        "EPOCHS": 20,
+        "MAX_HEADS": 20,
         "BATCH_SIZE": trial.suggest_int("BATCH_SIZE", 40, 80),
         "FEATURES": trial.suggest_categorical("FEATURES", [
             "ret,vol,log_ret,rolling_ret,volume",
@@ -18,19 +18,19 @@ def run_experiment(trial):
             "ret,cmo,momentum",
             "ret,sma,vol,cmo"
         ]),
-        "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 1.0, 1.0),  # Example range, tune as needed
-        "LAYER_COUNT": 6,            # fixed, not tuned
+        "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 1.0, 1.0),
+        "LAYER_COUNT": 6,
         "DROPOUT": trial.suggest_float("DROPOUT", 0.1, 0.5),
-        "LEARNING_WARMUP": trial.suggest_int("LEARNING_WARMUP", 10,400),  # 720 steps total
+        "WARMUP_FRAC": trial.suggest_float("WARMUP_FRAC", 0.02, 0.3),  # Fraction of total steps
         "DECAY": trial.suggest_float("DECAY", 0.005, 0.05),
-        "FEATURE_ATTENTION_ENABLED": 1,  # fixed
-        "L2_PENALTY_ENABLED": 1,          # fixed
-        "RETURN_PENALTY_ENABLED": 1,      # fixed
-        "LOSS_MIN_MEAN": trial.suggest_float("LOSS_MIN_MEAN", 0.0001, 0.1),  # example range
+        "FEATURE_ATTENTION_ENABLED": 1,
+        "L2_PENALTY_ENABLED": 1,
+        "RETURN_PENALTY_ENABLED": 1,
+        "LOSS_MIN_MEAN": trial.suggest_float("LOSS_MIN_MEAN", 0.0001, 0.1),
         "LOSS_RETURN_PENALTY": trial.suggest_float("LOSS_RETURN_PENALTY", 0.01, 1.0),
-        "WALKFWD_ENABLED": 0,   # fixed
-        "WALKFWD_STEP": 60,     # fixed
-        "WALKFWD_WNDW": 365,    # fixed
+        "WALKFWD_ENABLED": 0,
+        "WALKFWD_STEP": 60,
+        "WALKFWD_WNDW": 365,
     }
 
     env = os.environ.copy()
@@ -65,7 +65,6 @@ def run_experiment(trial):
         if sharpe is None or drawdown is None:
             return -float("inf")
 
-        # Objective score: prioritize Sharpe, reward weight movement, penalize drawdown
         score = sharpe - 0.5 * abs(drawdown) + 0.2 * weight_delta
         trial.set_user_attr("sharpe", sharpe)
         trial.set_user_attr("drawdown", drawdown)
@@ -100,12 +99,12 @@ def main():
         "WALKFWD_STEP": 60, "WALKFWD_WNDW": 365
     }
 
+    # Merge and print, including WARMUP_FRAC instead of LEARNING_WARMUP
     full_config = {**fixed_config, **best.params}
-    # reorder keys exactly as in your env loading code
     ordered_keys = [
         "SPLIT_DATE", "VAL_SPLIT", "PREDICT_DAYS", "LOOKBACK",
         "EPOCHS", "MAX_HEADS", "BATCH_SIZE", "FEATURES", "MAX_LEVERAGE",
-        "LAYER_COUNT", "DROPOUT", "LEARNING_WARMUP", "DECAY",
+        "LAYER_COUNT", "DROPOUT", "WARMUP_FRAC", "DECAY",
         "FEATURE_ATTENTION_ENABLED", "L2_PENALTY_ENABLED", "RETURN_PENALTY_ENABLED",
         "LOSS_MIN_MEAN", "LOSS_RETURN_PENALTY",
         "WALKFWD_ENABLED", "WALKFWD_STEP", "WALKFWD_WNDW"
