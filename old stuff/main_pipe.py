@@ -7,35 +7,26 @@ from torch.utils.data import DataLoader
 from walkforward import run_walkforward_test_with_validation
 from backtest import run_backtest
 from compute_features import compute_features, normalize_features
-from tech import (
-    create_model as base_create_model,
-    train_model_with_validation,
-    create_sequences,
-    split_train_validation,
-    MarketDataset,
-    calculate_performance_metrics,
-    TransformerTrader,
-    calculate_heads
-)
+from tech import *
 
 # --- Configuration defaults ---
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
-INITIAL_CAPITAL = 1_000_000
-MAX_LEVERAGE = 3.0
-LOOKBACK = 60
-PREDICT_DAYS = 9
-BATCH_SIZE = 64
-EPOCHS = 5
-WALKFORWARD_STEP_SIZE = 30
+INITIAL_CAPITAL = INITIAL_CAPITAL
+MAX_LEVERAGE = MAX_LEVERAGE
+LOOKBACK = LOOKBACK
+PREDICT_DAYS = PREDICT_DAYS
+BATCH_SIZE = BATCH_SIZE
+EPOCHS = EPOCHS
+WALKFORWARD_STEP_SIZE = WAL
 WALKFORWARD_TRAIN_WINDOW = 252 * 2
 SPLIT_DATE = '2023-01-01'
-TICKERS = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'NVDA', 'TSLA']
+TICKERS = TICKERS
 START_DATE = '2012-01-01'
 END_DATE = '2025-06-01'
 FEATURES = ['open', 'high', 'low', 'close', 'volume']
-LAYER_COUNT = 6
-DROPOUT = 0.1
-DECAY = 0.01  # Default weight decay
+LAYER_COUNT = LAYER_COUNT
+DROPOUT = DROPOUT
+DECAY = DECAY
 
 
 # Updated create_model that accepts dropout, layer_count, and lookback dynamically
