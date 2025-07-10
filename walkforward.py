@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 from torch.utils.data import DataLoader
 from compute_features import compute_features, normalize_features
-from walkforward import create_sequences, split_train_validation
 from model import MarketDataset, create_model, train_model_with_validation, calculate_performance_metrics, INITIAL_CAPITAL, START_DATE, END_DATE, TICKERS, DEVICE, SEED
 random.seed(SEED)
 np.random.seed(SEED)
@@ -31,6 +30,7 @@ def run_walkforward_test_with_validation(config):
         train_start = all_dates[i - window] if i - window > 0 else all_dates[0]
         train_end = all_dates[i]
         test_start = all_dates[i + config["LOOKBACK"]]
+        assert train_end < test_start, f"Potential data leakage: train_end {train_end} >= test_start {test_start}"
         test_end = all_dates[min(i + config["LOOKBACK"] + step, len(all_dates) - 1)]
         print(f"\n[Walk-Forward] Training: {train_start.date()} to {train_end.date()}")
         print(f"[Walk-Forward] Testing: {test_start.date()} to {test_end.date()}")

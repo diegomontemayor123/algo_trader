@@ -23,7 +23,7 @@ TICKERS = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'NVDA', 'TSLA']
 START_DATE = '2012-01-01'
 END_DATE = '2025-06-01'
 MODEL_PATH = "trained_model.pth"
-LOAD_MODEL_IF_AVAILABLE = False
+LOAD_MODEL = True
 
 def load_config():
     keys = ["SPLIT_DATE", "VAL_SPLIT", "PREDICT_DAYS", "LOOKBACK", "EPOCHS", "MAX_HEADS","BATCH_SIZE", "FEATURES", "MAX_LEVERAGE", "LAYER_COUNT", "DROPOUT", "DECAY",
@@ -345,7 +345,7 @@ def calculate_performance_metrics(equity_curve):
 if __name__ == "__main__":
     features, returns = compute_features(TICKERS, START_DATE, END_DATE, FEATURES)
     _, _, test_dataset = prepare_main_datasets(features, returns)
-    if LOAD_MODEL_IF_AVAILABLE and os.path.exists(MODEL_PATH):
+    if LOAD_MODEL and os.path.exists(MODEL_PATH):
         trained_model = load_trained_model(test_dataset[0][0].shape[1])
     else:
         trained_model = train_main_model()
