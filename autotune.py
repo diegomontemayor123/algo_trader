@@ -23,13 +23,13 @@ def run_experiment(trial):
             "ret,sma,vol,cmo"
         ]),
 
-        "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 0.5, 3.0),  # Example range, tune as needed
+        "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 1.0, 5.0),  # Example range, tune as needed
 
         "LAYER_COUNT": 6,            # fixed, not tuned
 
         "DROPOUT": trial.suggest_float("DROPOUT", 0.1, 0.5),
 
-        "LEARNING_WARMUP": trial.suggest_int("LEARNING_WARMUP", 200, 1000),  # Expanded range, adjust as needed
+        "LEARNING_WARMUP": trial.suggest_int("LEARNING_WARMUP", 200, 1500),  # Expanded range, adjust as needed
 
         "DECAY": trial.suggest_float("DECAY", 0.005, 0.05),
 
@@ -37,7 +37,7 @@ def run_experiment(trial):
         "L2_PENALTY_ENABLED": 1,          # fixed
         "RETURN_PENALTY_ENABLED": 1,      # fixed
 
-        "LOSS_MIN_MEAN": trial.suggest_float("LOSS_MIN_MEAN", 0.001, 0.02),  # example range
+        "LOSS_MIN_MEAN": trial.suggest_float("LOSS_MIN_MEAN", 0.001, 0.05),  # example range
 
         "LOSS_RETURN_PENALTY": trial.suggest_float("LOSS_RETURN_PENALTY", 0.3, 1.0),
 
