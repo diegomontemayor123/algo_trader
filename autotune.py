@@ -6,14 +6,10 @@ def run_experiment(trial):
         "SPLIT_DATE": "2023-01-01",  # fixed, not tuned
         "VAL_SPLIT": 0.2,            # fixed, not tuned
         "PREDICT_DAYS": 3,           # fixed, not tuned
-
-        "LOOKBACK": trial.suggest_int("LOOKBACK", 70, 90),
-
+        "LOOKBACK": trial.suggest_int("LOOKBACK", 50, 120),
         "EPOCHS": 20,                # fixed, not tuned
         "MAX_HEADS": 20,             # fixed, not tuned
-
         "BATCH_SIZE": trial.suggest_int("BATCH_SIZE", 40, 80),
-
         "FEATURES": trial.suggest_categorical("FEATURES", [
             "ret,vol,log_ret,rolling_ret,volume",
             "ret,sma,williams,cmo,momentum",
@@ -22,25 +18,16 @@ def run_experiment(trial):
             "ret,cmo,momentum",
             "ret,sma,vol,cmo"
         ]),
-
-        "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 1.0, 5.0),  # Example range, tune as needed
-
+        "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 1.0, 1.0),  # Example range, tune as needed
         "LAYER_COUNT": 6,            # fixed, not tuned
-
         "DROPOUT": trial.suggest_float("DROPOUT", 0.1, 0.5),
-
-        "LEARNING_WARMUP": trial.suggest_int("LEARNING_WARMUP", 200, 1500),  # Expanded range, adjust as needed
-
+        "LEARNING_WARMUP": trial.suggest_int("LEARNING_WARMUP", 200, 2500),  # Expanded range, adjust as needed
         "DECAY": trial.suggest_float("DECAY", 0.005, 0.05),
-
         "FEATURE_ATTENTION_ENABLED": 1,  # fixed
         "L2_PENALTY_ENABLED": 1,          # fixed
         "RETURN_PENALTY_ENABLED": 1,      # fixed
-
         "LOSS_MIN_MEAN": trial.suggest_float("LOSS_MIN_MEAN", 0.001, 0.05),  # example range
-
-        "LOSS_RETURN_PENALTY": trial.suggest_float("LOSS_RETURN_PENALTY", 0.3, 1.0),
-
+        "LOSS_RETURN_PENALTY": trial.suggest_float("LOSS_RETURN_PENALTY", 0.1, 1.0),
         "WALKFWD_ENABLED": 0,   # fixed
         "WALKFWD_STEP": 60,     # fixed
         "WALKFWD_WNDW": 365,    # fixed
