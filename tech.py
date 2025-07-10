@@ -27,7 +27,7 @@ FEATURES = os.environ.get("FEATURES", "ret,vol,log_ret,rolling_ret,volume").spli
 MAX_LEVERAGE = float(os.environ.get("MAX_LEVERAGE", 1.0))
 LAYER_COUNT = int(os.environ.get("LAYER_COUNT", 6))
 DROPOUT = float(os.environ.get("DROPOUT", 0.3))
-LEARNING_WARMUP = int(os.environ.get("LEARNING_WARMUP", 460))
+LEARNING_WARMUP = int(os.environ.get("LEARNING_WARMUP", 50)) #460 before
 DECAY = float(os.environ.get("DECAY", 0.0175))
 
 FEATURE_ATTENTION_ENABLED = bool(int(os.environ.get("FEATURE_ATTENTION_ENABLED", 1)))
@@ -36,7 +36,7 @@ RETURN_PENALTY_ENABLED = bool(int(os.environ.get("RETURN_PENALTY_ENABLED", 1)))
 LOSS_MIN_MEAN = float(os.environ.get("LOSS_MIN_MEAN", 0.007)) #.02 returns are 'high'
 LOSS_RETURN_PENALTY = float(os.environ.get("LOSS_RETURN_PENALTY", 0.7))
 
-WALKFORWARD_ENABLED = bool(int(os.environ.get("WALKFWD_ENABLED", 1)))
+WALKFORWARD_ENABLED = bool(int(os.environ.get("WALKFWD_ENABLED", 0)))
 WALKFORWARD_STEP_SIZE = int(os.environ.get("WALKFWD_STEP", 60))
 WALKFORWARD_TRAIN_WINDOW = int(os.environ.get("WALKFWD_WNDW", 365))
 #Variables to add -
