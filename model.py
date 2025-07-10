@@ -1,6 +1,4 @@
-import os
-import json
-import torch
+import os, json, torch
 import numpy as np
 import pandas as pd
 import torch.nn as nn
@@ -11,12 +9,14 @@ from compute_features import *
 from torch.optim.lr_scheduler import _LRScheduler
 import matplotlib.pyplot as plt
 
-torch.manual_seed(42)
-np.random.seed(42)
-if torch.cuda.is_available():
-    torch.cuda.manual_seed_all(42)
-
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
+SEED = 42
+torch.manual_seed(SEED)
+np.random.seed(SEED)
+if torch.cuda.is_available():
+    torch.cuda.manual_seed_all(SEED)
+
+
 EARLY_STOP_PATIENCE = 2
 INITIAL_CAPITAL = 100.0
 TICKERS = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'NVDA', 'TSLA']
@@ -26,23 +26,15 @@ MODEL_PATH = "trained_model.pth"
 LOAD_MODEL_IF_AVAILABLE = False
 
 def load_config():
-    keys = [
-        "SPLIT_DATE", "VAL_SPLIT", "PREDICT_DAYS", "LOOKBACK", "EPOCHS", "MAX_HEADS",
-        "BATCH_SIZE", "FEATURES", "MAX_LEVERAGE", "LAYER_COUNT", "DROPOUT", "DECAY",
-        "FEATURE_ATTENTION_ENABLED", "L2_PENALTY_ENABLED", "RETURN_PENALTY_ENABLED",
-        "LOSS_MIN_MEAN", "LOSS_RETURN_PENALTY", "WARMUP_FRAC"
-    ]
-
+    keys = ["SPLIT_DATE", "VAL_SPLIT", "PREDICT_DAYS", "LOOKBACK", "EPOCHS", "MAX_HEADS","BATCH_SIZE", "FEATURES", "MAX_LEVERAGE", "LAYER_COUNT", "DROPOUT", "DECAY",
+        "FEATURE_ATTENTION_ENABLED", "L2_PENALTY_ENABLED", "RETURN_PENALTY_ENABLED","LOSS_MIN_MEAN", "LOSS_RETURN_PENALTY", "WARMUP_FRAC"]
     env_present = any(key in os.environ for key in keys)
-
     if env_present:
-        print("[Config] Loading hyperparameters from environment variables (tuning mode)")
         config = {}
         for key in keys:
             val = os.environ.get(key)
             if val is None:
                 raise ValueError(f"Missing env var for key: {key}")
-
             if key == "FEATURES":
                 config[key] = val.split(",")
             elif key == "SPLIT_DATE":
@@ -58,11 +50,8 @@ def load_config():
         return config
 
     else:
-        print("[Config] Loading hyperparameters from JSON file (production mode)")
         with open("best_hyperparameters.json", "r") as f:
             config = json.load(f)
-
-        # parse types
         config["SPLIT_DATE"] = pd.Timestamp(config["SPLIT_DATE"])
         config["FEATURES"] = config["FEATURES"].split(",") if isinstance(config["FEATURES"], str) else config["FEATURES"]
         config["VAL_SPLIT"] = float(config["VAL_SPLIT"])
@@ -82,8 +71,6 @@ def load_config():
         config["LOSS_RETURN_PENALTY"] = float(config["LOSS_RETURN_PENALTY"])
         config["WARMUP_FRAC"] = float(config["WARMUP_FRAC"])
         return config
-
-# Load config once
 config = load_config()
 
 SPLIT_DATE = config["SPLIT_DATE"]
@@ -104,8 +91,6 @@ RETURN_PENALTY_ENABLED = config["RETURN_PENALTY_ENABLED"]
 LOSS_MIN_MEAN = config["LOSS_MIN_MEAN"]
 LOSS_RETURN_PENALTY = config["LOSS_RETURN_PENALTY"]
 WARMUP_FRAC = config["WARMUP_FRAC"]
-
-# === Your existing classes and functions below ===
 
 class MarketDataset(Dataset):
     def __init__(self, features, returns):
