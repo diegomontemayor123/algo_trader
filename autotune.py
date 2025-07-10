@@ -5,11 +5,11 @@ def run_experiment(trial):
     config = {
         "SPLIT_DATE": "2023-01-01",
         "VAL_SPLIT": 0.2,
-        "PREDICT_DAYS": 3,
+        "PREDICT_DAYS": trial.suggest_int("PREDICT_DAYS", 1,10),
         "LOOKBACK": trial.suggest_int("LOOKBACK", 50, 120),
         "EPOCHS": 20,
         "MAX_HEADS": 20,
-        "BATCH_SIZE": trial.suggest_int("BATCH_SIZE", 40, 80),
+        "BATCH_SIZE": trial.suggest_int("BATCH_SIZE", 40, 100),
         "FEATURES": trial.suggest_categorical("FEATURES", [
             "ret,vol,log_ret,rolling_ret,volume",
             "ret,sma,williams,cmo,momentum",
@@ -22,7 +22,7 @@ def run_experiment(trial):
         "LAYER_COUNT": 6,
         "DROPOUT": trial.suggest_float("DROPOUT", 0.1, 0.5),
         "WARMUP_FRAC": trial.suggest_float("WARMUP_FRAC", 0.02, 0.3),  # Fraction of total steps
-        "DECAY": trial.suggest_float("DECAY", 0.005, 0.05),
+        "DECAY": trial.suggest_float("DECAY", 0.005, 0.1),
         "FEATURE_ATTENTION_ENABLED": 1,
         "L2_PENALTY_ENABLED": 1,
         "RETURN_PENALTY_ENABLED": 1,
