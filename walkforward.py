@@ -3,14 +3,22 @@ import numpy as np
 import pandas as pd
 from torch.utils.data import DataLoader
 from compute_features import compute_features, normalize_features
-from model import MarketDataset, split_train_validation,create_sequences,create_model, train_model_with_validation, calculate_performance_metrics, INITIAL_CAPITAL, START_DATE, END_DATE, TICKERS, DEVICE, SEED
+from model import (
+    MarketDataset, split_train_validation, create_sequences,
+    create_model, train_model_with_validation, calculate_performance_metrics,
+    INITIAL_CAPITAL, START_DATE, END_DATE, TICKERS, DEVICE, SEED
+)
+
+# === CONFIG ===
+TEST_ONLY = True
+MODEL_PATH = "walkforward_trained_model.pth"
+
+# Set seeds for reproducibility
 random.seed(SEED)
 np.random.seed(SEED)
 torch.manual_seed(SEED)
 if torch.cuda.is_available():
     torch.cuda.manual_seed_all(SEED)
-
-MODEL_PATH = "walkforward_trained_model.pth"
 
 def run_walkforward_test_with_validation(config):
     print("[Walk-Forward] Starting walk-forward test with validation...")
@@ -25,6 +33,7 @@ def run_walkforward_test_with_validation(config):
     window = config["WALKFWD_WNDW"]
     walkforward_results = []
     model_input_dim = features.shape[1]
+
     for i in range(test_start_index, len(all_dates) - config["LOOKBACK"] - config["PREDICT_DAYS"], step):
         train_start = all_dates[i - window] if i - window > 0 else all_dates[0]
         train_end = all_dates[i]
@@ -33,51 +42,82 @@ def run_walkforward_test_with_validation(config):
         test_end = all_dates[min(i + config["LOOKBACK"] + step, len(all_dates) - 1)]
         print(f"\n[Walk-Forward] Training: {train_start.date()} to {train_end.date()}")
         print(f"[Walk-Forward] Testing: {test_start.date()} to {test_end.date()}")
+
         train_mask = (features.index >= train_start) & (features.index < train_end)
         train_features = features.loc[train_mask]
         train_returns = returns.loc[train_mask]
+
         if len(train_features) < config["LOOKBACK"] + config["PREDICT_DAYS"]:
             print("[Walk-Forward] Insufficient training data, skipping...")
             continue
-        sequences, targets, _ = create_sequences(
-            train_features, train_returns, 0, len(train_features))
-        if len(sequences) == 0:
-            print("[Walk-Forward] No valid sequences created, skipping...")
-            continue
-        train_seq, train_tgt, val_seq, val_tgt = split_train_validation(sequences, targets)
-        train_dataset = MarketDataset(torch.tensor(train_seq), torch.tensor(train_tgt))
-        val_dataset = MarketDataset(torch.tensor(val_seq), torch.tensor(val_tgt))
-        train_loader = DataLoader(train_dataset, batch_size=min(config["BATCH_SIZE"], len(train_dataset)), shuffle=True)
-        val_loader = DataLoader(val_dataset, batch_size=min(config["BATCH_SIZE"], len(val_dataset)), shuffle=False)
-        model = create_model(model_input_dim)
-        trained_model = train_model_with_validation(
-        model, train_loader, val_loader,epochs=config["EPOCHS"])
-        torch.save(trained_model.state_dict(), MODEL_PATH)
-        print(f"[Walk-Forward] Saved model to {MODEL_PATH}")
+
+        if TEST_ONLY:
+            print("[Walk-Forward] TEST_ONLY mode active: loading model from disk.")
+            model = create_model(model_input_dim)
+            model.load_state_dict(torch.load(MODEL_PATH, map_location=DEVICE))
+        else:
+            sequences, targets, _ = create_sequences(train_features, train_returns, 0, len(train_features))
+            if len(sequences) == 0:
+                print("[Walk-Forward] No valid sequences created, skipping...")
+                continue
+            train_seq, train_tgt, val_seq, val_tgt = split_train_validation(sequences, targets)
+            train_dataset = MarketDataset(torch.tensor(train_seq), torch.tensor(train_tgt))
+            val_dataset = MarketDataset(torch.tensor(val_seq), torch.tensor(val_tgt))
+            train_loader = DataLoader(train_dataset, batch_size=min(config["BATCH_SIZE"], len(train_dataset)), shuffle=True)
+            val_loader = DataLoader(val_dataset, batch_size=min(config["BATCH_SIZE"], len(val_dataset)), shuffle=False)
+
+            model = create_model(model_input_dim)
+            model = train_model_with_validation(model, train_loader, val_loader, epochs=config["EPOCHS"])
+            torch.save(model.state_dict(), MODEL_PATH)
+            print(f"[Walk-Forward] Saved model to {MODEL_PATH}")
+
+        # Inference phase
         test_mask = (features.index >= test_start) & (features.index <= test_end)
         test_features = features.loc[test_mask]
         test_returns = returns.loc[test_mask]
         portfolio_values = [INITIAL_CAPITAL]
-        trained_model.eval()
+        print(f"[DEBUG] Test period has {len(test_features)} rows")
+
+        model.eval()
         with torch.no_grad():
             for j in range(len(test_features) - config["LOOKBACK"]):
                 window = test_features.iloc[j:j + config["LOOKBACK"]].values.astype(np.float32)
                 norm_window = normalize_features(window)
                 input_tensor = torch.tensor(norm_window).unsqueeze(0).to(DEVICE)
-                raw_weights = trained_model(input_tensor).cpu().numpy().flatten()
+                raw_weights = model(input_tensor).cpu().numpy().flatten()
                 weight_sum = np.sum(np.abs(raw_weights)) + 1e-6
                 scale = min(config["MAX_LEVERAGE"] / weight_sum, 1.0)
                 weights = raw_weights * scale
                 period_returns = test_returns.iloc[j + config["LOOKBACK"]].values
                 portfolio_return = np.dot(weights, period_returns)
+                if np.isnan(portfolio_return) or np.isinf(portfolio_return):
+                    print(f"[WARNING] Invalid return at index {j}: {portfolio_return}")
                 portfolio_values.append(portfolio_values[-1] * (1 + portfolio_return))
+ 
+
+                print(f"[DEBUG] Portfolio values length: {len(portfolio_values)}")
+
         if len(portfolio_values) > 1:
-            metrics = calculate_performance_metrics(portfolio_values)
-            print(f"[Walk-Forward] Period Performance:")
-            print(f"  CAGR: {metrics['cagr']:.2%}")
-            print(f"  Sharpe: {metrics['sharpe_ratio']:.2f}")
-            print(f"  Max Drawdown: {metrics['max_drawdown']:.2%}")
-            walkforward_results.append({'start_date': test_start,'end_date': test_end,'cagr': metrics['cagr'],'sharpe_ratio': metrics['sharpe_ratio'],'max_drawdown': metrics['max_drawdown'],})
+            try:
+                metrics = calculate_performance_metrics(portfolio_values)
+                print(f"[DEBUG] Metrics: {metrics}")
+                print(f"[Walk-Forward] Period Performance:")
+                print(f"  CAGR: {metrics['cagr']:.2%}")
+                print(f"  Sharpe: {metrics['sharpe_ratio']:.2f}")
+                print(f"  Max Drawdown: {metrics['max_drawdown']:.2%}")
+                walkforward_results.append({
+                    'start_date': test_start,
+                    'end_date': test_end,
+                    'cagr': metrics['cagr'],
+                    'sharpe_ratio': metrics['sharpe_ratio'],
+                    'max_drawdown': metrics['max_drawdown'],
+                })
+            except Exception as e:
+                print(f"[ERROR] Failed to compute metrics for period {test_start}–{test_end}: {e}")
+                print(f"[DEBUG] portfolio_values sample: {portfolio_values[:5]} ... {portfolio_values[-5:]}")
+
+
+    # Final aggregate
     if walkforward_results:
         avg_cagr = np.mean([r['cagr'] for r in walkforward_results])
         avg_sharpe = np.mean([r['sharpe_ratio'] for r in walkforward_results])
@@ -89,8 +129,17 @@ def run_walkforward_test_with_validation(config):
         print(f"  Number of Periods: {len(walkforward_results)}")
     else:
         print("[Walk-Forward] No valid test periods completed.")
+
 def extract_model_kwargs(config):
-    return {"layer_count": config["LAYER_COUNT"],"dropout": config["DROPOUT"],"max_heads": config["MAX_HEADS"],"feature_attention_enabled": config.get("FEATURE_ATTENTION_ENABLED", False),"l2_penalty_enabled": config.get("L2_PENALTY_ENABLED", False),"return_penalty_enabled": config.get("RETURN_PENALTY_ENABLED", False),}
+    return {
+        "layer_count": config["LAYER_COUNT"],
+        "dropout": config["DROPOUT"],
+        "max_heads": config["MAX_HEADS"],
+        "feature_attention_enabled": config.get("FEATURE_ATTENTION_ENABLED", False),
+        "l2_penalty_enabled": config.get("L2_PENALTY_ENABLED", False),
+        "return_penalty_enabled": config.get("RETURN_PENALTY_ENABLED", False),
+    }
+
 if __name__ == "__main__":
     with open("best_hyperparameters.json", "r") as f:
         raw_params = json.load(f)
