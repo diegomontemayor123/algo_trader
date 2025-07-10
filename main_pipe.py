@@ -38,7 +38,7 @@ DROPOUT = 0.1
 DECAY = 0.01  # Default weight decay
 
 
-# Updated create_model that accepts dropout and layer_count dynamically
+# Updated create_model that accepts dropout, layer_count, and lookback dynamically
 def create_model(input_dim, dropout=None, layer_count=None, lookback=None):
     heads = calculate_heads(input_dim)
     effective_dropout = dropout if dropout is not None else DROPOUT
@@ -67,9 +67,8 @@ def objective(trial):
     batch_size = trial.suggest_int("batch_size", 40, 100)
     predict_days = trial.suggest_int("predict_days", 1, 10)
     decay = trial.suggest_float("decay", 0.0, 0.1)
-    epochs = 20  # You can also tune this if desired
+    epochs = 20  # Fixed epochs for tuning
 
-    # Features remain fixed or can be tuned similarly
     features = FEATURES
 
     # Model constructor closure using tuned params
@@ -117,7 +116,7 @@ def objective(trial):
         avg_sharpe = np.mean([r['sharpe_ratio'] for r in results])
         avg_drawdown = np.mean([r['max_drawdown'] for r in results])
 
-        # Define your custom score function here
+        # Custom objective: maximize Sharpe, penalize large drawdown
         score = avg_sharpe - 0.5 * abs(avg_drawdown)
 
         trial.set_user_attr("sharpe", avg_sharpe)
@@ -139,13 +138,13 @@ def main():
     for k, v in study.best_params.items():
         print(f"  {k}: {v}")
 
-    # Save trials to CSV for analysis
+    # Save trials to CSV for further analysis
     study.trials_dataframe().to_csv("optuna_trials.csv", index=False)
     print("[Optuna] Trials saved to optuna_trials.csv")
 
     best_params = study.best_params
 
-    # Extract best hyperparameters or fallback to defaults
+    # Extract best hyperparameters with fallbacks
     best_dropout = best_params.get("dropout", DROPOUT)
     best_layer_count = best_params.get("layer_count", LAYER_COUNT)
     best_lookback = best_params.get("lookback", LOOKBACK)
@@ -197,9 +196,9 @@ def main():
         for i, result in enumerate(final_results):
             print(f"  Period {i + 1}: Sharpe={result['sharpe_ratio']:.3f}, "
                   f"Max Drawdown={result['max_drawdown']:.2%}, "
-                  f"CAGR={result['CAGR']:.2%}")
+                  f"CAGR={result['cagr']:.2%}")
         avg_sharpe = np.mean([r["sharpe_ratio"] for r in final_results])
-        avg_cagr = np.mean([r["CAGR"] for r in final_results])
+        avg_cagr = np.mean([r["cagr"] for r in final_results])
         avg_dd = np.mean([r["max_drawdown"] for r in final_results])
         print(f"\n[Summary] Avg Sharpe: {avg_sharpe:.3f}, Avg CAGR: {avg_cagr:.2%}, Avg Max Drawdown: {avg_dd:.2%}")
     else:

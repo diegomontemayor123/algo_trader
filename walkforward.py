@@ -61,7 +61,8 @@ def run_walkforward_test_with_validation(
             logging.warning("[Walk-Forward] Insufficient training data, skipping this period.")
             continue
 
-        sequences, targets, _ = create_sequences(train_features, train_returns)
+        # Pass LOOKBACK and PREDICT_DAYS explicitly here
+        sequences, targets, _ = create_sequences(train_features, train_returns, LOOKBACK, PREDICT_DAYS)
 
         if len(sequences) == 0:
             logging.warning("[Walk-Forward] No valid sequences created, skipping this period.")

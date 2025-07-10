@@ -5,7 +5,6 @@ import pandas as pd
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset
-from torch.optim.lr_scheduler import _LRScheduler
 
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -68,32 +67,36 @@ def calculate_heads(input_dim, max_heads=20):
                 return heads
     return max_heads
 
-def create_model(input_dim, dropout=None):
+def create_model(input_dim, dropout=None, lookback=None, layer_count=None):
     heads = calculate_heads(input_dim)
     effective_dropout = dropout if dropout is not None else DROPOUT
+    effective_layers = layer_count if layer_count is not None else LAYER_COUNT
+    effective_lookback = lookback if lookback is not None else LOOKBACK
 
     print(f"[Model] Creating TransformerTrader with input_dim={input_dim}, heads={heads}, "
-          f"layers={LAYER_COUNT}, dropout={effective_dropout}")
+          f"layers={effective_layers}, dropout={effective_dropout}, lookback={effective_lookback}")
 
-    model = TransformerTrader(input_dim, heads, LAYER_COUNT, effective_dropout, LOOKBACK)
+    model = TransformerTrader(
+        input_dim=input_dim,
+        num_heads=heads,
+        num_layers=effective_layers,
+        dropout=effective_dropout,
+        seq_len=effective_lookback
+    )
     return model.to(DEVICE)
 
-
-def create_sequences(features, returns):
+def create_sequences(features, returns, lookback, predict_days):
     X, y, dates = [], [], []
-    for i in range(len(features) - LOOKBACK - PREDICT_DAYS + 1):
-        X.append(features.iloc[i:i+LOOKBACK].values)
-        y.append(returns.iloc[i+LOOKBACK + PREDICT_DAYS - 1].values)
-        dates.append(features.index[i + LOOKBACK + PREDICT_DAYS - 1])
+    for i in range(len(features) - lookback - predict_days + 1):
+        X.append(features.iloc[i:i+lookback].values)
+        y.append(returns.iloc[i+lookback + predict_days - 1].values)
+        dates.append(features.index[i + lookback + predict_days - 1])
     return X, y, dates
 
 def split_train_validation(sequences, targets, validation_ratio=0.2):
     n = len(sequences)
     split_idx = int(n * (1 - validation_ratio))
     return sequences[:split_idx], targets[:split_idx], sequences[split_idx:], targets[split_idx:]
-import torch.optim as optim
-import torch.nn as nn
-import numpy as np
 
 def train_model_with_validation(model, train_loader, val_loader, learning_rate=1e-3, epochs=20, weight_decay=0.0):
     optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
@@ -138,7 +141,6 @@ def train_model_with_validation(model, train_loader, val_loader, learning_rate=1
     model.load_state_dict(best_model_state)
     return model
 
-
 def calculate_performance_metrics(portfolio_values):
     returns = pd.Series(portfolio_values).pct_change().dropna()
     total_return = portfolio_values[-1] / portfolio_values[0] - 1
@@ -147,10 +149,7 @@ def calculate_performance_metrics(portfolio_values):
     max_drawdown = ((pd.Series(portfolio_values).cummax() - pd.Series(portfolio_values)).max()) / pd.Series(portfolio_values).cummax().max()
     return {
         "total_return": total_return,
-        "CAGR": cagr,
+        "cagr": cagr,
         "sharpe_ratio": sharpe_ratio,
         "max_drawdown": max_drawdown
     }
-
-def calculate_additional_metrics(portfolio_values):
-    return calculate_performance_metrics(portfolio_values)
