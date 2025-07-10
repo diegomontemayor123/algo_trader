@@ -22,28 +22,28 @@ END_DATE = '2025-06-01'
 SPLIT_DATE = pd.Timestamp(os.environ.get("SPLIT_DATE", "2023-01-01"))
 VAL_SPLIT = float(os.environ.get("VAL_SPLIT", 0.2))
 PREDICT_DAYS = int(os.environ.get("PREDICT_DAYS", 3))
-LOOKBACK = int(os.environ.get("LOOKBACK", 80))
+LOOKBACK = int(os.environ.get("LOOKBACK", 63))
 EPOCHS = int(os.environ.get("EPOCHS", 20))
 MAX_HEADS = int(os.environ.get("MAX_HEADS", 20))
-BATCH_SIZE = int(os.environ.get("BATCH_SIZE", 60))
+BATCH_SIZE = int(os.environ.get("BATCH_SIZE", 76))
 FEATURES = os.environ.get("FEATURES", "ret,vol,log_ret,rolling_ret,volume").split(",")
 MAX_LEVERAGE = float(os.environ.get("MAX_LEVERAGE", 1.0))
 LAYER_COUNT = int(os.environ.get("LAYER_COUNT", 6))
 DROPOUT = float(os.environ.get("DROPOUT", 0.3))
-DECAY = float(os.environ.get("DECAY", 0.0175))
+DECAY = float(os.environ.get("DECAY", 0.042))
 
 FEATURE_ATTENTION_ENABLED = bool(int(os.environ.get("FEATURE_ATTENTION_ENABLED", 1)))
 L2_PENALTY_ENABLED = bool(int(os.environ.get("L2_PENALTY_ENABLED", 1)))
 RETURN_PENALTY_ENABLED = bool(int(os.environ.get("RETURN_PENALTY_ENABLED", 1)))
-LOSS_MIN_MEAN = float(os.environ.get("LOSS_MIN_MEAN", 0.007))
-LOSS_RETURN_PENALTY = float(os.environ.get("LOSS_RETURN_PENALTY", 0.7))
+LOSS_MIN_MEAN = float(os.environ.get("LOSS_MIN_MEAN", 0.0007))
+LOSS_RETURN_PENALTY = float(os.environ.get("LOSS_RETURN_PENALTY", 0.5))
 
 WALKFORWARD_ENABLED = bool(int(os.environ.get("WALKFWD_ENABLED", 0)))
 WALKFORWARD_STEP_SIZE = int(os.environ.get("WALKFWD_STEP", 60))
 WALKFORWARD_TRAIN_WINDOW = int(os.environ.get("WALKFWD_WNDW", 365))
 
 # New: Learning warmup fraction (fraction of total training steps)
-WARMUP_FRAC = float(os.environ.get("WARMUP_FRAC", 0.1))  # Default 10%
+WARMUP_FRAC = float(os.environ.get("WARMUP_FRAC", 0.25))  # Default 10%
 
 class MarketDataset(Dataset):
     def __init__(self, features, returns):
