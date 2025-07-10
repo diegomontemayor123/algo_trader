@@ -168,13 +168,18 @@ class TransformerLRScheduler(_LRScheduler):
         lr = scale * min(step ** (-0.5), step * (self.warmup_steps ** -1.5))
         return [lr for _ in self.optimizer.param_groups]
 
+import matplotlib.pyplot as plt
+import numpy as np
+import torch
+
 def train_model_with_validation(model, train_loader, val_loader, epochs=EPOCHS):
     weight_decay = DECAY
-    optimizer = optim.Adam(model.parameters(), lr=1e-3, weight_decay=weight_decay) #lr not used if scheduler
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=weight_decay)  # lr ignored if scheduler
     learning_scheduler = TransformerLRScheduler(optimizer, d_model=model.mlp_head[0].in_features)
     loss_function = DifferentiableSharpeLoss()
     best_val_loss = float('inf')
     patience_counter = 0
+    lrs = [] 
     for epoch in range(epochs):
         print(f"[Training] Epoch {epoch+1}/{epochs}")
         model.train()
@@ -184,13 +189,15 @@ def train_model_with_validation(model, train_loader, val_loader, epochs=EPOCHS):
             batch_returns = batch_returns.to(DEVICE, non_blocking=True)
             raw_weights = model(batch_features)
             abs_sum = torch.sum(torch.abs(raw_weights), dim=1, keepdim=True) + 1e-6
-            scaling_factor = torch.clamp(MAX_LEVERAGE / abs_sum, max=1.0) 
+            scaling_factor = torch.clamp(MAX_LEVERAGE / abs_sum, max=1.0)
             normalized_weights = raw_weights * scaling_factor
             loss = loss_function(normalized_weights, batch_returns, model)
             if torch.isnan(loss) or torch.isinf(loss):
                 print("[Training][Error] Loss is NaN or Inf during training step")
+
             optimizer.zero_grad()
             loss.backward()
+
             nan_grads = False
             for name, param in model.named_parameters():
                 if param.grad is not None and (torch.isnan(param.grad).any() or torch.isinf(param.grad).any()):
@@ -201,8 +208,12 @@ def train_model_with_validation(model, train_loader, val_loader, epochs=EPOCHS):
                 break
             optimizer.step()
             learning_scheduler.step()
+            current_lr = optimizer.param_groups[0]['lr']
+            lrs.append(current_lr)
             train_losses.append(loss.item())
         avg_train_loss = np.mean(train_losses)
+
+        # Validation
         model.eval()
         val_portfolio_returns = []
         with torch.no_grad():
@@ -215,11 +226,14 @@ def train_model_with_validation(model, train_loader, val_loader, epochs=EPOCHS):
                 normalized_weights = raw_weights * scaling_factor
                 portfolio_returns = (normalized_weights * batch_returns).sum(dim=1)
                 val_portfolio_returns.extend(portfolio_returns.cpu().numpy())
+
         val_returns_array = np.array(val_portfolio_returns)
         mean_ret = val_returns_array.mean()
         std_ret = val_returns_array.std() + 1e-6
         avg_val_loss = -(mean_ret / std_ret)
+
         print(f"[Training] Train Loss: {avg_train_loss:.4f} | Validation: {abs(avg_val_loss):.4f}")
+
         if avg_val_loss < best_val_loss:
             best_val_loss = avg_val_loss
             patience_counter = 0
@@ -229,7 +243,21 @@ def train_model_with_validation(model, train_loader, val_loader, epochs=EPOCHS):
             if patience_counter >= EARLY_STOP_PATIENCE:
                 print("[Training] Early stopping due to val loss plateau")
                 break
+
+    # Save learning rate schedule plot to PNG
+    plt.figure(figsize=(10, 4))
+    plt.plot(lrs)
+    plt.title('Learning Rate Schedule During Training')
+    plt.xlabel('Training Step')
+    plt.ylabel('Learning Rate')
+    plt.grid(True)
+    plt.savefig('learning_rate_schedule.png')
+    plt.close()
+
+    print("[Training] Saved learning rate schedule plot as 'learning_rate_schedule.png'")
+
     return model
+
 
 def train_main_model():
     features, returns = compute_features(TICKERS,START_DATE,END_DATE,FEATURES)

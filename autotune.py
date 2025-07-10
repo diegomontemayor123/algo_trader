@@ -21,7 +21,7 @@ def run_experiment(trial):
         "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 1.0, 1.0),  # Example range, tune as needed
         "LAYER_COUNT": 6,            # fixed, not tuned
         "DROPOUT": trial.suggest_float("DROPOUT", 0.1, 0.5),
-        "LEARNING_WARMUP": trial.suggest_int("LEARNING_WARMUP", 200, 3500),  # Expanded range, adjust as needed
+        "LEARNING_WARMUP": trial.suggest_int("LEARNING_WARMUP", 10,400),  # 720 steps total
         "DECAY": trial.suggest_float("DECAY", 0.005, 0.05),
         "FEATURE_ATTENTION_ENABLED": 1,  # fixed
         "L2_PENALTY_ENABLED": 1,          # fixed
