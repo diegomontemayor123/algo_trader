@@ -1,4 +1,8 @@
-import os, subprocess, re, optuna
+import os
+import subprocess
+import re
+import optuna
+import json
 from optuna.samplers import TPESampler
 
 def run_experiment(trial):
@@ -21,16 +25,13 @@ def run_experiment(trial):
         "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 1.0, 1.0),
         "LAYER_COUNT": 6,
         "DROPOUT": trial.suggest_float("DROPOUT", 0.1, 0.5),
-        "WARMUP_FRAC": trial.suggest_float("WARMUP_FRAC", 0.02, 0.3),  # Fraction of total steps
+        "WARMUP_FRAC": trial.suggest_float("WARMUP_FRAC", 0.02, 0.3),
         "DECAY": trial.suggest_float("DECAY", 0.005, 0.1),
         "FEATURE_ATTENTION_ENABLED": 1,
         "L2_PENALTY_ENABLED": 1,
         "RETURN_PENALTY_ENABLED": 1,
         "LOSS_MIN_MEAN": trial.suggest_float("LOSS_MIN_MEAN", 0.0001, 0.1),
         "LOSS_RETURN_PENALTY": trial.suggest_float("LOSS_RETURN_PENALTY", 0.01, 1.0),
-        "WALKFWD_ENABLED": 0,
-        "WALKFWD_STEP": 60,
-        "WALKFWD_WNDW": 365,
     }
 
     env = os.environ.copy()
@@ -39,7 +40,7 @@ def run_experiment(trial):
 
     try:
         result = subprocess.run(
-            ["python", "tech.py"],
+            ["python", "model.py"],
             capture_output=True,
             text=True,
             env=env,
@@ -75,42 +76,35 @@ def run_experiment(trial):
         print(f"[Timeout] Trial failed for config: {config}")
         return -float("inf")
 
-
 def main():
     sampler = TPESampler(seed=42)
     study = optuna.create_study(direction="maximize", sampler=sampler)
     study.optimize(run_experiment, n_trials=30, n_jobs=1)
 
-    print("\n=== Best trial ===")
     best = study.best_trial
-    for k, v in best.params.items():
+
+    best_params = {
+        "SPLIT_DATE": "2023-01-01",
+        "VAL_SPLIT": 0.2,
+        "EPOCHS": 20,
+        "MAX_HEADS": 20,
+        "LAYER_COUNT": 6,
+        "FEATURE_ATTENTION_ENABLED": 1,
+        "L2_PENALTY_ENABLED": 1,
+        "RETURN_PENALTY_ENABLED": 1,
+    }
+    best_params.update(best.params)
+
+    with open("best_hyperparameters.json", "w") as f:
+        json.dump(best_params, f, indent=4)
+
+    print("\n=== Best trial parameters ===")
+    for k, v in best_params.items():
         print(f"{k}: {v}")
+
     print("\nMetrics:")
     for m in ["sharpe", "drawdown", "weight_delta"]:
         print(f"{m}: {best.user_attrs[m]:.4f}")
-
-    print("\nUse this config in your environment:")
-
-    fixed_config = {
-        "SPLIT_DATE": "2023-01-01", "VAL_SPLIT": 0.2, "PREDICT_DAYS": 3,
-        "EPOCHS": 20, "MAX_HEADS": 20, "LAYER_COUNT": 6,
-        "FEATURE_ATTENTION_ENABLED": 1, "L2_PENALTY_ENABLED": 1,
-        "RETURN_PENALTY_ENABLED": 1, "WALKFWD_ENABLED": 0,
-        "WALKFWD_STEP": 60, "WALKFWD_WNDW": 365
-    }
-
-    # Merge and print, including WARMUP_FRAC instead of LEARNING_WARMUP
-    full_config = {**fixed_config, **best.params}
-    ordered_keys = [
-        "SPLIT_DATE", "VAL_SPLIT", "PREDICT_DAYS", "LOOKBACK",
-        "EPOCHS", "MAX_HEADS", "BATCH_SIZE", "FEATURES", "MAX_LEVERAGE",
-        "LAYER_COUNT", "DROPOUT", "WARMUP_FRAC", "DECAY",
-        "FEATURE_ATTENTION_ENABLED", "L2_PENALTY_ENABLED", "RETURN_PENALTY_ENABLED",
-        "LOSS_MIN_MEAN", "LOSS_RETURN_PENALTY",
-        "WALKFWD_ENABLED", "WALKFWD_STEP", "WALKFWD_WNDW"
-    ]
-    for k in ordered_keys:
-        print(f"{k}={full_config[k]}")
 
 if __name__ == "__main__":
     main()

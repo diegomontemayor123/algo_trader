@@ -1,16 +1,20 @@
-import os
-import torch
+import os, json, torch
 import numpy as np
 import pandas as pd
 import torch.nn as nn
-import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
-from features_factory import FTR_FUNC
-from walkforward import run_walkforward_test_with_validation
+from features import FTR_FUNC
 from backtest import run_backtest
 from compute_features import *
 from torch.optim.lr_scheduler import _LRScheduler
 import matplotlib.pyplot as plt
+torch.manual_seed(42)
+np.random.seed(42)
+if torch.cuda.is_available():
+    torch.cuda.manual_seed_all(42)
+
+with open("best_hyperparameters.json", "r") as f:
+    config = json.load(f)
 
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 EARLY_STOP_PATIENCE = 2
@@ -18,32 +22,28 @@ INITIAL_CAPITAL = 100.0
 TICKERS = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'NVDA', 'TSLA']
 START_DATE = '2012-01-01'
 END_DATE = '2025-06-01'
+MODEL_PATH = "trained_model.pth"
+LOAD_MODEL_IF_AVAILABLE = True
 
-SPLIT_DATE = pd.Timestamp(os.environ.get("SPLIT_DATE", "2023-01-01"))
-VAL_SPLIT = float(os.environ.get("VAL_SPLIT", 0.2))
-PREDICT_DAYS = int(os.environ.get("PREDICT_DAYS", 8))
-LOOKBACK = int(os.environ.get("LOOKBACK", 94))
-EPOCHS = int(os.environ.get("EPOCHS", 20))
-MAX_HEADS = int(os.environ.get("MAX_HEADS", 20))
-BATCH_SIZE = int(os.environ.get("BATCH_SIZE", 55))
-FEATURES = os.environ.get("FEATURES", "ret,vol,log_ret,rolling_ret,volume").split(",")
-MAX_LEVERAGE = float(os.environ.get("MAX_LEVERAGE", 1.0))
-LAYER_COUNT = int(os.environ.get("LAYER_COUNT", 6))
-DROPOUT = float(os.environ.get("DROPOUT", 0.15))
-DECAY = float(os.environ.get("DECAY", 0.04))
 
-FEATURE_ATTENTION_ENABLED = bool(int(os.environ.get("FEATURE_ATTENTION_ENABLED", 1)))
-L2_PENALTY_ENABLED = bool(int(os.environ.get("L2_PENALTY_ENABLED", 1)))
-RETURN_PENALTY_ENABLED = bool(int(os.environ.get("RETURN_PENALTY_ENABLED", 1)))
-LOSS_MIN_MEAN = float(os.environ.get("LOSS_MIN_MEAN", 0.07))
-LOSS_RETURN_PENALTY = float(os.environ.get("LOSS_RETURN_PENALTY", 0.3))
-
-WALKFORWARD_ENABLED = bool(int(os.environ.get("WALKFWD_ENABLED", 0)))
-WALKFORWARD_STEP_SIZE = int(os.environ.get("WALKFWD_STEP", 60))
-WALKFORWARD_TRAIN_WINDOW = int(os.environ.get("WALKFWD_WNDW", 365))
-
-# New: Learning warmup fraction (fraction of total training steps)
-WARMUP_FRAC = float(os.environ.get("WARMUP_FRAC", 0.11))  # Default 10%
+SPLIT_DATE = pd.Timestamp(config["SPLIT_DATE"])
+VAL_SPLIT = float(config["VAL_SPLIT"])
+PREDICT_DAYS = int(config["PREDICT_DAYS"])
+LOOKBACK = int(config["LOOKBACK"])
+EPOCHS = int(config["EPOCHS"])
+MAX_HEADS = int(config["MAX_HEADS"])
+BATCH_SIZE = int(config["BATCH_SIZE"])
+FEATURES = config["FEATURES"].split(",")
+MAX_LEVERAGE = float(config["MAX_LEVERAGE"])
+LAYER_COUNT = int(config["LAYER_COUNT"])
+DROPOUT = float(config["DROPOUT"])
+DECAY = float(config["DECAY"])
+FEATURE_ATTENTION_ENABLED = bool(int(config["FEATURE_ATTENTION_ENABLED"]))
+L2_PENALTY_ENABLED = bool(int(config["L2_PENALTY_ENABLED"]))
+RETURN_PENALTY_ENABLED = bool(int(config["RETURN_PENALTY_ENABLED"]))
+LOSS_MIN_MEAN = float(config["LOSS_MIN_MEAN"])
+LOSS_RETURN_PENALTY = float(config["LOSS_RETURN_PENALTY"])
+WARMUP_FRAC = float(config["WARMUP_FRAC"])
 
 class MarketDataset(Dataset):
     def __init__(self, features, returns):
@@ -279,14 +279,23 @@ def train_model_with_validation(model, train_loader, val_loader, epochs=EPOCHS):
 def train_main_model():
     features, returns = compute_features(TICKERS, START_DATE, END_DATE, FEATURES)
     train_dataset, val_dataset, test_dataset = prepare_main_datasets(features, returns)
-
     train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
     val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=4)
-
     model = create_model(train_dataset[0][0].shape[1])
-
     trained_model = train_model_with_validation(model, train_loader, val_loader)
+    torch.save(trained_model.state_dict(), MODEL_PATH)
+    print(f"[Model] Trained model saved to {MODEL_PATH}")
+
     return trained_model
+
+def load_trained_model(input_dimension, path=MODEL_PATH):
+    model = create_model(input_dimension)
+    model.load_state_dict(torch.load(path, map_location=DEVICE))
+    model.eval()
+    print(f"[Model] Loaded trained model from {path}")
+    return model
+
+
 
 def calculate_performance_metrics(equity_curve):
     equity_curve = pd.Series(equity_curve).dropna()
@@ -303,20 +312,15 @@ def calculate_performance_metrics(equity_curve):
     return {'cagr': cagr,'sharpe_ratio': sharpe_ratio,'max_drawdown': max_drawdown}
 
 if __name__ == "__main__":
-    if WALKFORWARD_ENABLED:
-        run_walkforward_test_with_validation(
-            compute_features, create_sequences, split_train_validation,
-            MarketDataset, create_model, train_model_with_validation,
-            normalize_features, calculate_performance_metrics,
-            SPLIT_DATE, WALKFORWARD_STEP_SIZE, WALKFORWARD_TRAIN_WINDOW,
-            LOOKBACK, PREDICT_DAYS, BATCH_SIZE, INITIAL_CAPITAL,
-            MAX_LEVERAGE, DEVICE, TICKERS, START_DATE, END_DATE,
-            FEATURES
-        )
-    else:
-        trained_model = train_main_model()
+        features, returns = compute_features(TICKERS, START_DATE, END_DATE, FEATURES)
+        _, _, test_dataset = prepare_main_datasets(features, returns)
+        if LOAD_MODEL_IF_AVAILABLE and os.path.exists(MODEL_PATH):
+            trained_model = load_trained_model(test_dataset[0][0].shape[1])
+        else:
+            trained_model = train_main_model()
         run_backtest(
             DEVICE, INITIAL_CAPITAL, SPLIT_DATE, LOOKBACK, MAX_LEVERAGE,
             compute_features, normalize_features, calculate_performance_metrics,
             TICKERS, START_DATE, END_DATE, FEATURES, trained_model, plot=True
         )
+
