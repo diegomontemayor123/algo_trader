@@ -10,7 +10,7 @@
     "PREDICT_DAYS": 4,
     "LOOKBACK": 117,
     "BATCH_SIZE": 84,
-    "FEATURES": "ret,cmo,momentum",
+    "FEATURES": "ret,vol,log_ret,rolling_ret,volume",
     "MAX_LEVERAGE": 1.0,
     "DROPOUT": 0.3832290311184182,
     "WARMUP_FRAC": 0.025763658402824685,
