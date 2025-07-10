@@ -5,13 +5,24 @@ import pandas as pd
 import logging
 
 def run_backtest(
-    DEVICE, INITIAL_CAPITAL, SPLIT_DATE, LOOKBACK, MAX_LEVERAGE,
-    compute_features, normalize_features, calculate_performance_metrics,
-    TICKERS, START_DATE, END_DATE, FEATURES, model=None, plot=False,
+    DEVICE,
+    INITIAL_CAPITAL,
+    SPLIT_DATE,
+    LOOKBACK,
+    MAX_LEVERAGE,
+    compute_features,
+    normalize_features,
+    calculate_performance_metrics,
+    TICKERS,
+    START_DATE,
+    END_DATE,
+    FEATURES,
+    model=None,
+    plot=False,
     weights_csv_path="daily_portfolio_weights.csv"
 ):
     logging.info("[Backtest] Starting backtest...")
-    
+
     try:
         features, returns = compute_features(TICKERS, START_DATE, END_DATE, FEATURES)
         features.index = pd.to_datetime(features.index)
@@ -22,7 +33,8 @@ def run_backtest(
             return pd.Series([INITIAL_CAPITAL])
 
         if model is None:
-            raise ValueError("Model must be passed to run_backtest() to avoid checkpoint mismatch.")
+            raise ValueError("Model must be provided to run_backtest()")
+
         model.eval()
 
         portfolio_values = [INITIAL_CAPITAL]
@@ -68,6 +80,7 @@ def run_backtest(
         weights_df["total_exposure"] = weights_df.abs().sum(axis=1)
         weights_df.index.name = "Date"
         weights_df.to_csv(weights_csv_path)
+        logging.info(f"[Backtest] Saved daily portfolio weights to {weights_csv_path}")
 
         portfolio_metrics = calculate_performance_metrics(portfolio_values)
         benchmark_metrics = calculate_performance_metrics(benchmark_values)

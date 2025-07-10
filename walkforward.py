@@ -2,6 +2,7 @@ import torch
 import numpy as np
 import pandas as pd
 from torch.utils.data import DataLoader
+import logging
 
 def run_walkforward_test_with_validation(
     compute_features,
@@ -24,66 +25,62 @@ def run_walkforward_test_with_validation(
     TICKERS,
     START_DATE,
     END_DATE,
-    FEATURES
+    FEATURES,
+    epochs=5,
+    save_results_path=None
 ):
-    print("[Walk-Forward] Starting walk-forward test with validation...")
+    logging.info("[Walk-Forward] Starting walk-forward test with validation...")
 
     features, returns = compute_features(TICKERS, START_DATE, END_DATE, FEATURES)
     features.index = pd.to_datetime(features.index)
     returns.index = pd.to_datetime(returns.index)
     all_dates = features.index
 
-    test_start_index = all_dates.get_indexer([SPLIT_DATE], method="bfill")[0]
+    test_start_index = all_dates.get_indexer([pd.to_datetime(SPLIT_DATE)], method="bfill")[0]
     walkforward_results = []
     model_input_dim = features.shape[1]
 
     for step in range(test_start_index, len(all_dates) - LOOKBACK - PREDICT_DAYS, WALKFORWARD_STEP_SIZE):
-        train_start_date = all_dates[step - WALKFORWARD_TRAIN_WINDOW] if step - WALKFORWARD_TRAIN_WINDOW > 0 else all_dates[0]
-        train_end_date = all_dates[step]
-        test_start_date = all_dates[step + LOOKBACK]
-        test_end_date = all_dates[min(step + LOOKBACK + WALKFORWARD_STEP_SIZE, len(all_dates) - 1)]
+        train_start_idx = max(0, step - WALKFORWARD_TRAIN_WINDOW)
+        train_end_idx = step
+        test_start_idx = step + LOOKBACK
+        test_end_idx = min(step + LOOKBACK + WALKFORWARD_STEP_SIZE, len(all_dates) - 1)
 
-        print(f"\n[Walk-Forward] Training: {train_start_date.date()} to {train_end_date.date()}")
-        print(f"[Walk-Forward] Testing: {test_start_date.date()} to {test_end_date.date()}")
+        train_start_date = all_dates[train_start_idx]
+        train_end_date = all_dates[train_end_idx - 1]
+        test_start_date = all_dates[test_start_idx]
+        test_end_date = all_dates[test_end_idx]
 
-        train_mask = (features.index >= train_start_date) & (features.index < train_end_date)
-        train_features = features.loc[train_mask]
-        train_returns = returns.loc[train_mask]
+        logging.info(f"[Walk-Forward] Training: {train_start_date.date()} to {train_end_date.date()}")
+        logging.info(f"[Walk-Forward] Testing: {test_start_date.date()} to {test_end_date.date()}")
+
+        train_features = features.iloc[train_start_idx:train_end_idx]
+        train_returns = returns.iloc[train_start_idx:train_end_idx]
 
         if len(train_features) < LOOKBACK + PREDICT_DAYS:
-            print("[Walk-Forward] Insufficient training data, skipping...")
+            logging.warning("[Walk-Forward] Insufficient training data, skipping this period.")
             continue
 
-        train_start_idx = 0
-        train_end_idx = len(train_features)
-        sequences, targets, _ = create_sequences(train_features, train_returns, train_start_idx, train_end_idx)
+        sequences, targets, _ = create_sequences(train_features, train_returns)
 
         if len(sequences) == 0:
-            print("[Walk-Forward] No valid sequences created, skipping...")
+            logging.warning("[Walk-Forward] No valid sequences created, skipping this period.")
             continue
 
         train_seq, train_tgt, val_seq, val_tgt = split_train_validation(sequences, targets)
-        print(f"[Walk-Forward] Train samples: {len(train_seq)}, Validation samples: {len(val_seq)}")
-        
-        train_dataset = MarketDataset(
-            torch.tensor(np.array(train_seq)), 
-            torch.tensor(np.array(train_tgt))
-        )
-        val_dataset = MarketDataset(
-            torch.tensor(np.array(val_seq)), 
-            torch.tensor(np.array(val_tgt))
-        )
+        logging.info(f"[Walk-Forward] Train samples: {len(train_seq)}, Validation samples: {len(val_seq)}")
 
+        train_dataset = MarketDataset(torch.tensor(np.array(train_seq)), torch.tensor(np.array(train_tgt)))
+        val_dataset = MarketDataset(torch.tensor(np.array(val_seq)), torch.tensor(np.array(val_tgt)))
 
         train_loader = DataLoader(train_dataset, batch_size=min(BATCH_SIZE, len(train_dataset)), shuffle=True)
         val_loader = DataLoader(val_dataset, batch_size=min(BATCH_SIZE, len(val_dataset)), shuffle=False)
 
         model = create_model(model_input_dim)
-        trained_model = train_model_with_validation(model, train_loader, val_loader, epochs=5)
+        trained_model = train_model_with_validation(model, train_loader, val_loader, epochs=epochs)
 
-        test_mask = (features.index >= test_start_date) & (features.index <= test_end_date)
-        test_features = features.loc[test_mask]
-        test_returns = returns.loc[test_mask]
+        test_features = features.iloc[test_start_idx:test_end_idx+1]
+        test_returns = returns.iloc[test_start_idx:test_end_idx+1]
         portfolio_values = [INITIAL_CAPITAL]
 
         trained_model.eval()
@@ -104,10 +101,10 @@ def run_walkforward_test_with_validation(
 
         if len(portfolio_values) > 1:
             period_metrics = calculate_performance_metrics(portfolio_values)
-            print(f"[Walk-Forward] Period Performance:")
-            print(f"  CAGR: {period_metrics['cagr']:.2%}")
-            print(f"  Sharpe: {period_metrics['sharpe_ratio']:.2f}")
-            print(f"  Max Drawdown: {period_metrics['max_drawdown']:.2%}")
+            logging.info(f"[Walk-Forward] Period Performance:")
+            logging.info(f"  CAGR: {period_metrics['cagr']:.2%}")
+            logging.info(f"  Sharpe: {period_metrics['sharpe_ratio']:.2f}")
+            logging.info(f"  Max Drawdown: {period_metrics['max_drawdown']:.2%}")
             walkforward_results.append({
                 'start_date': test_start_date,
                 'end_date': test_end_date,
@@ -121,10 +118,17 @@ def run_walkforward_test_with_validation(
         avg_sharpe = np.mean([r['sharpe_ratio'] for r in walkforward_results])
         avg_drawdown = np.mean([r['max_drawdown'] for r in walkforward_results])
 
-        print(f"\n[Walk-Forward] === Aggregate Results Across All Periods ===")
-        print(f"  Average CAGR: {avg_cagr:.2%}")
-        print(f"  Average Sharpe Ratio: {avg_sharpe:.2f}")
-        print(f"  Average Max Drawdown: {avg_drawdown:.2%}")
-        print(f"  Number of Test Periods: {len(walkforward_results)}")
+        logging.info(f"\n[Walk-Forward] === Aggregate Results Across All Periods ===")
+        logging.info(f"  Average CAGR: {avg_cagr:.2%}")
+        logging.info(f"  Average Sharpe Ratio: {avg_sharpe:.2f}")
+        logging.info(f"  Average Max Drawdown: {avg_drawdown:.2%}")
+        logging.info(f"  Number of Test Periods: {len(walkforward_results)}")
     else:
-        print("[Walk-Forward] No valid test periods completed.")
+        logging.warning("[Walk-Forward] No valid test periods completed.")
+
+    if save_results_path and walkforward_results:
+        df_results = pd.DataFrame(walkforward_results)
+        df_results.to_csv(save_results_path, index=False)
+        logging.info(f"[Walk-Forward] Results saved to {save_results_path}")
+
+    return walkforward_results
