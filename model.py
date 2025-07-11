@@ -1,5 +1,4 @@
-import os
-import torch
+import os, torch, sys
 import numpy as np
 import torch.nn as nn
 from torch.utils.data import  DataLoader
@@ -200,6 +199,9 @@ def load_trained_model(input_dimension, config, path=MODEL_PATH):
     model.eval()
     print(f"[Model] Loaded trained model from {path}")
     return model
+
+import sys
+
 if __name__ == "__main__":
     from backtest import run_backtest
     config = load_config()
@@ -209,7 +211,9 @@ if __name__ == "__main__":
         trained_model = load_trained_model(test_dataset[0][0].shape[1], config)
     else:
         trained_model = train_main_model(config)
-    run_backtest(
+    
+    # Run backtest and capture strategy and benchmark metrics
+    results = run_backtest(
         device=DEVICE,
         initial_capital=config["INITIAL_CAPITAL"],
         split_date=config["SPLIT_DATE"],
@@ -227,5 +231,20 @@ if __name__ == "__main__":
         config=config,
         retrain=config["RETRAIN"]
     )
+    
+    sharpe_ratio = results.get("strategy_sharpe", float('nan'))
+    max_drawdown = results.get("strategy_max_drawdown", float('nan'))
+    benchmark_sharpe = results.get("benchmark_sharpe", float('nan'))
+    benchmark_drawdown = results.get("benchmark_max_drawdown", float('nan'))
+    performance_variance = results.get("performance_variance", {})
 
+    print(f"Sharpe Ratio: Strategy: {sharpe_ratio * 100:.6f}%")
+    print(f"Max Drawdown: Strategy: {max_drawdown * 100:.6f}%")
+    print(f"Sharpe Ratio: Benchmark: {benchmark_sharpe * 100:.6f}%")
+    print(f"Max Drawdown: Benchmark: {benchmark_drawdown * 100:.6f}%")
 
+    print("Performance Variance (Std Across Chunks):")
+    for k, v in performance_variance.items():
+        print(f"{k}: ±{v * 100:.6f}%")
+
+    sys.stdout.flush()
