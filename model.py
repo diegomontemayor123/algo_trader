@@ -265,11 +265,11 @@ if __name__ == "__main__":
             print("[Debug] strategy_equity_curve contains Infs")
     # === End Debug Addition ===
 
-    sharpe_ratio = results.get("strategy_sharpe", float('nan'))
-    max_drawdown = results.get("strategy_max_drawdown", float('nan'))
-    benchmark_sharpe = results.get("benchmark_sharpe", float('nan'))
-    benchmark_drawdown = results.get("benchmark_max_drawdown", float('nan'))
-    performance_variance = results.get("performance_variance", {})
+    sharpe_ratio = results["portfolio"].get("sharpe_ratio", float('nan'))
+    max_drawdown = results["portfolio"].get("max_drawdown", float('nan'))
+    benchmark_sharpe = results["benchmark"].get("sharpe_ratio", float('nan'))
+    benchmark_drawdown = results["benchmark"].get("max_drawdown", float('nan'))
+
 
     print(f"Sharpe Ratio: Strategy: {sharpe_ratio * 100:.6f}%")
     print(f"Max Drawdown: Strategy: {max_drawdown * 100:.6f}%")
