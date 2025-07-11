@@ -26,41 +26,58 @@ def load_config():
     list_keys = {"FEATURES", "TICKERS"}
     date_keys = {"SPLIT_DATE", "START_DATE", "END_DATE"}
 
+    def parse_bool(val):
+        if isinstance(val, bool):
+            return val
+        if isinstance(val, str):
+            val_lower = val.lower()
+            if val_lower in ('1', 'true', 'yes'):
+                return True
+            elif val_lower in ('0', 'false', 'no'):
+                return False
+            else:
+                raise ValueError(f"Cannot parse boolean value from string '{val}'")
+        return bool(val)
+
     def parse_value(key, val):
         if key in float_keys:
             return float(val)
         elif key in int_keys:
             return int(val)
         elif key in bool_keys:
-            return bool(int(val))
+            return parse_bool(val)
         elif key in list_keys:
-            return val.split(",") if isinstance(val, str) else val
+            # Accept list or comma-separated string
+            if isinstance(val, str):
+                return [x.strip() for x in val.split(",") if x.strip()]
+            elif isinstance(val, list):
+                return val
+            else:
+                raise ValueError(f"Expected list or comma-separated string for key '{key}', got {type(val)}")
         elif key in date_keys:
             return pd.Timestamp(val)
         return val
 
-    # Identify missing keys in environment variables
-    missing_env_keys = [k for k in keys if k not in os.environ]
+    # Consider missing if not set or empty string
+    missing_env_keys = [k for k in keys if not os.environ.get(k)]
 
     if not missing_env_keys:
-        # All keys present in environment, parse from env
         print("[Config] Loading configuration from environment variables.")
         config = {}
         for key in keys:
             val = os.environ.get(key)
-            if val is None:
+            if val is None or val == "":
                 raise ValueError(f"[ENV Missing] Required key: {key}")
             config[key] = parse_value(key, val)
         return config
 
-    # Fallback: Load from JSON file
+    # Fallback: load from JSON
     if not os.path.exists("hyperparameters.json"):
         raise FileNotFoundError("Configuration file 'hyperparameters.json' not found and some environment variables missing.")
 
     with open("hyperparameters.json", "r") as f:
         config_raw = json.load(f)
 
-    # Identify missing keys in JSON as well
     missing_json_keys = [k for k in keys if k not in config_raw]
 
     if missing_json_keys:
@@ -70,8 +87,9 @@ def load_config():
     print("[Config] Loading configuration from JSON file 'hyperparameters.json'.")
     config = {}
     for key in keys:
-        # Prefer env var if exists, else use JSON value
         val = os.environ.get(key, config_raw[key])
+        if val == "":
+            raise ValueError(f"Key '{key}' is empty in environment or JSON.")
         config[key] = parse_value(key, val)
 
     return config

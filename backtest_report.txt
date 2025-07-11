@@ -1,0 +1,8 @@
+=== Combined Performance Over Full Period ===
+Cagr: Strategy 28.50%, Benchmark 35.07%
+Sharpe_Ratio: Strategy 102.34%, Benchmark 110.08%
+Max_Drawdown: Strategy -46.66%, Benchmark -49.38%
+
+=== Per-Chunk Metrics ===
+
+=== Std Dev of Metrics Across Chunks ===
