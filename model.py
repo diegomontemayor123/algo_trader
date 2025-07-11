@@ -1,15 +1,14 @@
 import os
 import torch
 import numpy as np
-import pandas as pd
 import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import  DataLoader
 from features import FTR_FUNC
-from backtest import run_backtest
 from compute_features import *
 from torch.optim.lr_scheduler import _LRScheduler
 from loadconfig import load_config
 import matplotlib.pyplot as plt
+from data_prep import *
 
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 MODEL_PATH = "trained_model.pth"
@@ -19,17 +18,6 @@ torch.manual_seed(SEED)
 np.random.seed(SEED)
 if torch.cuda.is_available():
     torch.cuda.manual_seed_all(SEED)
-
-class MarketDataset(Dataset):
-    def __init__(self, features, returns):
-        self.features = features
-        self.returns = returns
-
-    def __len__(self):
-        return len(self.features)
-
-    def __getitem__(self, index):
-        return self.features[index], self.returns[index]
 
 class TransformerTrader(nn.Module):
     def __init__(self, input_dim, num_heads, num_layers, dropout, seq_len, tickers, feature_attention_enabled):
@@ -86,46 +74,6 @@ def split_train_validation(sequences, targets, validation_ratio):
     train_size = total_samples - val_size
     return (sequences[:train_size], targets[:train_size],
             sequences[train_size:], targets[train_size:])
-
-def create_sequences(features, returns, lookback, predict_days, tickers):
-    sequences = []
-    targets = []
-    indices = []
-    for i in range(len(features) - lookback - predict_days):
-        feature_window = features.iloc[i:i + lookback].values.astype(np.float32)
-        normalized_window = normalize_features(feature_window)
-        if np.isnan(normalized_window).any():
-            print(f"[Sequence][Warning] NaN detected in normalized features at index {i}")
-        future_returns = returns.iloc[i + lookback:i + lookback + predict_days].mean().values.astype(np.float32)
-        if len(future_returns) != len(tickers):
-            print(f"[Sequence][Warning] Future returns length mismatch at index {i}: {future_returns.shape}")
-        sequences.append(normalized_window)
-        targets.append(future_returns)
-        indices.append(features.index[i + lookback])
-    return sequences, targets, indices
-
-def prepare_main_datasets(features, returns, config):
-    sequences, targets, seq_dates = create_sequences(features,returns,config["LOOKBACK"],config["PREDICT_DAYS"],config["TICKERS"])
-
-    if len(set(seq_dates)) != len(seq_dates):
-        print("[Data][Warning] Duplicate dates found in sequence dates.")
-    if any(pd.isna(seq_dates)):
-        print("[Data][Warning] NaN detected in sequence dates.")
-    train_sequences, train_targets, test_sequences, test_targets = [], [], [], []
-    split_date = pd.to_datetime(config["SPLIT_DATE"])
-    for seq, tgt, date in zip(sequences, targets, pd.to_datetime(seq_dates)):
-        if date < split_date:
-            train_sequences.append(seq)
-            train_targets.append(tgt)
-        else:
-            test_sequences.append(seq)
-            test_targets.append(tgt)
-    train_seq, train_tgt, val_seq, val_tgt = split_train_validation(train_sequences, train_targets, config["VAL_SPLIT"])
-    train_dataset = MarketDataset(torch.tensor(np.array(train_seq)), torch.tensor(np.array(train_tgt)))
-    val_dataset = MarketDataset(torch.tensor(np.array(val_seq)), torch.tensor(np.array(val_tgt)))
-    test_dataset = MarketDataset(torch.tensor(np.array(test_sequences)), torch.tensor(np.array(test_targets)))
-    print(f"[Data] Training samples: {len(train_dataset)}, Validation samples: {len(val_dataset)}, Test samples: {len(test_dataset)}")
-    return train_dataset, val_dataset, test_dataset
 
 class DifferentiableSharpeLoss(nn.Module):
     def __init__(self, l2_lambda=1e-4, loss_min_mean=0.0, loss_return_penalty=0.0, l2_penalty_enabled=False, return_penalty_enabled=False):
@@ -253,6 +201,7 @@ def load_trained_model(input_dimension, config, path=MODEL_PATH):
     print(f"[Model] Loaded trained model from {path}")
     return model
 if __name__ == "__main__":
+    from backtest import run_backtest
     config = load_config()
     features, returns = compute_features(config["TICKERS"], config["START_DATE"], config["END_DATE"], config["FEATURES"])
     _, _, test_dataset = prepare_main_datasets(features, returns, config)
@@ -260,6 +209,23 @@ if __name__ == "__main__":
         trained_model = load_trained_model(test_dataset[0][0].shape[1], config)
     else:
         trained_model = train_main_model(config)
-    run_backtest(device=DEVICE,initial_capital=config["INITIAL_CAPITAL"],split_date=config["SPLIT_DATE"],lookback=config["LOOKBACK"],max_leverage=config["MAX_LEVERAGE"],compute_features=compute_features,normalize_features=normalize_features,tickers=config["TICKERS"],start_date=config["START_DATE"],end_date=config["END_DATE"],features=config["FEATURES"],test_chunk_months=config["TEST_CHUNK_MONTHS"],model=trained_model,plot=True)
+    run_backtest(
+        device=DEVICE,
+        initial_capital=config["INITIAL_CAPITAL"],
+        split_date=config["SPLIT_DATE"],
+        lookback=config["LOOKBACK"],
+        max_leverage=config["MAX_LEVERAGE"],
+        compute_features=compute_features,
+        normalize_features=normalize_features,
+        tickers=config["TICKERS"],
+        start_date=config["START_DATE"],
+        end_date=config["END_DATE"],
+        features=config["FEATURES"],
+        test_chunk_months=config["TEST_CHUNK_MONTHS"],
+        model=trained_model,
+        plot=True,
+        config=config,
+        retrain=config["RETRAIN"]
+    )
 
 

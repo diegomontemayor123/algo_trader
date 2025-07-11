@@ -3,27 +3,15 @@ from optuna.samplers import TPESampler
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
-BASE_DATE = datetime(2000, 1, 1)
-def days_to_date(days):
-    return (datetime(2000, 1, 1) + timedelta(days=days)).strftime("%Y-%m-%d")
-def run_experiment(trial):
-    start_min_days = (datetime(2012, 1, 1) - BASE_DATE).days
-    start_max_days = (datetime(2018, 1, 1) - BASE_DATE).days
-    end_min_days = (datetime(2020, 1, 1) - BASE_DATE).days
-    end_max_days = (datetime(2025, 5, 29) - BASE_DATE).days
-    start_days = trial.suggest_int("START_DATE_DAYS", start_min_days, start_max_days)
-    end_days = trial.suggest_int("END_DATE_DAYS", max(start_days + 365 * 2, end_min_days), end_max_days) 
-    start_date = days_to_date(start_days)
-    end_date = days_to_date(end_days)
-    end_date_dt = datetime.strptime(end_date, "%Y-%m-%d")
-    split_date_dt = end_date_dt - relativedelta(years=2)
-    split_date = split_date_dt.strftime("%Y-%m-%d")
 
+def run_experiment(trial):
     config = {
         "EARLY_STOP_PATIENCE": trial.suggest_int("EARLY_STOP_PATIENCE", 2, 5),
         "INITIAL_CAPITAL": trial.suggest_float("INITIAL_CAPITAL", 100.0, 100.0),
         "TICKERS": trial.suggest_categorical("TICKERS", ["AAPL,MSFT,GOOGL,AMZN,META,NVDA,TSLA"]),
-        "START_DATE": start_date,"END_DATE": end_date,"SPLIT_DATE": split_date,
+        "START_DATE": trial.suggest_categorical("START_DATE", ["2012-01-01", "2013-01-01", "2014-01-01", "2015-01-01", "2016-01-01", "2017-01-01", "2018-01-01"]),
+        "END_DATE": trial.suggest_categorical("END_DATE", ["2023-01-01", "2024-01-01", "2025-05-29"]),
+        "SPLIT_DATE": trial.suggest_categorical("SPLIT_DATE", ["2018-05-01", "2019-05-01", "2020-05-01", "2021-05-01", "2022-05-01",]),
         "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", 0.05, 0.2),
         "PREDICT_DAYS": trial.suggest_int("PREDICT_DAYS", 1, 10),
         "LOOKBACK": trial.suggest_int("LOOKBACK", 50, 120),
@@ -42,10 +30,8 @@ def run_experiment(trial):
         "LOSS_MIN_MEAN": trial.suggest_float("LOSS_MIN_MEAN", 0.0001, 0.1),
         "LOSS_RETURN_PENALTY": trial.suggest_float("LOSS_RETURN_PENALTY", 0.01, 1.0),
         "TEST_CHUNK_MONTHS": trial.suggest_int("TEST_CHUNK_MONTHS", 6,6),
+        "RETRAIN": trial.suggest_int("RETRAIN",0,1)
     }
-
-
-    
     env = os.environ.copy()
     for k, v in config.items():
         env[k] = str(v)
