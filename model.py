@@ -1,7 +1,9 @@
-import os, torch, sys
+import os
+import torch
+import sys
 import numpy as np
 import torch.nn as nn
-from torch.utils.data import  DataLoader
+from torch.utils.data import DataLoader
 from features import FTR_FUNC
 from compute_features import *
 from torch.optim.lr_scheduler import _LRScheduler
@@ -86,7 +88,7 @@ class DifferentiableSharpeLoss(nn.Module):
         returns = (portfolio_weights * target_returns).sum(dim=1)
         mean_return = torch.mean(returns)
         std_return = torch.std(returns) + 1e-6
-        sharpe_ratio = mean_return / std_return
+        sharpe_ratio = mean_return / (std_return + 1e-6)
         low_return_penalty = torch.clamp(self.loss_min_mean - mean_return, min=0.0)
         loss = -sharpe_ratio + self.loss_return_penalty * low_return_penalty * self.return_penalty_enabled
         if self.l2_penalty_enabled and model is not None:
@@ -200,8 +202,6 @@ def load_trained_model(input_dimension, config, path=MODEL_PATH):
     print(f"[Model] Loaded trained model from {path}")
     return model
 
-import sys
-
 if __name__ == "__main__":
     from backtest import run_backtest
     config = load_config()
@@ -231,7 +231,40 @@ if __name__ == "__main__":
         config=config,
         retrain=config["RETRAIN"]
     )
-    
+
+    # === DEBUG ADDITION ===
+    def debug_metric(name, val):
+        if val is None:
+            print(f"[Debug] {name} is None")
+        elif isinstance(val, float) and (np.isnan(val) or np.isinf(val)):
+            print(f"[Debug] {name} is NaN or Inf")
+        else:
+            print(f"[Debug] {name} = {val}")
+
+    debug_metric("strategy_sharpe", results.get("strategy_sharpe"))
+    debug_metric("strategy_max_drawdown", results.get("strategy_max_drawdown"))
+    debug_metric("benchmark_sharpe", results.get("benchmark_sharpe"))
+    debug_metric("benchmark_max_drawdown", results.get("benchmark_max_drawdown"))
+
+    if "strategy_returns" in results:
+        strat_returns = results["strategy_returns"]
+        print(f"[Debug] strategy_returns length: {len(strat_returns)}")
+        print(f"[Debug] strategy_returns sample: {strat_returns[:5]}")
+        if np.any(np.isnan(strat_returns)):
+            print("[Debug] strategy_returns contains NaNs")
+        if np.any(np.isinf(strat_returns)):
+            print("[Debug] strategy_returns contains Infs")
+
+    if "strategy_equity_curve" in results:
+        equity = results["strategy_equity_curve"]
+        print(f"[Debug] strategy_equity_curve length: {len(equity)}")
+        print(f"[Debug] strategy_equity_curve sample: {equity[:5]}")
+        if np.any(np.isnan(equity)):
+            print("[Debug] strategy_equity_curve contains NaNs")
+        if np.any(np.isinf(equity)):
+            print("[Debug] strategy_equity_curve contains Infs")
+    # === End Debug Addition ===
+
     sharpe_ratio = results.get("strategy_sharpe", float('nan'))
     max_drawdown = results.get("strategy_max_drawdown", float('nan'))
     benchmark_sharpe = results.get("benchmark_sharpe", float('nan'))
