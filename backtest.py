@@ -137,6 +137,30 @@ def run_backtest(
 
         logging.info("[Backtest] Completed backtest without retraining.")
 
+        # --- ADDED: Calculate per-chunk metrics after full backtest run (no retrain) ---
+        weights_df = pd.DataFrame(daily_weights)
+        weights_df["total_exposure"] = weights_df.abs().sum(axis=1)
+        weights_df.index.name = "Date"
+
+        portfolio_series = pd.Series(portfolio_values[1:], index=weights_df.index)
+        benchmark_series = pd.Series(benchmark_values[1:], index=weights_df.index)
+
+        for idx, (chunk_start, chunk_end) in enumerate(chunks):
+            chunk_portfolio = portfolio_series.loc[chunk_start:chunk_end]
+            chunk_benchmark = benchmark_series.loc[chunk_start:chunk_end]
+            if len(chunk_portfolio) < 2:
+                continue
+            portfolio_metrics = calculate_performance_metrics(chunk_portfolio)
+            benchmark_metrics = calculate_performance_metrics(chunk_benchmark)
+            all_portfolio_metrics.append(portfolio_metrics)
+            all_benchmark_metrics.append(benchmark_metrics)
+            logging.info(f"[Backtest] Chunk {idx+1}: Portfolio Metrics: {portfolio_metrics}")
+            logging.info(f"[Backtest] Chunk {idx+1}: Benchmark Metrics: {benchmark_metrics}")
+
+        metrics_df = pd.DataFrame(all_portfolio_metrics)
+        metrics_std = metrics_df.std()
+        # --- END ADDED ---
+
     else:
         logging.info(f"[Backtest] Running backtest with retraining every {test_chunk_months} months in chunks.")
         # Retrain at start of each chunk (year)
@@ -242,6 +266,9 @@ def run_backtest(
                 plt.close()
                 logging.info(f"[Backtest] Chunk {idx+1}: Saved equity curve plot.")
 
+        metrics_df = pd.DataFrame(all_portfolio_metrics)
+        metrics_std = metrics_df.std()
+
     # Calculate combined metrics over full period
     weights_df = pd.DataFrame(daily_weights)
     weights_df["total_exposure"] = weights_df.abs().sum(axis=1)
@@ -252,9 +279,6 @@ def run_backtest(
 
     combined_portfolio_metrics = calculate_performance_metrics(portfolio_series)
     combined_benchmark_metrics = calculate_performance_metrics(benchmark_series)
-
-    metrics_df = pd.DataFrame(all_portfolio_metrics)
-    metrics_std = metrics_df.std()
 
     report_path = "backtest_report.txt"
     with open(report_path, "w") as f:
