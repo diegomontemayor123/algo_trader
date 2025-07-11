@@ -277,7 +277,8 @@ if __name__ == "__main__":
     print(f"Max Drawdown: Benchmark: {benchmark_drawdown * 100:.6f}%")
 
     print("Performance Variance (Std Across Chunks):")
-    for k, v in performance_variance.items():
+    for k, v in results["performance_variance"].items():
         print(f"{k}: ±{v * 100:.6f}%")
+
 
     sys.stdout.flush()
