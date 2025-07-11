@@ -121,13 +121,7 @@ def create_sequences(features, returns, lookback, predict_days, tickers):
 
 
 def prepare_main_datasets(features, returns, config):
-    sequences, targets, seq_dates = create_sequences(
-        features,
-        returns,
-        config["LOOKBACK"],
-        config["PREDICT_DAYS"],
-        config["TICKERS"]
-    )
+    sequences, targets, seq_dates = create_sequences(features,returns,config["LOOKBACK"],config["PREDICT_DAYS"],config["TICKERS"])
 
     # Integrity checks
     if len(set(seq_dates)) != len(seq_dates):
@@ -154,7 +148,6 @@ def prepare_main_datasets(features, returns, config):
 
     print(f"[Data] Training samples: {len(train_dataset)}, Validation samples: {len(val_dataset)}, Test samples: {len(test_dataset)}")
     return train_dataset, val_dataset, test_dataset
-
 
 class DifferentiableSharpeLoss(nn.Module):
     def __init__(self, l2_lambda=1e-4, loss_min_mean=0.0, loss_return_penalty=0.0, l2_penalty_enabled=False, return_penalty_enabled=False):
@@ -231,33 +224,25 @@ def train_model_with_validation(model, train_loader, val_loader, config):
             abs_sum = torch.sum(torch.abs(raw_weights), dim=1, keepdim=True) + 1e-6
             scaling_factor = torch.clamp(config["MAX_LEVERAGE"] / abs_sum, max=1.0)
             normalized_weights = raw_weights * scaling_factor
-
             loss = loss_function(normalized_weights, batch_returns, model)
-
             if torch.isnan(loss) or torch.isinf(loss):
                 print("[Training][Error] Loss is NaN or Inf during training step")
-
             optimizer.zero_grad()
             loss.backward()
-
             nan_grads = False
             for name, param in model.named_parameters():
                 if param.grad is not None and (torch.isnan(param.grad).any() or torch.isinf(param.grad).any()):
                     print(f"[Training][Error] NaN or Inf detected in gradients of {name}")
                     nan_grads = True
-
             if nan_grads:
                 print("[Training][Error] Stopping training due to invalid gradients")
                 break
-
             optimizer.step()
             learning_scheduler.step()
             current_lr = optimizer.param_groups[0]['lr']
             lrs.append(current_lr)
             train_losses.append(loss.item())
-
         avg_train_loss = np.mean(train_losses)
-
         model.eval()
         val_portfolio_returns = []
 
@@ -265,7 +250,6 @@ def train_model_with_validation(model, train_loader, val_loader, config):
             for batch_features, batch_returns in val_loader:
                 batch_features = batch_features.to(DEVICE, non_blocking=True)
                 batch_returns = batch_returns.to(DEVICE, non_blocking=True)
-
                 raw_weights = model(batch_features)
                 weight_sum = torch.sum(torch.abs(raw_weights), dim=1, keepdim=True) + 1e-6
                 scaling_factor = torch.clamp(config["MAX_LEVERAGE"] / weight_sum, max=1.0)
@@ -279,7 +263,6 @@ def train_model_with_validation(model, train_loader, val_loader, config):
         avg_val_loss = -(mean_ret / std_ret)
 
         print(f"[Training] Train Loss: {avg_train_loss:.4f} | Validation: {abs(avg_val_loss):.4f}")
-
         if avg_val_loss < best_val_loss:
             best_val_loss = avg_val_loss
             patience_counter = 0
@@ -299,20 +282,16 @@ def train_model_with_validation(model, train_loader, val_loader, config):
     plt.savefig('learning_rate_schedule.png')
     plt.close()
     print("[Training] Saved learning rate schedule plot as 'learning_rate_schedule.png'")
-
     return model
 
 
 def train_main_model(config):
     features, returns = compute_features(config["TICKERS"], config["START_DATE"], config["END_DATE"], config["FEATURES"])
     train_dataset, val_dataset, test_dataset = prepare_main_datasets(features, returns, config)
-
     train_loader = DataLoader(train_dataset, batch_size=config["BATCH_SIZE"], shuffle=True, num_workers=4)
     val_loader = DataLoader(val_dataset, batch_size=config["BATCH_SIZE"], shuffle=False, num_workers=4)
-
     model = create_model(train_dataset[0][0].shape[1], config)
     trained_model = train_model_with_validation(model, train_loader, val_loader, config)
-
     torch.save(trained_model.state_dict(), MODEL_PATH)
     print(f"[Model] Trained model saved to {MODEL_PATH}")
     return trained_model
@@ -325,56 +304,9 @@ def load_trained_model(input_dimension, config, path=MODEL_PATH):
     print(f"[Model] Loaded trained model from {path}")
     return model
 
-
-def calculate_performance_metrics(equity_curve):
-    equity_curve = pd.Series(equity_curve).dropna()
-
-    if len(equity_curve) < 2:
-        print("[Performance] Not enough data points to calculate metrics.")
-        return {'cagr': 0.0, 'sharpe_ratio': 0.0, 'max_drawdown': 0.0}
-
-    returns = equity_curve.pct_change().dropna()
-
-    if returns.empty or equity_curve.iloc[0] <= 0:
-        print("[Performance] Invalid returns or initial capital.")
-        return {'cagr': 0.0, 'sharpe_ratio': 0.0, 'max_drawdown': 0.0}
-
-    total_return = equity_curve.iloc[-1] / equity_curve.iloc[0]
-    years = len(returns) / 252
-
-    if years <= 0:
-        print("[Performance] Invalid time span (years <= 0).")
-        return {'cagr': 0.0, 'sharpe_ratio': 0.0, 'max_drawdown': 0.0}
-
-    try:
-        cagr = total_return ** (1 / years) - 1
-    except Exception as e:
-        print(f"[Performance] Error calculating CAGR: {e}")
-        cagr = 0.0
-
-    std_returns = returns.std()
-
-    if std_returns == 0 or np.isnan(std_returns):
-        print("[Performance] Std dev of returns is zero or NaN — Sharpe set to 0")
-        sharpe_ratio = 0.0
-    else:
-        sharpe_ratio = returns.mean() / std_returns * np.sqrt(252)
-
-    peak_values = np.maximum.accumulate(equity_curve)
-    drawdowns = (equity_curve - peak_values) / peak_values
-    max_drawdown = drawdowns.min()
-
-    return {
-        'cagr': float(cagr),
-        'sharpe_ratio': float(sharpe_ratio),
-        'max_drawdown': float(max_drawdown)
-    }
-
-
 if __name__ == "__main__":
     config = load_config()
 
-    # Load features and targets, prepare datasets
     features, returns = compute_features(config["TICKERS"], config["START_DATE"], config["END_DATE"], config["FEATURES"])
     _, _, test_dataset = prepare_main_datasets(features, returns, config)
 
@@ -383,21 +315,7 @@ if __name__ == "__main__":
     else:
         trained_model = train_main_model(config)
 
-    run_backtest(
-    device=DEVICE,
-    initial_capital=config["INITIAL_CAPITAL"],
-    split_date=config["SPLIT_DATE"],
-    lookback=config["LOOKBACK"],
-    max_leverage=config["MAX_LEVERAGE"],
-    compute_features=compute_features,
-    normalize_features=normalize_features,
-    calculate_performance_metrics=calculate_performance_metrics,
-    tickers=config["TICKERS"],
-    start_date=config["START_DATE"],
-    end_date=config["END_DATE"],
-    features=config["FEATURES"],
-    model=trained_model,
-    plot=True
+    run_backtest(device=DEVICE,initial_capital=config["INITIAL_CAPITAL"],split_date=config["SPLIT_DATE"],lookback=config["LOOKBACK"],max_leverage=config["MAX_LEVERAGE"],compute_features=compute_features,normalize_features=normalize_features,tickers=config["TICKERS"],start_date=config["START_DATE"],end_date=config["END_DATE"],features=config["FEATURES"],model=trained_model,plot=True
 )
 
 
