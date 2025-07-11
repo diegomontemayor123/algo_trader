@@ -13,7 +13,7 @@ from data_prep import *
 
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 MODEL_PATH = "trained_model_new.pth"
-LOAD_MODEL = True
+LOAD_MODEL = False
 SEED = 42
 torch.manual_seed(SEED)
 np.random.seed(SEED)
