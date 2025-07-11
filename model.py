@@ -15,13 +15,10 @@ DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 MODEL_PATH = "trained_model.pth"
 LOAD_MODEL = True
 SEED = 42
-
-# Set seeds for reproducibility
 torch.manual_seed(SEED)
 np.random.seed(SEED)
 if torch.cuda.is_available():
     torch.cuda.manual_seed_all(SEED)
-
 
 class MarketDataset(Dataset):
     def __init__(self, features, returns):
@@ -34,7 +31,6 @@ class MarketDataset(Dataset):
     def __getitem__(self, index):
         return self.features[index], self.returns[index]
 
-
 class TransformerTrader(nn.Module):
     def __init__(self, input_dim, num_heads, num_layers, dropout, seq_len, tickers, feature_attention_enabled):
         super().__init__()
@@ -42,7 +38,6 @@ class TransformerTrader(nn.Module):
         self.feature_attention_enabled = feature_attention_enabled
         self.pos_embedding = nn.Parameter(torch.randn(1, seq_len, input_dim))
         self.feature_weights = nn.Parameter(torch.ones(input_dim))
-
         encoder_layer = nn.TransformerEncoderLayer(
             d_model=input_dim,
             nhead=num_heads,
@@ -50,14 +45,12 @@ class TransformerTrader(nn.Module):
             batch_first=True
         )
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
-
         self.mlp_head = nn.Sequential(
             nn.Linear(input_dim, 64),
             nn.PReLU(),
             nn.Dropout(dropout),
             nn.Linear(64, len(tickers))
         )
-
     def forward(self, x):
         x = x * self.feature_weights * self.feature_attention_enabled
         x = x + self.pos_embedding
@@ -66,7 +59,6 @@ class TransformerTrader(nn.Module):
         weights = self.mlp_head(last_hidden)
         return weights
 
-
 def calculate_heads(input_dim, max_heads):
     if input_dim % max_heads != 0:
         for heads in range(max_heads, 0, -1):
@@ -74,7 +66,6 @@ def calculate_heads(input_dim, max_heads):
                 return heads
     else:
         return max_heads
-
 
 def create_model(input_dimension, config):
     heads = calculate_heads(input_dimension, config["MAX_HEADS"])
@@ -89,7 +80,6 @@ def create_model(input_dimension, config):
         feature_attention_enabled=config["FEATURE_ATTENTION_ENABLED"]
     ).to(DEVICE, non_blocking=True)
 
-
 def split_train_validation(sequences, targets, validation_ratio):
     total_samples = len(sequences)
     val_size = int(total_samples * validation_ratio)
@@ -97,41 +87,32 @@ def split_train_validation(sequences, targets, validation_ratio):
     return (sequences[:train_size], targets[:train_size],
             sequences[train_size:], targets[train_size:])
 
-
 def create_sequences(features, returns, lookback, predict_days, tickers):
     sequences = []
     targets = []
     indices = []
-
     for i in range(len(features) - lookback - predict_days):
         feature_window = features.iloc[i:i + lookback].values.astype(np.float32)
         normalized_window = normalize_features(feature_window)
         if np.isnan(normalized_window).any():
             print(f"[Sequence][Warning] NaN detected in normalized features at index {i}")
-
         future_returns = returns.iloc[i + lookback:i + lookback + predict_days].mean().values.astype(np.float32)
         if len(future_returns) != len(tickers):
             print(f"[Sequence][Warning] Future returns length mismatch at index {i}: {future_returns.shape}")
-
         sequences.append(normalized_window)
         targets.append(future_returns)
         indices.append(features.index[i + lookback])
-
     return sequences, targets, indices
-
 
 def prepare_main_datasets(features, returns, config):
     sequences, targets, seq_dates = create_sequences(features,returns,config["LOOKBACK"],config["PREDICT_DAYS"],config["TICKERS"])
 
-    # Integrity checks
     if len(set(seq_dates)) != len(seq_dates):
         print("[Data][Warning] Duplicate dates found in sequence dates.")
     if any(pd.isna(seq_dates)):
         print("[Data][Warning] NaN detected in sequence dates.")
-
     train_sequences, train_targets, test_sequences, test_targets = [], [], [], []
     split_date = pd.to_datetime(config["SPLIT_DATE"])
-
     for seq, tgt, date in zip(sequences, targets, pd.to_datetime(seq_dates)):
         if date < split_date:
             train_sequences.append(seq)
@@ -139,13 +120,10 @@ def prepare_main_datasets(features, returns, config):
         else:
             test_sequences.append(seq)
             test_targets.append(tgt)
-
     train_seq, train_tgt, val_seq, val_tgt = split_train_validation(train_sequences, train_targets, config["VAL_SPLIT"])
-
     train_dataset = MarketDataset(torch.tensor(np.array(train_seq)), torch.tensor(np.array(train_tgt)))
     val_dataset = MarketDataset(torch.tensor(np.array(val_seq)), torch.tensor(np.array(val_tgt)))
     test_dataset = MarketDataset(torch.tensor(np.array(test_sequences)), torch.tensor(np.array(test_targets)))
-
     print(f"[Data] Training samples: {len(train_dataset)}, Validation samples: {len(val_dataset)}, Test samples: {len(test_dataset)}")
     return train_dataset, val_dataset, test_dataset
 
@@ -157,69 +135,46 @@ class DifferentiableSharpeLoss(nn.Module):
         self.loss_return_penalty = loss_return_penalty
         self.l2_penalty_enabled = l2_penalty_enabled
         self.return_penalty_enabled = return_penalty_enabled
-
     def forward(self, portfolio_weights, target_returns, model=None):
         returns = (portfolio_weights * target_returns).sum(dim=1)
         mean_return = torch.mean(returns)
         std_return = torch.std(returns) + 1e-6
         sharpe_ratio = mean_return / std_return
-
         low_return_penalty = torch.clamp(self.loss_min_mean - mean_return, min=0.0)
         loss = -sharpe_ratio + self.loss_return_penalty * low_return_penalty * self.return_penalty_enabled
-
         if self.l2_penalty_enabled and model is not None:
             l2_penalty = sum(p.pow(2.0).sum() for p in model.parameters())
             loss += self.l2_lambda * l2_penalty
-
         return loss
-
 
 class TransformerLRScheduler(_LRScheduler):
     def __init__(self, optimizer, d_model, warmup_steps=50, last_epoch=-1):
         self.d_model = d_model
         self.warmup_steps = warmup_steps
         super().__init__(optimizer, last_epoch)
-
     def get_lr(self):
         step = max(self.last_epoch, 1)
         scale = self.d_model ** -0.5
         lr = scale * min(step ** (-0.5), step * (self.warmup_steps ** -1.5))
         return [lr for _ in self.optimizer.param_groups]
 
-
 def train_model_with_validation(model, train_loader, val_loader, config):
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=config["DECAY"])
     total_steps = config["EPOCHS"] * len(train_loader)
     learning_warmup_steps = int(total_steps * config["WARMUP_FRAC"])
     print(f"[Scheduler] Total steps: {total_steps}, LEARNING_WARMUP steps: {learning_warmup_steps}")
-
-    learning_scheduler = TransformerLRScheduler(
-        optimizer, 
-        d_model=model.mlp_head[0].in_features, 
-        warmup_steps=learning_warmup_steps
-    )
-
-    loss_function = DifferentiableSharpeLoss(
-        l2_lambda=1e-4,
-        loss_min_mean=config["LOSS_MIN_MEAN"],
-        loss_return_penalty=config["LOSS_RETURN_PENALTY"],
-        l2_penalty_enabled=config["L2_PENALTY_ENABLED"],
-        return_penalty_enabled=config["RETURN_PENALTY_ENABLED"]
-    )
-
+    learning_scheduler = TransformerLRScheduler(optimizer, d_model=model.mlp_head[0].in_features, warmup_steps=learning_warmup_steps)
+    loss_function = DifferentiableSharpeLoss(l2_lambda=1e-4,loss_min_mean=config["LOSS_MIN_MEAN"],loss_return_penalty=config["LOSS_RETURN_PENALTY"],l2_penalty_enabled=config["L2_PENALTY_ENABLED"],return_penalty_enabled=config["RETURN_PENALTY_ENABLED"])
     best_val_loss = float('inf')
     patience_counter = 0
     lrs = []
-
     for epoch in range(config["EPOCHS"]):
         print(f"[Training] Epoch {epoch + 1}/{config['EPOCHS']}")
         model.train()
         train_losses = []
-
         for batch_features, batch_returns in train_loader:
             batch_features = batch_features.to(DEVICE, non_blocking=True)
             batch_returns = batch_returns.to(DEVICE, non_blocking=True)
-
             raw_weights = model(batch_features)
             abs_sum = torch.sum(torch.abs(raw_weights), dim=1, keepdim=True) + 1e-6
             scaling_factor = torch.clamp(config["MAX_LEVERAGE"] / abs_sum, max=1.0)
@@ -245,7 +200,6 @@ def train_model_with_validation(model, train_loader, val_loader, config):
         avg_train_loss = np.mean(train_losses)
         model.eval()
         val_portfolio_returns = []
-
         with torch.no_grad():
             for batch_features, batch_returns in val_loader:
                 batch_features = batch_features.to(DEVICE, non_blocking=True)
@@ -256,12 +210,10 @@ def train_model_with_validation(model, train_loader, val_loader, config):
                 normalized_weights = raw_weights * scaling_factor
                 portfolio_returns = (normalized_weights * batch_returns).sum(dim=1)
                 val_portfolio_returns.extend(portfolio_returns.cpu().numpy())
-
         val_returns_array = np.array(val_portfolio_returns)
         mean_ret = val_returns_array.mean()
         std_ret = val_returns_array.std() + 1e-6
         avg_val_loss = -(mean_ret / std_ret)
-
         print(f"[Training] Train Loss: {avg_train_loss:.4f} | Validation: {abs(avg_val_loss):.4f}")
         if avg_val_loss < best_val_loss:
             best_val_loss = avg_val_loss
@@ -272,7 +224,6 @@ def train_model_with_validation(model, train_loader, val_loader, config):
             if patience_counter >= config["EARLY_STOP_PATIENCE"]:
                 print("[Training] Early stopping due to val loss plateau")
                 break
-
     plt.figure(figsize=(10, 4))
     plt.plot(lrs)
     plt.title('Learning Rate Schedule During Training')
@@ -283,7 +234,6 @@ def train_model_with_validation(model, train_loader, val_loader, config):
     plt.close()
     print("[Training] Saved learning rate schedule plot as 'learning_rate_schedule.png'")
     return model
-
 
 def train_main_model(config):
     features, returns = compute_features(config["TICKERS"], config["START_DATE"], config["END_DATE"], config["FEATURES"])
@@ -296,26 +246,20 @@ def train_main_model(config):
     print(f"[Model] Trained model saved to {MODEL_PATH}")
     return trained_model
 
-
 def load_trained_model(input_dimension, config, path=MODEL_PATH):
     model = create_model(input_dimension, config)
     model.load_state_dict(torch.load(path, map_location=DEVICE))
     model.eval()
     print(f"[Model] Loaded trained model from {path}")
     return model
-
 if __name__ == "__main__":
     config = load_config()
-
     features, returns = compute_features(config["TICKERS"], config["START_DATE"], config["END_DATE"], config["FEATURES"])
     _, _, test_dataset = prepare_main_datasets(features, returns, config)
-
     if LOAD_MODEL and os.path.exists(MODEL_PATH):
         trained_model = load_trained_model(test_dataset[0][0].shape[1], config)
     else:
         trained_model = train_main_model(config)
-
-    run_backtest(device=DEVICE,initial_capital=config["INITIAL_CAPITAL"],split_date=config["SPLIT_DATE"],lookback=config["LOOKBACK"],max_leverage=config["MAX_LEVERAGE"],compute_features=compute_features,normalize_features=normalize_features,tickers=config["TICKERS"],start_date=config["START_DATE"],end_date=config["END_DATE"],features=config["FEATURES"],model=trained_model,plot=True
-)
+    run_backtest(device=DEVICE,initial_capital=config["INITIAL_CAPITAL"],split_date=config["SPLIT_DATE"],lookback=config["LOOKBACK"],max_leverage=config["MAX_LEVERAGE"],compute_features=compute_features,normalize_features=normalize_features,tickers=config["TICKERS"],start_date=config["START_DATE"],end_date=config["END_DATE"],features=config["FEATURES"],test_chunk_months=config["TEST_CHUNK_MONTHS"],model=trained_model,plot=True)
 
 

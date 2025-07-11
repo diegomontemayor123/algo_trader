@@ -11,7 +11,6 @@ def run_experiment(trial):
     start_max_days = (datetime(2018, 1, 1) - BASE_DATE).days
     end_min_days = (datetime(2020, 1, 1) - BASE_DATE).days
     end_max_days = (datetime(2025, 5, 29) - BASE_DATE).days
-
     start_days = trial.suggest_int("START_DATE_DAYS", start_min_days, start_max_days)
     end_days = trial.suggest_int("END_DATE_DAYS", max(start_days + 365 * 2, end_min_days), end_max_days) 
     start_date = days_to_date(start_days)
@@ -42,6 +41,7 @@ def run_experiment(trial):
         "RETURN_PENALTY_ENABLED": trial.suggest_int("RETURN_PENALTY_ENABLED", 0, 1),
         "LOSS_MIN_MEAN": trial.suggest_float("LOSS_MIN_MEAN", 0.0001, 0.1),
         "LOSS_RETURN_PENALTY": trial.suggest_float("LOSS_RETURN_PENALTY", 0.01, 1.0),
+        "TEST_CHUNK_MONTHS": trial.suggest_int("TEST_CHUNK_MONTHS", 6,6),
     }
 
 
@@ -112,17 +112,27 @@ def main():
     study.optimize(run_experiment, n_trials=30, n_jobs=1)
     
     best = study.best_trial
-    best_params = best.params
-    
+    best_params = best.params.copy()
+
+    # Override with derived date values
+    best_params["START_DATE"] = days_to_date(best_params["START_DATE_DAYS"])
+    best_params["END_DATE"] = days_to_date(best_params["END_DATE_DAYS"])
+    best_params["SPLIT_DATE"] = (
+        datetime.strptime(best_params["END_DATE"], "%Y-%m-%d") - relativedelta(years=2)
+    ).strftime("%Y-%m-%d")
+
+    # Save updated config to JSON
     with open("hyperparameters.json", "w") as f:
         json.dump(best_params, f, indent=4)
 
+    # Print best trial parameters
     print("\n=== Best trial parameters ===")
     for k, v in best_params.items():
         print(f"{k}: {v}")
 
     for m in ["sharpe", "drawdown", "sharpe_variance"]:
         print(f"{m}: {best.user_attrs.get(m, float('nan')):.4f}")
+
 
 if __name__ == "__main__":
     main()

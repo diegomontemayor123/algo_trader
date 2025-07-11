@@ -54,9 +54,9 @@ def run_backtest(
     start_date,
     end_date,
     features,
+    test_chunk_months,
     model=None,
     plot=False,
-    test_chunk_months=6,
     weights_csv_path="daily_portfolio_weights.csv"
 ):
     if model is None:
@@ -221,10 +221,46 @@ def run_backtest(
         plt.savefig("combined_equity_curve.png", dpi=300)
         plt.close()
 
+        # --- Save performance report ---
+    report_lines = []
+
+    report_lines.append("=== Combined Performance Over Full Period ===")
+    for key in combined_portfolio_metrics:
+        report_lines.append(f"{key.replace('_', ' ').title()}:")
+        report_lines.append(f"    Strategy: {combined_portfolio_metrics[key]:.2%}")
+        report_lines.append(f"    Benchmark: {combined_benchmark_metrics[key]:.2%}")
+    report_lines.append("")
+
+    report_lines.append("=== Performance Variance (Std Across Chunks) ===")
+    if isinstance(metrics_std, pd.Series):
+        for key, val in metrics_std.items():
+            report_lines.append(f"  {key.replace('_', ' ').title()}: ±{val:.2%}")
+    else:
+        report_lines.append(f"  Performance Variance: ±{metrics_std:.2%}")
+    report_lines.append("")
+
+    report_lines.append("=== Per-Chunk Metrics ===")
+    for idx, (p_metrics, b_metrics) in enumerate(zip(all_portfolio_metrics, all_benchmark_metrics)):
+        report_lines.append(f"--- Chunk {idx + 1} ---")
+        for metric_name in p_metrics:
+            report_lines.append(f"{metric_name.replace('_', ' ').title()}:")
+            report_lines.append(f"    Strategy: {p_metrics[metric_name]:.2%}")
+            report_lines.append(f"    Benchmark: {b_metrics[metric_name]:.2%}")
+        report_lines.append("")
+
+    # Write to report file
+    report_path = "backtest_report.txt"
+    with open(report_path, "w") as f:
+        f.write("\n".join(report_lines))
+
+    print(f"\n[Backtest] Saved performance report to {report_path}")
+
     return {
         'portfolio': combined_portfolio_metrics,
         'benchmark': combined_benchmark_metrics,
         'combined_equity_curve': portfolio_series,
         'combined_benchmark_equity_curve': benchmark_series,
         'performance_variance': metrics_std.to_dict()
+    
+    
     }
