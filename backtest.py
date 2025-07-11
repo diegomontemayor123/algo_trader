@@ -1,15 +1,12 @@
 import numpy as np
 import torch
 import logging
-logging.basicConfig(level=logging.INFO)
 import matplotlib.pyplot as plt
 import pandas as pd
 from dateutil.relativedelta import relativedelta
 from data_prep import prepare_main_datasets
 from torch.utils.data import DataLoader
 from model import create_model, train_model_with_validation
-
-
 
 def calculate_performance_metrics(equity_curve):
     equity_curve = pd.Series(equity_curve).dropna()

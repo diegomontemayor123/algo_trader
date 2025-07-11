@@ -232,39 +232,6 @@ if __name__ == "__main__":
         retrain=config["RETRAIN"]
     )
 
-    # === DEBUG ADDITION ===
-    def debug_metric(name, val):
-        if val is None:
-            print(f"[Debug] {name} is None")
-        elif isinstance(val, float) and (np.isnan(val) or np.isinf(val)):
-            print(f"[Debug] {name} is NaN or Inf")
-        else:
-            print(f"[Debug] {name} = {val}")
-
-    debug_metric("strategy_sharpe", results.get("strategy_sharpe"))
-    debug_metric("strategy_max_drawdown", results.get("strategy_max_drawdown"))
-    debug_metric("benchmark_sharpe", results.get("benchmark_sharpe"))
-    debug_metric("benchmark_max_drawdown", results.get("benchmark_max_drawdown"))
-
-    if "strategy_returns" in results:
-        strat_returns = results["strategy_returns"]
-        print(f"[Debug] strategy_returns length: {len(strat_returns)}")
-        print(f"[Debug] strategy_returns sample: {strat_returns[:5]}")
-        if np.any(np.isnan(strat_returns)):
-            print("[Debug] strategy_returns contains NaNs")
-        if np.any(np.isinf(strat_returns)):
-            print("[Debug] strategy_returns contains Infs")
-
-    if "strategy_equity_curve" in results:
-        equity = results["strategy_equity_curve"]
-        print(f"[Debug] strategy_equity_curve length: {len(equity)}")
-        print(f"[Debug] strategy_equity_curve sample: {equity[:5]}")
-        if np.any(np.isnan(equity)):
-            print("[Debug] strategy_equity_curve contains NaNs")
-        if np.any(np.isinf(equity)):
-            print("[Debug] strategy_equity_curve contains Infs")
-    # === End Debug Addition ===
-
     sharpe_ratio = results["portfolio"].get("sharpe_ratio", float('nan'))
     max_drawdown = results["portfolio"].get("max_drawdown", float('nan'))
     benchmark_sharpe = results["benchmark"].get("sharpe_ratio", float('nan'))
@@ -279,6 +246,4 @@ if __name__ == "__main__":
     print("Performance Variance (Std Across Chunks):")
     for k, v in results["performance_variance"].items():
         print(f"{k}: ±{v * 100:.6f}%")
-
-
     sys.stdout.flush()

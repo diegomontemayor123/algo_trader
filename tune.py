@@ -30,7 +30,7 @@ def run_experiment(trial):
         "LOSS_MIN_MEAN": trial.suggest_float("LOSS_MIN_MEAN", 0.0001, 0.1),
         "LOSS_RETURN_PENALTY": trial.suggest_float("LOSS_RETURN_PENALTY", 0.01, 1.0),
         "TEST_CHUNK_MONTHS": trial.suggest_int("TEST_CHUNK_MONTHS", 6, 6),
-        "RETRAIN": trial.suggest_categorical("RETRAIN", [False, True])
+        "RETRAIN": trial.suggest_categorical("RETRAIN", [False])
     }
     env = os.environ.copy()
     for k, v in config.items():
