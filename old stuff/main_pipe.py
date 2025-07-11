@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 from walkforward import run_walkforward_test_with_validation
 from backtest import run_backtest
 from compute_features import compute_features, normalize_features
-from tech import *
+from model import *
 
 # --- Configuration defaults ---
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'

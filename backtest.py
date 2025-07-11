@@ -5,76 +5,74 @@ import pandas as pd
 import logging
 
 def run_backtest(
-    DEVICE,
-    INITIAL_CAPITAL,
-    SPLIT_DATE,
-    LOOKBACK,
-    MAX_LEVERAGE,
+    device,
+    initial_capital,
+    split_date,
+    lookback,
+    max_leverage,
     compute_features,
     normalize_features,
     calculate_performance_metrics,
-    TICKERS,
-    START_DATE,
-    END_DATE,
-    FEATURES,
+    tickers,
+    start_date,
+    end_date,
+    features,
     model=None,
     plot=False,
     weights_csv_path="daily_portfolio_weights.csv"
 ):
     logging.info("[Backtest] Starting backtest...")
-
     try:
-        features, returns = compute_features(TICKERS, START_DATE, END_DATE, FEATURES)
-        features.index = pd.to_datetime(features.index)
-        returns.index = pd.to_datetime(returns.index)
+        features_df, returns_df = compute_features(tickers, start_date, end_date, features)
+        features_df.index = pd.to_datetime(features_df.index)
+        returns_df.index = pd.to_datetime(returns_df.index)
 
-        if features.empty or returns.empty:
+        if features_df.empty or returns_df.empty:
             logging.warning("[Backtest] Feature or return data is empty. Returning flat curve.")
-            return pd.Series([INITIAL_CAPITAL])
+            return pd.Series([initial_capital])
 
         if model is None:
             raise ValueError("Model must be provided to run_backtest()")
 
         model.eval()
-
-        portfolio_values = [INITIAL_CAPITAL]
-        benchmark_values = [INITIAL_CAPITAL]
+        portfolio_values = [initial_capital]
+        benchmark_values = [initial_capital]
         daily_weights = []
 
         try:
-            start_index = features.index.get_indexer([pd.to_datetime(SPLIT_DATE)], method='bfill')[0]
+            start_index = features_df.index.get_indexer([pd.to_datetime(split_date)], method='bfill')[0]
         except Exception as e:
-            logging.error(f"[Backtest] Error finding SPLIT_DATE index: {e}")
-            return pd.Series([INITIAL_CAPITAL])
+            logging.error(f"[Backtest] Error finding split_date index: {e}")
+            return pd.Series([initial_capital])
 
-        test_dates = returns.index[start_index:]
-        asset_names = returns.columns
+        test_dates = returns_df.index[start_index:]
+        asset_names = returns_df.columns
 
-        for i in range(start_index - LOOKBACK, len(features) - LOOKBACK):
-            feature_window = features.iloc[i:i + LOOKBACK].values.astype(np.float32)
+        for i in range(start_index - lookback, len(features_df) - lookback):
+            feature_window = features_df.iloc[i:i + lookback].values.astype(np.float32)
             normalized_features = normalize_features(feature_window)
-            input_tensor = torch.tensor(normalized_features).unsqueeze(0).to(DEVICE, non_blocking=True)
+            input_tensor = torch.tensor(normalized_features).unsqueeze(0).to(device, non_blocking=True)
 
             with torch.no_grad():
                 raw_weights = model(input_tensor).cpu().numpy().flatten()
 
             weight_sum = np.sum(np.abs(raw_weights)) + 1e-6
-            scaling_factor = min(MAX_LEVERAGE / weight_sum, 1.0)
+            scaling_factor = min(max_leverage / weight_sum, 1.0)
             final_weights = raw_weights * scaling_factor
 
-            period_returns = returns.iloc[i + LOOKBACK].values
+            period_returns = returns_df.iloc[i + lookback].values
             portfolio_return = np.dot(final_weights, period_returns)
             benchmark_return = np.mean(period_returns)
 
             portfolio_values.append(portfolio_values[-1] * (1 + portfolio_return))
             benchmark_values.append(benchmark_values[-1] * (1 + benchmark_return))
 
-            weight_date = returns.index[i + LOOKBACK]
+            weight_date = returns_df.index[i + lookback]
             daily_weights.append(pd.Series(final_weights, index=asset_names, name=weight_date))
 
         if not daily_weights:
             logging.warning("[Backtest] No daily weights generated. Possibly insufficient data.")
-            return pd.Series([INITIAL_CAPITAL])
+            return pd.Series([initial_capital])
 
         weights_df = pd.DataFrame(daily_weights)
         weights_df["total_exposure"] = weights_df.abs().sum(axis=1)
@@ -116,4 +114,4 @@ def run_backtest(
 
     except Exception as e:
         logging.error("[Backtest] Critical failure during backtest: %s", str(e))
-        return pd.Series([INITIAL_CAPITAL])
+        return pd.Series([initial_capital])

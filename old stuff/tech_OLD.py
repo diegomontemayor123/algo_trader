@@ -8,7 +8,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 import matplotlib.pyplot as plt
-from features_factory import FEATURE_FUNCTIONS
+from features import FEATURE_FUNCTIONS
 from sklearn.decomposition import DictionaryLearning
 
 # === Configs ===
