@@ -17,7 +17,6 @@ def train_model_with_validation(model, train_loader, val_loader, config):
     patience_counter = 0
     lrs = []
     for epoch in range(config["EPOCHS"]):
-        print(f"[Training] Epoch {epoch + 1}/{config['EPOCHS']}")
         model.train()
         train_losses = []
         for batch_features, batch_returns in train_loader:
@@ -29,7 +28,8 @@ def train_model_with_validation(model, train_loader, val_loader, config):
             normalized_weights = raw_weights * scaling_factor
             loss = loss_function(normalized_weights, batch_returns, model)
             if torch.isnan(loss) or torch.isinf(loss):
-                print("[Error] Loss is NaN or Inf during training step")
+                logging.warning("[Train] NaN or Inf loss detected — skipping model.")
+                return None
             optimizer.zero_grad()
             loss.backward()
             nan_grads = False
@@ -38,7 +38,8 @@ def train_model_with_validation(model, train_loader, val_loader, config):
                     print(f"[Error] NaN or Inf detected in gradients of {name}")
                     nan_grads = True
             if nan_grads:
-                break
+                print("[Warning] Skipping retraining chunk due to NaNs in gradients.")
+                return None 
             optimizer.step()
             learning_scheduler.step()
             current_lr = optimizer.param_groups[0]['lr']
@@ -61,7 +62,7 @@ def train_model_with_validation(model, train_loader, val_loader, config):
         mean_ret = val_returns_array.mean()
         std_ret = val_returns_array.std() + 1e-6
         avg_val_loss = -(mean_ret / std_ret)
-        print(f"[Training] Train Loss: {avg_train_loss:.4f} | Validation: {abs(avg_val_loss):.4f}")
+        print(f"[Train] Epoch {epoch + 1}/{config} Train Loss: {avg_train_loss:.4f} | Validation: {abs(avg_val_loss):.4f}")
         if avg_val_loss < best_val_loss:
             best_val_loss = avg_val_loss
             patience_counter = 0

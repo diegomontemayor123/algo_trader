@@ -116,7 +116,7 @@ if __name__ == "__main__":
     print(f"Max Drawdown: Benchmark: {benchmark_drawdown * 100:.6f}%\n")
     print(f"CAGR: Strategy: {cagr * 100:.6f}%")
     print(f"CAGR: Benchmark: {benchmark_cagr * 100:.6f}%\n")
-    print("Performance Variance (Std Across Chunks):")
-    for k, v in results["performance_variance"].items():
-        print(f"{k}: ±{v * 100:.6f}%")
+    print("Average Benchmark Outperformance Across Chunks:")
+    for k, v in results["performance_outperformance"].items():
+        print(f"{k}: {v * 100:.6f}%")
     sys.stdout.flush()
