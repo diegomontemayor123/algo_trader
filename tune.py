@@ -6,35 +6,33 @@ import json
 from optuna.samplers import TPESampler
 
 def run_experiment(trial):
-    config = {
-        "START_DATE": trial.suggest_categorical("START_DATE", ["2012-01-01"]),
+    config = {"START_DATE": trial.suggest_categorical("START_DATE", ["2012-01-01","2014-01-01","2016-01-01"]),
         "END_DATE": trial.suggest_categorical("END_DATE", ["2025-06-29"]),
-        "SPLIT_DATE": trial.suggest_categorical("SPLIT_DATE", ["2023-01-01","2022-01-01","2021-01-01","2019-01-01","2017-01-01"]),
-
+        "SPLIT_DATE": trial.suggest_categorical("SPLIT_DATE", ["2023-01-01","2021-01-01","2019-01-01"]),
         "TICKERS": trial.suggest_categorical("TICKERS", ["AAPL,MSFT,GOOGL,AMZN,META,NVDA,TSLA"]),
         "FEATURES": trial.suggest_categorical("FEATURES", ["ret,vol,log_ret,rolling_ret,volume"]),
         "INITIAL_CAPITAL": trial.suggest_float("INITIAL_CAPITAL", 100, 100),
-        "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 1, 2),
+        "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 2,2),
 
-        "BATCH_SIZE": trial.suggest_int("BATCH_SIZE", 40, 90),
-        "LOOKBACK": trial.suggest_int("LOOKBACK", 50, 120),
-        "PREDICT_DAYS": trial.suggest_int("PREDICT_DAYS", 1, 8),
-        "WARMUP_FRAC": trial.suggest_float("WARMUP_FRAC", 0.05, 0.25),
-        "DROPOUT": trial.suggest_float("DROPOUT", 0.01, 0.3),
-        "DECAY": trial.suggest_float("DECAY", 0.01, 0.1),
+        "BATCH_SIZE": trial.suggest_int("BATCH_SIZE",40,60),
+        "LOOKBACK": trial.suggest_int("LOOKBACK",80,100),
+        "PREDICT_DAYS": trial.suggest_int("PREDICT_DAYS",1,10),
+        "WARMUP_FRAC": trial.suggest_float("WARMUP_FRAC", 0.15, 0.35),
+        "DROPOUT": trial.suggest_float("DROPOUT", 0.1, 0.2),
+        "DECAY": trial.suggest_float("DECAY", 0.01, 0.07),
 
-        "FEATURE_ATTENTION_ENABLED": trial.suggest_int("FEATURE_ATTENTION_ENABLED", 0, 1),
-        "L2_PENALTY_ENABLED": trial.suggest_int("L2_PENALTY_ENABLED", 0, 1),
-        "LOSS_MIN_MEAN": trial.suggest_float("LOSS_MIN_MEAN", 0.001, 0.1),
-        "LOSS_RETURN_PENALTY": trial.suggest_float("LOSS_RETURN_PENALTY", 0, 1),
-        "TEST_CHUNK_MONTHS": trial.suggest_int("TEST_CHUNK_MONTHS", 12, 24),
-        "RETRAIN_WINDOW": trial.suggest_int("RETRAIN_WINDOW", 24, 35),
+        "FEATURE_ATTENTION_ENABLED": trial.suggest_int("FEATURE_ATTENTION_ENABLED", 1, 1),
+        "L2_PENALTY_ENABLED": trial.suggest_int("L2_PENALTY_ENABLED", 1, 1),
+        "LOSS_MIN_MEAN": trial.suggest_float("LOSS_MIN_MEAN", 0.01, 0.1),
+        "LOSS_RETURN_PENALTY": trial.suggest_float("LOSS_RETURN_PENALTY", 0, 2),
+        "TEST_CHUNK_MONTHS": trial.suggest_int("TEST_CHUNK_MONTHS", 15, 22),
+        "RETRAIN_WINDOW": trial.suggest_int("RETRAIN_WINDOW", 30, 50),
 
         "EPOCHS": trial.suggest_int("EPOCHS", 20, 20),
         "MAX_HEADS": trial.suggest_int("MAX_HEADS", 20, 20),
         "LAYER_COUNT": trial.suggest_int("LAYER_COUNT", 6, 6),
-        "EARLY_STOP_PATIENCE": trial.suggest_int("EARLY_STOP_PATIENCE", 3, 6),
-        "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", 0.12, 0.12),
+        "EARLY_STOP_PATIENCE": trial.suggest_int("EARLY_STOP_PATIENCE", 4, 4),
+        "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", 0.1, 0.2),
     }
 
     env = os.environ.copy()

@@ -99,21 +99,17 @@ if __name__ == "__main__":
         trained_model = load_trained_model(test_dataset[0][0].shape[1], config)
     else:
         trained_model = train_main_model(config, features, returns)
-
-    results = run_backtest(
-        device=DEVICE,initial_capital=config["INITIAL_CAPITAL"],split_date=config["SPLIT_DATE"],lookback=config["LOOKBACK"],max_leverage=config["MAX_LEVERAGE"],compute_features=compute_features,normalize_features=normalize_features,tickers=config["TICKERS"],start_date=config["START_DATE"],end_date=config["END_DATE"],features=config["FEATURES"],test_chunk_months=config["TEST_CHUNK_MONTHS"],model=trained_model,plot=True,config=config,retrain_window=config["RETRAIN_WINDOW"]
-    )
-
+    results = run_backtest(device=DEVICE,initial_capital=config["INITIAL_CAPITAL"],split_date=config["SPLIT_DATE"],lookback=config["LOOKBACK"],max_leverage=config["MAX_LEVERAGE"],compute_features=compute_features,normalize_features=normalize_features,tickers=config["TICKERS"],start_date=config["START_DATE"],end_date=config["END_DATE"],features=config["FEATURES"],test_chunk_months=config["TEST_CHUNK_MONTHS"],model=trained_model,plot=True,config=config,retrain_window=config["RETRAIN_WINDOW"])
     sharpe_ratio = results["portfolio"].get("sharpe_ratio", float('nan'))
     max_drawdown = results["portfolio"].get("max_drawdown", float('nan'))
     benchmark_sharpe = results["benchmark"].get("sharpe_ratio", float('nan'))
     benchmark_drawdown = results["benchmark"].get("max_drawdown", float('nan'))
     cagr = results["portfolio"].get("cagr", float('nan'))
     benchmark_cagr = results["benchmark"].get("cagr", float('nan'))
-    print(f"Sharpe Ratio: Strategy: {sharpe_ratio * 100:.6f}%")
-    print(f"Sharpe Ratio: Benchmark: {benchmark_sharpe * 100:.6f}%\n")
+    print(f"\nSharpe Ratio: Strategy: {sharpe_ratio * 100:.6f}%")
+    print(f"Sharpe Ratio: Benchmark: {benchmark_sharpe * 100:.6f}%")
     print(f"Max Drawdown: Strategy: {max_drawdown * 100:.6f}%")
-    print(f"Max Drawdown: Benchmark: {benchmark_drawdown * 100:.6f}%\n")
+    print(f"Max Drawdown: Benchmark: {benchmark_drawdown * 100:.6f}%")
     print(f"CAGR: Strategy: {cagr * 100:.6f}%")
     print(f"CAGR: Benchmark: {benchmark_cagr * 100:.6f}%\n")
     print("Average Benchmark Outperformance Across Chunks:")

@@ -220,16 +220,25 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
         f.write("=Combined Perform Over Full Period=\n")
         for key in combined_portfolio_metrics:
             f.write(f"{key.title()}: Strategy {combined_portfolio_metrics[key]:.2%}, Benchmark {combined_benchmark_metrics[key]:.2%}\n")
+        
         f.write("\n=Per-Chunk Metrics=\n")
         for i, (pm, bm) in enumerate(zip(all_portfolio_metrics, all_benchmark_metrics)):
-            f.write(f"-Chunk {i+1}-\n")
+            chunk_start, chunk_end = chunks[i]
+            f.write(f"-Chunk {i+1} ({chunk_start.date()} to {chunk_end.date()})-\n") 
             for key in pm:
                 f.write(f"{key.title()}: Strategy {pm[key]:.2%}, Benchmark {bm[key]:.2%}\n")
+        
         f.write("\n=Std Dev of Metrics Across Chunks=\n")
         metrics_df = pd.DataFrame(all_portfolio_metrics)
         metrics_std = metrics_df.std()
         for key, val in metrics_std.items():
             f.write(f"{key.title()}: ±{val:.2%}\n")
+
+        f.write("\n=Average Outperformance Across Chunks (Strategy - Benchmark)=\n")
+        for key, val in avg_outperformance.items():
+            f.write(f"{key.title()}: {val:.2%}\n")
+
+
 
     logging.info(f"[Backtest] Saved perform report to {report_path}")
 

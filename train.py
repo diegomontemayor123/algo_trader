@@ -62,14 +62,13 @@ def train_model_with_validation(model, train_loader, val_loader, config):
         mean_ret = val_returns_array.mean()
         std_ret = val_returns_array.std() + 1e-6
         avg_val_loss = -(mean_ret / std_ret)
-        print(f"[Train] Epoch {epoch + 1} Train Loss: {avg_train_loss:.4f} | Validation: {abs(avg_val_loss):.4f}")
+        #print(f"[Train] Epoch {epoch + 1} Train Loss: {avg_train_loss:.4f} | Validation: {abs(avg_val_loss):.4f}")
         if avg_val_loss < best_val_loss:
             best_val_loss = avg_val_loss
             patience_counter = 0
         else:
             patience_counter += 1
             if patience_counter >= config["EARLY_STOP_PATIENCE"]:
-                print("[Training] Early stopping due to val loss plateau")
                 break
     plt.figure(figsize=(10, 4))
     plt.plot(lrs)
@@ -79,7 +78,6 @@ def train_model_with_validation(model, train_loader, val_loader, config):
     plt.grid(True)
     plt.savefig('learning_rate_schedule.png')
     plt.close()
-    print("[Training] Saved learning rate schedule plot png'")
     return model
 
 def train_main_model(config, features, returns):

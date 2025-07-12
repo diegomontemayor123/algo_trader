@@ -1,19 +1,14 @@
-# data_prep.py
 import torch
 import numpy as np
 import pandas as pd
-
-# Import normalize_features from your features computation module
 from compute_features import normalize_features
 
 class MarketDataset(torch.utils.data.Dataset):
     def __init__(self, features, returns):
         self.features = features
         self.returns = returns
-
     def __len__(self):
         return len(self.features)
-
     def __getitem__(self, index):
         return self.features[index], self.returns[index]
 
@@ -36,15 +31,12 @@ def create_sequences(features, returns, lookback, predict_days, tickers):
 
 def prepare_main_datasets(features, returns, config):
     sequences, targets, seq_dates = create_sequences(features, returns, config["LOOKBACK"], config["PREDICT_DAYS"], config["TICKERS"])
-
     if len(set(seq_dates)) != len(seq_dates):
         print("[Data][Warning] Duplicate dates found in sequence dates.")
     if any(pd.isna(seq_dates)):
         print("[Data][Warning] NaN detected in sequence dates.")
-
     train_sequences, train_targets, test_sequences, test_targets = [], [], [], []
     split_date = pd.to_datetime(config["SPLIT_DATE"])
-
     for seq, tgt, date in zip(sequences, targets, pd.to_datetime(seq_dates)):
         if date < split_date:
             train_sequences.append(seq)
@@ -52,19 +44,15 @@ def prepare_main_datasets(features, returns, config):
         else:
             test_sequences.append(seq)
             test_targets.append(tgt)
-
     val_split = config.get("VAL_SPLIT", 0.2)
     val_size = int(len(train_sequences) * val_split)
     train_size = len(train_sequences) - val_size
-
     train_seq = train_sequences[:train_size]
     train_tgt = train_targets[:train_size]
     val_seq = train_sequences[train_size:]
     val_tgt = train_targets[train_size:]
-
     train_dataset = MarketDataset(torch.tensor(np.array(train_seq)), torch.tensor(np.array(train_tgt)))
     val_dataset = MarketDataset(torch.tensor(np.array(val_seq)), torch.tensor(np.array(val_tgt)))
     test_dataset = MarketDataset(torch.tensor(np.array(test_sequences)), torch.tensor(np.array(test_targets)))
-
     print(f"[Data] Training samples: {len(train_dataset)}, Validation samples: {len(val_dataset)}, Test samples: {len(test_dataset)}")
     return train_dataset, val_dataset, test_dataset

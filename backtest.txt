@@ -1,8 +1,0 @@
-=Combined Perform Over Full Period=
-Cagr: Strategy 0.00%, Benchmark 0.00%
-Sharpe_Ratio: Strategy 0.00%, Benchmark 0.00%
-Max_Drawdown: Strategy 0.00%, Benchmark 0.00%
-
-=Per-Chunk Metrics=
-
-=Std Dev of Metrics Across Chunks=
