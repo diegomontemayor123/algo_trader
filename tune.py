@@ -69,7 +69,7 @@ def run_experiment(trial):
         if sharpe is None or drawdown is None:
             return -float("inf")
         sharpe_var = variance_metrics.get("sharpe_ratio", 0.0)
-        score = (2 * sharpe) - (0.5  * abs(drawdown)) - (0.7 * sharpe_var)
+        score = (2 * sharpe) - (1  * abs(drawdown)) - (0 * sharpe_var)
         trial.set_user_attr("sharpe", sharpe)
         trial.set_user_attr("drawdown", drawdown)
         trial.set_user_attr("sharpe_variance", sharpe_var)
