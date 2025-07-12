@@ -62,7 +62,10 @@ class DifferentiableSharpeLoss(nn.Module):
     def forward(self, portfolio_weights, target_returns, model=None):
         returns = (portfolio_weights * target_returns).sum(dim=1)
         mean_return = torch.mean(returns)
-        std_return = torch.std(returns) + 1e-6
+        if returns.numel() > 1 and not torch.isnan(returns).all():
+            std_return = torch.std(returns, unbiased=False) + 1e-6
+        else:
+            std_return = torch.tensor(1e-6, device=returns.device)
         sharpe_ratio = mean_return / (std_return + 1e-6)
         low_return = torch.clamp(self.loss_min_mean - mean_return, min=0.0)
         loss = -sharpe_ratio + self.loss_return_penalty * low_return 
