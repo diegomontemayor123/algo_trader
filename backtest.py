@@ -7,6 +7,9 @@ from dateutil.relativedelta import relativedelta
 from data_prep import prepare_main_datasets
 from torch.utils.data import DataLoader
 from model import create_model, train_model_with_validation
+import multiprocessing
+
+
 
 def calculate_performance_metrics(equity_curve):
     equity_curve = pd.Series(equity_curve).dropna()
@@ -181,8 +184,9 @@ def run_backtest(
 
             features_train, returns_train = compute_features(tickers, chunk_config["START_DATE"], chunk_config["END_DATE"], features)
             train_dataset, val_dataset, _ = prepare_main_datasets(features_train, returns_train, chunk_config)
-            train_loader = DataLoader(train_dataset, batch_size=config["BATCH_SIZE"], shuffle=True, num_workers=4)
-            val_loader = DataLoader(val_dataset, batch_size=config["BATCH_SIZE"], shuffle=False, num_workers=4)
+            num_workers = min(2, multiprocessing.cpu_count()) 
+            train_loader = DataLoader(train_dataset, batch_size=config["BATCH_SIZE"], shuffle=True, num_workers=num_workers)
+            val_loader = DataLoader(val_dataset, batch_size=config["BATCH_SIZE"], shuffle=False, num_workers=num_workers)
 
             model_dim = train_dataset[0][0].shape[1]
             model = create_model(model_dim, config)

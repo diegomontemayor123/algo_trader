@@ -1,6 +1,4 @@
-import os
-import torch
-import sys
+import os, torch, sys, multiprocessing
 import numpy as np
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -187,8 +185,9 @@ def train_model_with_validation(model, train_loader, val_loader, config):
 def train_main_model(config):
     features, returns = compute_features(config["TICKERS"], config["START_DATE"], config["END_DATE"], config["FEATURES"])
     train_dataset, val_dataset, test_dataset = prepare_main_datasets(features, returns, config)
-    train_loader = DataLoader(train_dataset, batch_size=config["BATCH_SIZE"], shuffle=True, num_workers=4)
-    val_loader = DataLoader(val_dataset, batch_size=config["BATCH_SIZE"], shuffle=False, num_workers=4)
+    num_workers = min(2, multiprocessing.cpu_count()) 
+    train_loader = DataLoader(train_dataset, batch_size=config["BATCH_SIZE"], shuffle=True, num_workers=num_workers)
+    val_loader = DataLoader(val_dataset, batch_size=config["BATCH_SIZE"], shuffle=False, num_workers=num_workers)
     model = create_model(train_dataset[0][0].shape[1], config)
     trained_model = train_model_with_validation(model, train_loader, val_loader, config)
     torch.save(trained_model.state_dict(), MODEL_PATH)
