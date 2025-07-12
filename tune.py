@@ -3,31 +3,37 @@ from optuna.samplers import TPESampler
 
 def run_experiment(trial):
     config = {
-        "EARLY_STOP_PATIENCE": trial.suggest_int("EARLY_STOP_PATIENCE", 2, 5),
-        "INITIAL_CAPITAL": trial.suggest_float("INITIAL_CAPITAL", 100.0, 100.0),
+        "START_DATE": trial.suggest_categorical("START_DATE", ["2012-01-01"]),
+        "END_DATE": trial.suggest_categorical("END_DATE", [ "2025-06-29"]),
+        "SPLIT_DATE": trial.suggest_categorical("SPLIT_DATE", [ "2023-01-01","2021-01-01","2019-01-01","2017-01-01","2015-01-01"]),
+
         "TICKERS": trial.suggest_categorical("TICKERS", ["AAPL,MSFT,GOOGL,AMZN,META,NVDA,TSLA"]),
-        "START_DATE": trial.suggest_categorical("START_DATE", ["2017-01-01" ]),
-        "END_DATE": trial.suggest_categorical("END_DATE", [ "2025-05-29"]),
-        "SPLIT_DATE": trial.suggest_categorical("SPLIT_DATE", [ "2021-01-01"]),
-        "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", 0.05, 0.2),
-        "PREDICT_DAYS": trial.suggest_int("PREDICT_DAYS", 1, 10),
-        "LOOKBACK": trial.suggest_int("LOOKBACK", 40, 120),
-        "EPOCHS": trial.suggest_int("EPOCHS", 20, 20),
-        "MAX_HEADS": trial.suggest_int("MAX_HEADS", 20, 20),
-        "BATCH_SIZE": trial.suggest_int("BATCH_SIZE", 40, 90),
         "FEATURES": trial.suggest_categorical("FEATURES", ["ret,vol,log_ret,rolling_ret,volume"]),
-        "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 1.0, 2.0),
-        "LAYER_COUNT": trial.suggest_int("LAYER_COUNT", 6, 6),
-        "DROPOUT": trial.suggest_float("DROPOUT", 0.1, 0.5),
+
+        "INITIAL_CAPITAL": trial.suggest_float("INITIAL_CAPITAL", 100.0, 100.0),
+        "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 1.0, 1.5),
+
+        "BATCH_SIZE": trial.suggest_int("BATCH_SIZE", 40, 90),
+        "LOOKBACK": trial.suggest_int("LOOKBACK", 50, 100),
+        "PREDICT_DAYS": trial.suggest_int("PREDICT_DAYS", 1, 8),
+
         "WARMUP_FRAC": trial.suggest_float("WARMUP_FRAC", 0.02, 0.3),
+        "DROPOUT": trial.suggest_float("DROPOUT", 0.01, 0.9),
         "DECAY": trial.suggest_float("DECAY", 0.001, 0.1),
-        "FEATURE_ATTENTION_ENABLED": trial.suggest_int("FEATURE_ATTENTION_ENABLED", 0, 1),
-        "L2_PENALTY_ENABLED": trial.suggest_int("L2_PENALTY_ENABLED", 0, 1),
-        "RETURN_PENALTY_ENABLED": trial.suggest_int("RETURN_PENALTY_ENABLED", 1,1),
+
+        "FEATURE_ATTENTION_ENABLED": trial.suggest_int("FEATURE_ATTENTION_ENABLED", 0,1),
+        "L2_PENALTY_ENABLED": trial.suggest_int("L2_PENALTY_ENABLED", 0,1),
         "LOSS_MIN_MEAN": trial.suggest_float("LOSS_MIN_MEAN", 0.0001, 0.1),
         "LOSS_RETURN_PENALTY": trial.suggest_float("LOSS_RETURN_PENALTY", 0.0, 1.0),
-        "TEST_CHUNK_MONTHS": trial.suggest_int("TEST_CHUNK_MONTHS", 6, 6),
-        "RETRAIN": trial.suggest_categorical("RETRAIN", [False])
+
+        "TEST_CHUNK_MONTHS": trial.suggest_int("TEST_CHUNK_MONTHS", 6,24),
+        "RETRAIN_WINDOW": trial.suggest_int("RETRAIN_WINDOW", 24,48),
+
+        "EPOCHS": trial.suggest_int("EPOCHS", 20, 20),
+        "MAX_HEADS": trial.suggest_int("MAX_HEADS", 20, 20),
+        "LAYER_COUNT": trial.suggest_int("LAYER_COUNT", 6, 6),
+        "EARLY_STOP_PATIENCE": trial.suggest_int("EARLY_STOP_PATIENCE", 3,3),
+        "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", 0.12, 0.12),
     }
     env = os.environ.copy()
     for k, v in config.items():
