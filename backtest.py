@@ -134,7 +134,7 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
             train_start_date = max(train_start_date, pd.to_datetime(start_date))
             train_end_date = max(train_end_date, train_start_date)
             training_days = (train_end_date - train_start_date).days
-            if training_days < (chunk_start - (chunk_start - relativedelta(months=retrain_window))).days:
+            if training_days < ((chunk_start - (chunk_start - relativedelta(months=retrain_window))).days)-30:
                 logging.warning(f"[Backtest] Skipping chunk {idx+1} due to insufficient training data: {training_days} days")
                 continue
             logging.info(f"[Backtest] Chunk {idx+1}: Training from {train_start_date.date()} to {train_end_date.date()}")
