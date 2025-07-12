@@ -8,6 +8,7 @@ from data_prep import prepare_main_datasets
 from torch.utils.data import DataLoader
 from model import create_model, train_model_with_validation
 import multiprocessing
+from copy import deepcopy
 
 
 
@@ -161,36 +162,50 @@ def run_backtest(
 
         metrics_df = pd.DataFrame(all_portfolio_metrics)
         metrics_std = metrics_df.std()
-
+        
     else:
         logging.info(f"[Backtest] Running backtest with retraining every {test_chunk_months} months in chunks.")
+        previous_model = None  # for warm-starting
+
         for idx, (chunk_start, chunk_end) in enumerate(chunks):
             logging.info(f"[Backtest] === Starting Chunk {idx+1} | Period: {chunk_start.date()} to {chunk_end.date()} ===")
 
+            # Rolling 3-year window
+            train_start_date = chunk_start - relativedelta(years=3)
             train_end_date = chunk_start - pd.Timedelta(days=1)
-            if train_end_date < pd.to_datetime(start_date):
-                train_end_date = pd.to_datetime(start_date)
+
+            # Clip to available data
+            train_start_date = max(train_start_date, pd.to_datetime(start_date))
+            train_end_date = max(train_end_date, train_start_date)
 
             chunk_config = config.copy()
-            chunk_config["START_DATE"] = str(start_date)
-            chunk_config["END_DATE"] = str(train_end_date)
-            chunk_config["SPLIT_DATE"] = str(chunk_start)
+            chunk_config["START_DATE"] = str(train_start_date.date())
+            chunk_config["END_DATE"] = str(train_end_date.date())
+            chunk_config["SPLIT_DATE"] = str(chunk_start.date())
 
             logging.info(f"[Backtest] Chunk {idx+1}: Retraining model from {chunk_config['START_DATE']} to {chunk_config['END_DATE']}")
 
-            features_train, returns_train = compute_features(tickers, chunk_config["START_DATE"], chunk_config["END_DATE"], features)
+            features_train, returns_train = compute_features(
+                tickers, chunk_config["START_DATE"], chunk_config["END_DATE"], features
+            )
             train_dataset, val_dataset, _ = prepare_main_datasets(features_train, returns_train, chunk_config)
-            num_workers = min(2, multiprocessing.cpu_count()) 
+
+            num_workers = min(2, multiprocessing.cpu_count())
             train_loader = DataLoader(train_dataset, batch_size=config["BATCH_SIZE"], shuffle=True, num_workers=num_workers)
             val_loader = DataLoader(val_dataset, batch_size=config["BATCH_SIZE"], shuffle=False, num_workers=num_workers)
 
             model_dim = train_dataset[0][0].shape[1]
-            model = create_model(model_dim, config)
+
+            # Warm start if available
+            if previous_model is None:
+                model = create_model(model_dim, config)
+            else:
+                model = deepcopy(previous_model)
 
             logging.info(f"[Backtest] Chunk {idx+1}: Starting model training...")
             model = train_model_with_validation(model, train_loader, val_loader, config)
             model.eval()
-            logging.info(f"[Backtest] Chunk {idx+1}: Model training completed.")
+            previous_model = deepcopy(model)  # save for next chunk
 
             try:
                 start_idx = features_df.index.get_indexer([chunk_start], method='bfill')[0]

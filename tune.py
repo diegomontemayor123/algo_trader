@@ -35,7 +35,7 @@ def run_experiment(trial):
     try:
         result = subprocess.run(["python", "model.py"], capture_output=True, text=True, env=env, timeout=1800)
         output = result.stdout + result.stderr
-        print(f"[Subprocess output]\n{output}\n--- End of output ---")
+        print(f"[Subprocess output]\n{output}\n")
         def extract_metric(label, out):
             match = re.search(rf"{label}:\s*Strategy:\s*([-+]?\d*\.\d+|\d+)%", out)
             return float(match.group(1)) / 100 if match else None

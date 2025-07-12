@@ -165,7 +165,6 @@ def train_model_with_validation(model, train_loader, val_loader, config):
         if avg_val_loss < best_val_loss:
             best_val_loss = avg_val_loss
             patience_counter = 0
-            print("[Training] Improvement; continuing...")
         else:
             patience_counter += 1
             if patience_counter >= config["EARLY_STOP_PATIENCE"]:
