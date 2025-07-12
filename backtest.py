@@ -129,12 +129,12 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
         previous_model = None
         for idx, (chunk_start, chunk_end) in enumerate(chunks):
             logging.info(f"[Backtest] Starting Chunk {idx+1} | Period: {chunk_start.date()} to {chunk_end.date()} ===")
-            train_start_date = chunk_start - relativedelta(years=3)
+            train_start_date = chunk_start - relativedelta(months=retrain_window)
             train_end_date = chunk_start - pd.Timedelta(days=1)
             train_start_date = max(train_start_date, pd.to_datetime(start_date))
             train_end_date = max(train_end_date, train_start_date)
             training_days = (train_end_date - train_start_date).days
-            if training_days < (retrain_window*30):
+            if training_days < (chunk_start - (chunk_start - relativedelta(months=retrain_window))).days:
                 logging.warning(f"[Backtest] Skipping chunk {idx+1} due to insufficient training data: {training_days} days")
                 continue
             logging.info(f"[Backtest] Chunk {idx+1}: Training from {train_start_date.date()} to {train_end_date.date()}")
