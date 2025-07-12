@@ -8,7 +8,7 @@ from optuna.samplers import TPESampler
 def run_experiment(trial):
     config = {"START_DATE": trial.suggest_categorical("START_DATE", ["2012-01-01","2014-01-01","2016-01-01"]),
         "END_DATE": trial.suggest_categorical("END_DATE", ["2025-06-29"]),
-        "SPLIT_DATE": trial.suggest_categorical("SPLIT_DATE", ["2023-01-01","2021-01-01","2019-01-01"]),
+        "SPLIT_DATE": trial.suggest_categorical("SPLIT_DATE", ["2019-01-01"]),
         "TICKERS": trial.suggest_categorical("TICKERS", ["AAPL,MSFT,GOOGL,AMZN,META,NVDA,TSLA"]),
         "FEATURES": trial.suggest_categorical("FEATURES", ["ret,vol,log_ret,rolling_ret,volume"]),
         "INITIAL_CAPITAL": trial.suggest_float("INITIAL_CAPITAL", 100, 100),
@@ -32,7 +32,7 @@ def run_experiment(trial):
         "MAX_HEADS": trial.suggest_int("MAX_HEADS", 20, 20),
         "LAYER_COUNT": trial.suggest_int("LAYER_COUNT", 6, 6),
         "EARLY_STOP_PATIENCE": trial.suggest_int("EARLY_STOP_PATIENCE", 4, 4),
-        "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", 0.1, 0.2),
+        "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", 0.1,0.1),
     }
 
     env = os.environ.copy()
