@@ -28,7 +28,7 @@ def run_experiment(trial):
         "LOSS_MIN_MEAN": trial.suggest_float("LOSS_MIN_MEAN", 0.001, 0.1),
         "LOSS_RETURN_PENALTY": trial.suggest_float("LOSS_RETURN_PENALTY", 0, 1),
         "TEST_CHUNK_MONTHS": trial.suggest_int("TEST_CHUNK_MONTHS", 12, 24),
-        "RETRAIN_WINDOW": trial.suggest_int("RETRAIN_WINDOW", 24, 48),
+        "RETRAIN_WINDOW": trial.suggest_int("RETRAIN_WINDOW", 24, 35),
 
         "EPOCHS": trial.suggest_int("EPOCHS", 20, 20),
         "MAX_HEADS": trial.suggest_int("MAX_HEADS", 20, 20),
