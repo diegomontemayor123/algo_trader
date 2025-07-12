@@ -82,14 +82,6 @@ class TransformerLRScheduler(torch.optim.lr_scheduler._LRScheduler):
         lr = scale * min(step ** (-0.5), step * (self.warmup_steps ** -1.5))
         return [lr for _ in self.optimizer.param_groups]
 
-def train_main_model_wrapper(config):
-    from train import train_main_model 
-    features, returns = compute_features(config["TICKERS"], config["START_DATE"], config["END_DATE"], config["FEATURES"])
-    trained_model = train_main_model(config, features, returns)
-    torch.save(trained_model.state_dict(), MODEL_PATH)
-    print(f"[Model] Trained model saved to {MODEL_PATH}")
-    return trained_model
-
 def load_trained_model(input_dimension, config, path=MODEL_PATH):
     model = create_model(input_dimension, config)
     model.load_state_dict(torch.load(path, map_location=DEVICE))
@@ -99,6 +91,7 @@ def load_trained_model(input_dimension, config, path=MODEL_PATH):
 
 if __name__ == "__main__":
     from backtest import run_backtest
+    from train import train_main_model
     config = load_config()
     features, returns = compute_features(config["TICKERS"], config["START_DATE"], config["END_DATE"], config["FEATURES"])
     _, _, test_dataset = prepare_main_datasets(features, returns, config)
