@@ -5,7 +5,6 @@ from features import FTR_FUNC
 from compute_features import *
 from loadconfig import load_config
 from data_prep import *
-from train import train_main_model
 
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 MODEL_PATH = "trained_model.pth"
@@ -84,6 +83,7 @@ class TransformerLRScheduler(torch.optim.lr_scheduler._LRScheduler):
         return [lr for _ in self.optimizer.param_groups]
 
 def train_main_model_wrapper(config):
+    from train import train_main_model 
     features, returns = compute_features(config["TICKERS"], config["START_DATE"], config["END_DATE"], config["FEATURES"])
     trained_model = train_main_model(config, features, returns)
     torch.save(trained_model.state_dict(), MODEL_PATH)
