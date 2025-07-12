@@ -140,7 +140,6 @@ def run_backtest(
 
         logging.info("[Backtest] Completed backtest without retraining.")
 
-        # --- ADDED: Calculate per-chunk metrics after full backtest run (no retrain) ---
         weights_df = pd.DataFrame(daily_weights)
         weights_df["total_exposure"] = weights_df.abs().sum(axis=1)
         weights_df.index.name = "Date"
@@ -162,15 +161,12 @@ def run_backtest(
 
         metrics_df = pd.DataFrame(all_portfolio_metrics)
         metrics_std = metrics_df.std()
-        # --- END ADDED ---
 
     else:
         logging.info(f"[Backtest] Running backtest with retraining every {test_chunk_months} months in chunks.")
-        # Retrain at start of each chunk (year)
         for idx, (chunk_start, chunk_end) in enumerate(chunks):
             logging.info(f"[Backtest] === Starting Chunk {idx+1} | Period: {chunk_start.date()} to {chunk_end.date()} ===")
 
-            # Retrain model using data up to chunk start (exclusive)
             train_end_date = chunk_start - pd.Timedelta(days=1)
             if train_end_date < pd.to_datetime(start_date):
                 train_end_date = pd.to_datetime(start_date)
@@ -196,7 +192,6 @@ def run_backtest(
             model.eval()
             logging.info(f"[Backtest] Chunk {idx+1}: Model training completed.")
 
-            # Run backtest for this chunk period
             try:
                 start_idx = features_df.index.get_indexer([chunk_start], method='bfill')[0]
                 end_idx = features_df.index.get_indexer([chunk_end], method='ffill')[0]
@@ -233,50 +228,38 @@ def run_backtest(
 
                 daily_weights.append(pd.Series(final_weights, index=asset_names, name=current_date))
 
-            weights_df = pd.DataFrame(daily_weights)
-            weights_df["total_exposure"] = weights_df.abs().sum(axis=1)
-            weights_df.index.name = "Date"
+            logging.info(f"[Backtest] Chunk {idx+1}: Completed weight calculation.")
 
-            portfolio_series = pd.Series(portfolio_values[1:], index=weights_df.index)
-            benchmark_series = pd.Series(benchmark_values[1:], index=weights_df.index)
+        # After all chunks, consolidate weights
+        weights_df = pd.DataFrame(daily_weights)
+        weights_df["total_exposure"] = weights_df.abs().sum(axis=1)
+        weights_df.index.name = "Date"
 
+        portfolio_series = pd.Series(portfolio_values[1:], index=weights_df.index)
+        benchmark_series = pd.Series(benchmark_values[1:], index=weights_df.index)
+
+        # Calculate per-chunk metrics
+        for idx, (chunk_start, chunk_end) in enumerate(chunks):
             chunk_portfolio = portfolio_series.loc[chunk_start:chunk_end]
             chunk_benchmark = benchmark_series.loc[chunk_start:chunk_end]
-            chunk_weights = weights_df.loc[chunk_start:chunk_end]
-
-            chunk_weights.to_csv(weights_csv_path.replace(".csv", f"_chunk{idx + 1}.csv"))
-            logging.info(f"[Backtest] Chunk {idx+1}: Saved weights CSV to {weights_csv_path.replace('.csv', f'_chunk{idx + 1}.csv')}")
-
+            if len(chunk_portfolio) < 2:
+                continue
             portfolio_metrics = calculate_performance_metrics(chunk_portfolio)
             benchmark_metrics = calculate_performance_metrics(chunk_benchmark)
-
-            logging.info(f"[Backtest] Chunk {idx+1}: Portfolio Metrics: {portfolio_metrics}")
-            logging.info(f"[Backtest] Chunk {idx+1}: Benchmark Metrics: {benchmark_metrics}")
-
             all_portfolio_metrics.append(portfolio_metrics)
             all_benchmark_metrics.append(benchmark_metrics)
-
-            if plot:
-                plt.figure(figsize=(10, 5))
-                plt.plot(chunk_portfolio.index, chunk_portfolio.values, label="Strategy Equity Curve")
-                plt.plot(chunk_benchmark.index, chunk_benchmark.values, label="Benchmark Equity Curve")
-                plt.title(f"Equity Curve - Test Chunk {idx + 1} ({chunk_start.date()} to {chunk_end.date()})")
-                plt.xlabel("Date")
-                plt.ylabel("Portfolio Value ($)")
-                plt.legend()
-                plt.grid(True, alpha=0.3)
-                plt.tight_layout()
-                plt.savefig(f"equity_curve_chunk_{idx + 1}.png", dpi=300)
-                plt.close()
-                logging.info(f"[Backtest] Chunk {idx+1}: Saved equity curve plot.")
+            logging.info(f"[Backtest] Chunk {idx+1}: Portfolio Metrics: {portfolio_metrics}")
+            logging.info(f"[Backtest] Chunk {idx+1}: Benchmark Metrics: {benchmark_metrics}")
 
         metrics_df = pd.DataFrame(all_portfolio_metrics)
         metrics_std = metrics_df.std()
 
-    # Calculate combined metrics over full period
+    # Consolidate final weights and save combined weights CSV
     weights_df = pd.DataFrame(daily_weights)
     weights_df["total_exposure"] = weights_df.abs().sum(axis=1)
     weights_df.index.name = "Date"
+    weights_df.to_csv(weights_csv_path)
+    logging.info(f"[Backtest] Saved combined weights CSV to {weights_csv_path}")
 
     portfolio_series = pd.Series(portfolio_values[1:], index=weights_df.index)
     benchmark_series = pd.Series(benchmark_values[1:], index=weights_df.index)
@@ -319,5 +302,6 @@ def run_backtest(
         'benchmark': combined_benchmark_metrics,
         'combined_equity_curve': portfolio_series,
         'combined_benchmark_equity_curve': benchmark_series,
-        'performance_variance': metrics_std.to_dict()
+        'performance_variance': metrics_std.to_dict(),
+        'cagr': combined_portfolio_metrics.get('cagr', float('nan'))  # Explicit CAGR return
     }

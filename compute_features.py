@@ -51,7 +51,7 @@ def compute_features(TICKERS,START_DATE,END_DATE,FEATURES):
         all_features[ticker] = df
     features = pd.concat(all_features.values(), axis=1).dropna()
     returns = prices.pct_change().shift(-1).reindex(features.index)
-    #print(f"Features shape: {features.shape}, Returns shape: {returns.shape}")
+    print(f"Features shape: {features.shape}, Returns shape: {returns.shape}")
     #print(f"Features sample:\n{features.head()}")
     #print(f"[Features] Returns sample:\n{returns.head()}")
     if not features.index.equals(returns.index):

@@ -11,7 +11,7 @@ from data_prep import *
 
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 MODEL_PATH = "trained_model_new.pth"
-LOAD_MODEL = True
+LOAD_MODEL = False
 SEED = 42
 torch.manual_seed(SEED)
 np.random.seed(SEED)
@@ -235,13 +235,15 @@ if __name__ == "__main__":
     max_drawdown = results["portfolio"].get("max_drawdown", float('nan'))
     benchmark_sharpe = results["benchmark"].get("sharpe_ratio", float('nan'))
     benchmark_drawdown = results["benchmark"].get("max_drawdown", float('nan'))
-
+    cagr = results["portfolio"].get("cagr", float('nan'))
+    benchmark_cagr = results["benchmark"].get("cagr", float('nan'))
 
     print(f"Sharpe Ratio: Strategy: {sharpe_ratio * 100:.6f}%")
     print(f"Max Drawdown: Strategy: {max_drawdown * 100:.6f}%")
+    print(f"CAGR: Strategy: {cagr * 100:.6f}%")
     print(f"Sharpe Ratio: Benchmark: {benchmark_sharpe * 100:.6f}%")
     print(f"Max Drawdown: Benchmark: {benchmark_drawdown * 100:.6f}%")
-
+    print(f"CAGR: Benchmark: {benchmark_cagr * 100:.6f}%")
     print("Performance Variance (Std Across Chunks):")
     for k, v in results["performance_variance"].items():
         print(f"{k}: ±{v * 100:.6f}%")
