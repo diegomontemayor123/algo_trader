@@ -9,7 +9,7 @@ def run_experiment(trial):
     config = {"START_DATE": trial.suggest_categorical("START_DATE", ["2014-01-01","2015-01-01","2016-01-01","2012-01-01"]),
         "END_DATE": trial.suggest_categorical("END_DATE", ["2025-07-01"]),
         "SPLIT_DATE": trial.suggest_categorical("SPLIT_DATE", ["2019-01-01"]),
-        "TICKERS": trial.suggest_categorical("TICKERS", ["AAPL,MSFT,GOOGL,AMZN,META,NVDA,TSLA,JPM,WMT,BTC,CVX,MCD,T,NKE"]),
+        "TICKERS": trial.suggest_categorical("TICKERS", ["AAPL,MSFT,GOOGL,AMZN,META,NVDA,TSLA,JPM,WMT,CVX,MCD,T,NKE"]),
         "MACRO":trial.suggest_categorical("MACRO", ["CPI"]),
         "FEATURES": trial.suggest_categorical("FEATURES", ["ret,vol,log_ret,rolling_ret,volume"]),
         "INITIAL_CAPITAL": trial.suggest_float("INITIAL_CAPITAL", 100, 100),
