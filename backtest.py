@@ -53,13 +53,21 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
     returns_df.index = pd.to_datetime(returns_df.index)
     chunks = []
     current_start = split_date_dt
+
     while current_start < end_date_dt:
         current_end = current_start + relativedelta(months=test_chunk_months) - pd.Timedelta(days=1)
         if current_end > end_date_dt:
             current_end = end_date_dt
         chunks.append((current_start, current_end))
         current_start = current_end + pd.Timedelta(days=1)
-
+    if len(chunks) >= 2:
+        final_start, final_end = chunks[-1]
+        duration_months = (final_end.year - final_start.year) * 12 + (final_end.month - final_start.month)
+        if duration_months < test_chunk_months:
+            logging.info(f"[Chunk Merge] Merging short final chunk ({final_start.date()} to {final_end.date()}) into previous.")
+            prev_start, _ = chunks[-2]
+            chunks[-2] = (prev_start, final_end)
+            chunks.pop()
     portfolio_values = [initial_capital]
     benchmark_values = [initial_capital]
     daily_weights = []

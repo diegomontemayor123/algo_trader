@@ -63,9 +63,14 @@ class DifferentiableSharpeLoss(nn.Module):
         returns = (portfolio_weights * target_returns).sum(dim=1)
         mean_return = torch.mean(returns)
         if returns.numel() > 1 and not torch.isnan(returns).all():
-            std_return = torch.std(returns, unbiased=False) + 1e-6
+            std_return = torch.std(returns, unbiased=False)
+            if std_return < 1e-4:
+                logging.warning("[Loss] Std dev of returns too low (<1e-6), skipping batch.")
+                return None  
         else:
-            std_return = torch.tensor(1e-6, device=returns.device)
+            logging.warning("[Loss] Returns invalid or empty, skipping batch.")
+            return None 
+
         sharpe_ratio = mean_return / (std_return + 1e-6)
         low_return = torch.clamp(self.loss_min_mean - mean_return, min=0.0)
         loss = -sharpe_ratio + self.loss_return_penalty * low_return 

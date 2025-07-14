@@ -45,7 +45,6 @@ def train_model_with_validation(model, train_loader, val_loader, config):
             current_lr = optimizer.param_groups[0]['lr']
             lrs.append(current_lr)
             train_losses.append(loss.item())
-        avg_train_loss = np.mean(train_losses)
         model.eval()
         val_portfolio_returns = []
         with torch.no_grad():
@@ -62,7 +61,6 @@ def train_model_with_validation(model, train_loader, val_loader, config):
         mean_ret = val_returns_array.mean()
         std_ret = val_returns_array.std() + 1e-6
         avg_val_loss = -(mean_ret / std_ret)
-        #print(f"[Train] Epoch {epoch + 1} Train Loss: {avg_train_loss:.4f} | Validation: {abs(avg_val_loss):.4f}")
         if avg_val_loss < best_val_loss:
             best_val_loss = avg_val_loss
             patience_counter = 0
