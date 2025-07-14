@@ -13,17 +13,17 @@ def run_experiment(trial):
         "MACRO":trial.suggest_categorical("MACRO", ["FEDFUNDS"]),
         "FEATURES": trial.suggest_categorical("FEATURES", ["ret,vol,log_ret,rolling_ret,volume"]),
         "INITIAL_CAPITAL": trial.suggest_float("INITIAL_CAPITAL", 100, 100),
-        "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 1,2),
+        "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 1.2,2),
 
         "BATCH_SIZE": trial.suggest_int("BATCH_SIZE",40,80),
         "LOOKBACK": trial.suggest_int("LOOKBACK",50,90),
         "PREDICT_DAYS": trial.suggest_int("PREDICT_DAYS",1,8),
-        "WARMUP_FRAC": trial.suggest_float("WARMUP_FRAC", 0.1, 0.2),
+        "WARMUP_FRAC": trial.suggest_float("WARMUP_FRAC", 0.17, 0.17),
         "DROPOUT": trial.suggest_float("DROPOUT", 0.01, 0.1),
-        "DECAY": trial.suggest_float("DECAY", 1e-6, 0.06),
+        "DECAY": trial.suggest_float("DECAY", 1e-7, 1e-3),
 
         "FEATURE_ATTENTION_ENABLED": trial.suggest_int("FEATURE_ATTENTION_ENABLED", 1, 1),
-        "L1_PENALTY": trial.suggest_float("L1_PENALTY", 1e-10, 1),
+        "L1_PENALTY": trial.suggest_float("L1_PENALTY", 1e-10, 1e-3),
         "L2_PENALTY": trial.suggest_float("L2_PENALTY", 0, 0),
         "LOSS_MIN_MEAN": trial.suggest_float("LOSS_MIN_MEAN", 0.01, 0.15),
         "LOSS_RETURN_PENALTY": trial.suggest_float("LOSS_RETURN_PENALTY", 0.01, 0.5),
@@ -33,7 +33,7 @@ def run_experiment(trial):
         "EPOCHS": trial.suggest_int("EPOCHS", 20, 20),
         "MAX_HEADS": trial.suggest_int("MAX_HEADS", 20, 20),
         "LAYER_COUNT": trial.suggest_int("LAYER_COUNT", 6, 6),
-        "EARLY_STOP_PATIENCE": trial.suggest_int("EARLY_STOP_PATIENCE", 3, 6),
+        "EARLY_STOP_PATIENCE": trial.suggest_int("EARLY_STOP_PATIENCE", 5,5),
         "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", 0.16,0.16),
     }
 
@@ -67,7 +67,7 @@ def run_experiment(trial):
         avg_benchmark_outperformance = extract_avg_benchmark_outperformance(output)
         if sharpe is None or drawdown is None:
             return -float("inf")
-        score = (1 * sharpe) + (1 * avg_benchmark_outperformance) - (1 * abs(drawdown))
+        score = (1 * sharpe) + (1 * avg_benchmark_outperformance) - (0.3 * abs(drawdown))
         trial.set_user_attr("sharpe", sharpe)
         trial.set_user_attr("drawdown", drawdown)
         trial.set_user_attr("avg_benchmark_outperformance", avg_benchmark_outperformance)
