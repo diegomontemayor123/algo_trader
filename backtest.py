@@ -20,13 +20,12 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
     logging.info(f"[Backtest] Starting w retrain_window={retrain_window}")
     split_date_dt = pd.to_datetime(split_date)
     end_date_dt = pd.to_datetime(end_date)
-    cached_data=load_price_data(start_date,end_date,macro_keys)
+    cached_data = load_price_data(start_date, end_date, macro_keys)
     features_df, returns_df = compute_features(tickers, features, cached_data, macro_keys)
     features_df.index = pd.to_datetime(features_df.index)
     returns_df.index = pd.to_datetime(returns_df.index)
     chunks = []
     current_start = split_date_dt
-
     while current_start < end_date_dt:
         current_end = current_start + relativedelta(months=test_chunk_months) - pd.Timedelta(days=1)
         if current_end > end_date_dt:
@@ -46,8 +45,7 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
     daily_weights = []
     all_portfolio_metrics = []
     all_benchmark_metrics = []
-
-    avg_outperformance = {}  # Initialize here outside retrain branches
+    avg_outperformance = {}
 
     if retrain_window < 1:
         logging.info("[Backtest] Running w/o retraining.")
@@ -81,8 +79,18 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
             daily_weights.append(pd.Series(final_weights, index=asset_names, name=current_date))
         logging.info("[Backtest] Completed w/o retraining.")
         weights_df = pd.DataFrame(daily_weights)
+        logging.debug(f"[Backtest] Daily weights DataFrame created with shape: {weights_df.shape}")
+
         weights_df["total_exposure"] = weights_df.abs().sum(axis=1)
         weights_df.index.name = "Date"
+
+        logging.info(f"[Backtest] Saving combined weights DataFrame to CSV at: {weights_csv_path}")
+        try:
+            weights_df.to_csv(weights_csv_path)
+            logging.info(f"[Backtest] Successfully saved combined weights to {weights_csv_path}")
+        except Exception as e:
+            logging.error(f"[Backtest] Error saving daily weights to {weights_csv_path}: {e}")
+
         portfolio_series = pd.Series(portfolio_values[1:], index=weights_df.index)
         benchmark_series = pd.Series(benchmark_values[1:], index=weights_df.index)
         for idx, (chunk_start, chunk_end) in enumerate(chunks):
@@ -96,7 +104,6 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
             all_benchmark_metrics.append(benchmark_metrics)
             logging.info(f"[Backtest] Chunk {idx+1}: Portfolio Metrics: {portfolio_metrics}")
             logging.info(f"[Backtest] Chunk {idx+1}: Benchmark Metrics: {benchmark_metrics}")
-
         if all_portfolio_metrics and all_benchmark_metrics:
             metrics_keys = all_portfolio_metrics[0].keys()
             for key in metrics_keys:
@@ -104,7 +111,6 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
                 bench_vals = [m[key] for m in all_benchmark_metrics]
                 diffs = [p - b for p, b in zip(port_vals, bench_vals)]
                 avg_outperformance[key] = np.mean(diffs)
-
     else:
         logging.info(f"[Backtest] Running w test_chunk_months {test_chunk_months} and retrain_window {retrain_window}")
         previous_model = None
@@ -115,7 +121,7 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
             train_start_date = max(train_start_date, pd.to_datetime(start_date))
             train_end_date = max(train_end_date, train_start_date)
             training_days = (train_end_date - train_start_date).days
-            if training_days < ((chunk_start - (chunk_start - relativedelta(months=retrain_window))).days)-30:
+            if training_days < ((chunk_start - (chunk_start - relativedelta(months=retrain_window))).days) - 30:
                 logging.warning(f"[Backtest] Skipping chunk {idx+1} due to insufficient training data: {training_days} days")
                 continue
             logging.info(f"[Backtest] Chunk {idx+1}: Training from {train_start_date.date()} to {train_end_date.date()}")
@@ -133,10 +139,9 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
             model = train_model_with_validation(model, train_loader, val_loader, config)
             if model is None:
                 logging.warning(f"[Backtest] Skipping chunk {idx+1} due to failed training (NaNs or early exit).")
-                continue  
+                continue
             model.eval()
             previous_model = deepcopy(model)
-
             try:
                 start_idx = features_df.index.get_indexer([chunk_start], method='bfill')[0]
                 end_idx = features_df.index.get_indexer([chunk_end], method='ffill')[0]
@@ -163,12 +168,18 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
                 benchmark_values.append(benchmark_values[-1] * (1 + benchmark_return))
                 daily_weights.append(pd.Series(final_weights, index=asset_names, name=current_date))
             logging.info(f"[Backtest] Chunk {idx+1}: Completed inference.")
-
         weights_df = pd.DataFrame(daily_weights)
+        logging.debug(f"[Backtest] Daily weights DataFrame created with shape: {weights_df.shape}")
+
         weights_df["total_exposure"] = weights_df.abs().sum(axis=1)
         weights_df.index.name = "Date"
-        weights_df.to_csv(weights_csv_path)
-        logging.info(f"[Backtest] Saved combined weights to {weights_csv_path}")
+
+        logging.info(f"[Backtest] Saving combined weights DataFrame to CSV at: {weights_csv_path}")
+        try:
+            weights_df.to_csv(weights_csv_path)
+            logging.info(f"[Backtest] Successfully saved combined weights to {weights_csv_path}")
+        except Exception as e:
+            logging.error(f"[Backtest] Error saving daily weights to {weights_csv_path}: {e}")
 
         portfolio_series = pd.Series(portfolio_values[1:], index=weights_df.index)
         benchmark_series = pd.Series(benchmark_values[1:], index=weights_df.index)
@@ -192,37 +203,28 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
                 bench_vals = [m[key] for m in all_benchmark_metrics]
                 diffs = [p - b for p, b in zip(port_vals, bench_vals)]
                 avg_outperformance[key] = np.mean(diffs)
-
     combined_portfolio_metrics = calculate_performance_metrics(portfolio_series)
     combined_benchmark_metrics = calculate_performance_metrics(benchmark_series)
-
     report_path = "backtest.txt"
     with open(report_path, "w") as f:
         f.write("=Combined Perform Over Full Period=\n")
         for key in combined_portfolio_metrics:
             f.write(f"{key.title()}: Strategy {combined_portfolio_metrics[key]:.2%}, Benchmark {combined_benchmark_metrics[key]:.2%}\n")
-        
         f.write("\n=Per-Chunk Metrics=\n")
         for i, (pm, bm) in enumerate(zip(all_portfolio_metrics, all_benchmark_metrics)):
             chunk_start, chunk_end = chunks[i]
-            f.write(f"-Chunk {i+1} ({chunk_start.date()} to {chunk_end.date()})-\n") 
+            f.write(f"-Chunk {i+1} ({chunk_start.date()} to {chunk_end.date()})-\n")
             for key in pm:
                 f.write(f"{key.title()}: Strategy {pm[key]:.2%}, Benchmark {bm[key]:.2%}\n")
-        
         f.write("\n=Std Dev of Metrics Across Chunks=\n")
         metrics_df = pd.DataFrame(all_portfolio_metrics)
         metrics_std = metrics_df.std()
         for key, val in metrics_std.items():
             f.write(f"{key.title()}: ±{val:.2%}\n")
-
         f.write("\n=Average Outperformance Across Chunks (Strategy - Benchmark)=\n")
         for key, val in avg_outperformance.items():
             f.write(f"{key.title()}: {val:.2%}\n")
-
-
-
     logging.info(f"[Backtest] Saved perform report to {report_path}")
-
     if plot:
         plt.figure(figsize=(12, 6))
         plt.plot(portfolio_series.index, portfolio_series.values, label="Combined Strategy Equity Curve", linewidth=2)
@@ -236,7 +238,6 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
         plt.savefig("combined_equity_curve.png", dpi=300)
         plt.close()
         logging.info("[Backtest] Saved combined equity curve plot.")
-
     return {
         'portfolio': combined_portfolio_metrics,
         'benchmark': combined_benchmark_metrics,
