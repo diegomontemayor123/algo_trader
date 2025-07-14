@@ -6,10 +6,10 @@ import json
 from optuna.samplers import TPESampler
 
 def run_experiment(trial):
-    config = {"START_DATE": trial.suggest_categorical("START_DATE", ["2017-01-01"]),
-        "END_DATE": trial.suggest_categorical("END_DATE", ["2025-06-29"]),
-        "SPLIT_DATE": trial.suggest_categorical("SPLIT_DATE", ["2022-07-01"]),
-        "TICKERS": trial.suggest_categorical("TICKERS", ["AAPL,MSFT,GOOGL,AMZN,META,NVDA,TSLA,JPM,WMT,BA,PG,CAT,CVX,MCD,GE,VZ,T,UNH,NKE"]),
+    config = {"START_DATE": trial.suggest_categorical("START_DATE", ["2014-01-01","2015-01-01","2016-01-01","2012-01-01"]),
+        "END_DATE": trial.suggest_categorical("END_DATE", ["2025-07-01"]),
+        "SPLIT_DATE": trial.suggest_categorical("SPLIT_DATE", ["2019-01-01"]),
+        "TICKERS": trial.suggest_categorical("TICKERS", ["AAPL,MSFT,GOOGL,AMZN,META,NVDA,TSLA,JPM,WMT,BTC,CVX,MCD,T,NKE"]),
         "MACRO":trial.suggest_categorical("MACRO", ["CPI"]),
         "FEATURES": trial.suggest_categorical("FEATURES", ["ret,vol,log_ret,rolling_ret,volume"]),
         "INITIAL_CAPITAL": trial.suggest_float("INITIAL_CAPITAL", 100, 100),
@@ -17,7 +17,7 @@ def run_experiment(trial):
 
         "BATCH_SIZE": trial.suggest_int("BATCH_SIZE",40,60),
         "LOOKBACK": trial.suggest_int("LOOKBACK",60,90),
-        "PREDICT_DAYS": trial.suggest_int("PREDICT_DAYS",6,6),
+        "PREDICT_DAYS": trial.suggest_int("PREDICT_DAYS",1,8),
         "WARMUP_FRAC": trial.suggest_float("WARMUP_FRAC", 0.17, 0.17),
         "DROPOUT": trial.suggest_float("DROPOUT", 0.1, 0.3),
         "DECAY": trial.suggest_float("DECAY", 0.03, 0.06),
