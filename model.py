@@ -78,6 +78,9 @@ class DifferentiableSharpeLoss(nn.Module):
         if self.l2_penalty_enabled and model is not None:
             l2_penalty = sum(p.pow(2.0).sum() for p in model.parameters())
             loss += self.l2_lambda * l2_penalty
+        if  model is not None:
+            l1_penalty = sum(p.abs().sum() for p in model.parameters())
+            loss += self.l1_lambda * l1_penalty
         return loss
 
 class TransformerLRScheduler(torch.optim.lr_scheduler._LRScheduler):
