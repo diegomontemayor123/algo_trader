@@ -1,7 +1,6 @@
 import os, torch, sys, csv
 import numpy as np
 import torch.nn as nn
-from features import FTR_FUNC
 from compute_features import *
 from loadconfig import load_config
 from data_prep import *
@@ -14,11 +13,6 @@ torch.manual_seed(SEED)
 np.random.seed(SEED)
 if torch.cuda.is_available():
     torch.cuda.manual_seed_all(SEED)
-
-def save_top_features_csv(model, feature_names, filepath="top_features.csv", top_k=50):
-    weights = model.feature_weights.detach().cpu().numpy()
-    feature_weight_pairs = list(zip(feature_names, weights))
-    feature_weight_pairs.sort(key=lambda x: abs(x[1]), reverse=True)
     
     with open(filepath, mode='w', newline='') as f:
         writer = csv.writer(f)
@@ -110,6 +104,19 @@ def load_trained_model(input_dimension, config, path=MODEL_PATH):
     print(f"[Model] Loaded trained model from {path}")
     return model
 
+def save_top_features_csv(model, feature_names, filepath="top_features.csv", top_k=50):
+    weights = model.feature_weights.detach().cpu().numpy()
+    feature_weight_pairs = list(zip(feature_names, weights))
+    feature_weight_pairs.sort(key=lambda x: abs(x[1]), reverse=True)
+    
+    with open(filepath, mode='w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(["Feature", "Weight"])
+        for feat, weight in feature_weight_pairs[:top_k]:
+            writer.writerow([feat, weight])
+    print(f"Saved top {top_k} features to {filepath}")
+
+
 if __name__ == "__main__":
     import sys
     from backtest import run_backtest
@@ -126,21 +133,15 @@ if __name__ == "__main__":
     macro_keys = config.get("MACRO", [])
     if isinstance(macro_keys, str):
         macro_keys = [k.strip() for k in macro_keys.split(",") if k.strip()]
-
-    # Load price and macro data once, passing macro keys
     cached_data = load_price_data(config["START_DATE"], config["END_DATE"], macro_keys)
-
-    # Compute features and targets, passing macro keys
     features, returns = compute_features(tickers, feature_list, cached_data, macro_keys)
-
-    # Prepare datasets
     _, _, test_dataset = prepare_main_datasets(features, returns, config)
 
     if LOAD_MODEL and os.path.exists(MODEL_PATH):
         trained_model = load_trained_model(test_dataset[0][0].shape[1], config)
     else:
         trained_model = train_main_model(config, features, returns)
-
+    save_top_features_csv(trained_model, features.columns.tolist(), filepath="top_features.csv", top_k=50)
     results = run_backtest(
         device=DEVICE,
         initial_capital=config["INITIAL_CAPITAL"],
@@ -178,5 +179,4 @@ if __name__ == "__main__":
     print("Average Benchmark Outperformance Across Chunks:")
     for k, v in results["performance_outperformance"].items():
         print(f"{k}: {v * 100:.6f}%")
-    save_top_features_csv(trained_model, feature_list, filepath="feature_attention_weights.csv", top_k=50)
     sys.stdout.flush()

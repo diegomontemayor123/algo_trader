@@ -3,23 +3,26 @@ import pandas as pd
 import yfinance as yf
 from pandas_datareader.data import DataReader
 from features import FTR_FUNC, add_volume
+from loadconfig import load_config
 
+config = load_config()
 PRICE_CACHE_FILE = "cached_prices.csv"
 
-TICKERS = ["AAPL", "MSFT", "GOOGL", "AMZN", "META", "NVDA", "TSLA"]
+# Load tickers and macro keys from config
+TICKERS = config["TICKERS"]
+if isinstance(TICKERS, str):
+    TICKERS = [t.strip() for t in TICKERS.split(",") if t.strip()]
 
-# Fixed internal mapping from macro keys to ticker symbols
-MACRO_TICKERS = {
-    "TNX": "^TNX",         # US 10-Year Treasury Yield (Yahoo Finance)
-    "CPI": "CPIAUCSL",     # Consumer Price Index (FRED)
-    "FEDFUNDS": "FEDFUNDS" # Fed Funds Rate (FRED)
-}
+MACRO_KEYS = config.get("MACRO", [])
+if isinstance(MACRO_KEYS, str):
+    MACRO_KEYS = [m.strip() for m in MACRO_KEYS.split(",") if m.strip()]
 
-LOW_FREQ_MACROS = {"CPI", "FEDFUNDS"}  # Known low-frequency macros
+# Low frequency macros can also be loaded from config or hardcoded
+LOW_FREQ_MACROS = set(config.get("LOW_FREQ_MACROS", ["CPI", "FEDFUNDS"]))
 
 def fetch_macro_series(name, ticker, start, end):
     try:
-        if ticker in ["CPIAUCSL", "FEDFUNDS"]:
+        if ticker in LOW_FREQ_MACROS:
             # Fetch monthly/quarterly FRED data, resample daily with forward fill
             series = DataReader(ticker, "fred", start, end).squeeze()
             series = series.resample('D').ffill()
@@ -38,7 +41,7 @@ def fetch_macro_series(name, ticker, start, end):
         return series
 
     except Exception as e:
-        print(f"[Macro] Failed to fetch {name}: {e}")
+        print(f"[Macro] Failed to fetch {name} ({ticker}): {e}")
         return pd.Series(dtype='float64')
 
 def load_price_data(START_DATE, END_DATE, macro_keys):
@@ -54,12 +57,9 @@ def load_price_data(START_DATE, END_DATE, macro_keys):
         volume.columns = [f"{ticker}_volume" for ticker in volume.columns]
         data = pd.concat([price, volume], axis=1)
 
-        # Map macro keys to tickers and fetch only those macros
-        macro_dict = {key: MACRO_TICKERS[key] for key in macro_keys if key in MACRO_TICKERS}
-
-        for name, macro_ticker in macro_dict.items():
-            macro_series = fetch_macro_series(name, macro_ticker, START_DATE, END_DATE)
-            data[name] = macro_series
+        for macro_name in macro_keys:
+            macro_series = fetch_macro_series(macro_name, macro_name, START_DATE, END_DATE)
+            data[macro_name] = macro_series
 
         data = data.sort_index()
         data.to_csv(PRICE_CACHE_FILE)
@@ -86,6 +86,8 @@ def process_macro_features(cached_data, index, macro_keys, min_non_na_ratio=0.1)
             pct_series = pd.Series(0, index=series.index)
         macro_features[col] = pct_series
     return pd.DataFrame(macro_features, index=index)
+
+# compute_features and normalize_features unchanged, but ensure TICKERS and MACRO_KEYS are passed
 
 def compute_features(TICKERS, FEATURES, cached_data, macro_keys):
     price_cols = [col for col in cached_data.columns if not col.endswith("_volume") and col in TICKERS]
