@@ -48,7 +48,15 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
     logging.info(f"[Backtest] Starting w retrain_window={retrain_window}")
     split_date_dt = pd.to_datetime(split_date)
     end_date_dt = pd.to_datetime(end_date)
-    features_df, returns_df = compute_features(tickers, start_date, end_date, features)
+    # Step 1: Define macro_keys (assuming `features` holds macro features like ["CPI", "FEDFUNDS", ...])
+    macro_keys = features  # or explicitly: macro_keys = ["CPI", "FEDFUNDS", "TNX"] if appropriate
+
+    # Step 2: Load the cached or fresh price/macro data
+    cached_data = load_price_data(start_date, end_date, macro_keys)
+
+    # Step 3: Compute features and returns using the correct argument order
+    features_df, returns_df = compute_features(tickers, features, cached_data, macro_keys)
+
     features_df.index = pd.to_datetime(features_df.index)
     returns_df.index = pd.to_datetime(returns_df.index)
     chunks = []
