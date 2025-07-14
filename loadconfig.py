@@ -47,7 +47,6 @@ def load_config():
                 return val
             else:
                 raise ValueError(f"Expected list or comma-separated string for key '{key}', got {type(val)}")
-            
         if key in float_keys:
             return float(val)
         elif key in int_keys:
@@ -55,7 +54,6 @@ def load_config():
         elif key in bool_keys:
             return parse_bool(val)
         elif key in list_keys:
-            # Accept list or comma-separated string
             if isinstance(val, str):
                 return [x.strip() for x in val.split(",") if x.strip()]
             elif isinstance(val, list):
@@ -65,10 +63,7 @@ def load_config():
         elif key in date_keys:
             return pd.Timestamp(val)
         return val
-
-    # Consider missing if not set or empty string
     missing_env_keys = [k for k in keys if not os.environ.get(k)]
-
     if not missing_env_keys:
         print("[Config] Loading configuration from environment variables.")
         config = {}
@@ -78,20 +73,14 @@ def load_config():
                 raise ValueError(f"[ENV Missing] Required key: {key}")
             config[key] = parse_value(key, val)
         return config
-
-    # Fallback: load from JSON
     if not os.path.exists("hyperparameters.json"):
         raise FileNotFoundError("Configuration file 'hyperparameters.json' not found and some environment variables missing.")
-
     with open("hyperparameters.json", "r") as f:
         config_raw = json.load(f)
-
     missing_json_keys = [k for k in keys if k not in config_raw]
-
     if missing_json_keys:
         raise ValueError(f"[Config Missing] Keys missing from both environment and JSON: "
                          f"{missing_env_keys + missing_json_keys}")
-
     print("[Config] Loading configuration from JSON file 'hyperparameters.json'.")
     config = {}
     for key in keys:
@@ -99,5 +88,4 @@ def load_config():
         if val == "":
             raise ValueError(f"Key '{key}' is empty in environment or JSON.")
         config[key] = parse_value(key, val)
-
     return config
