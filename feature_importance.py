@@ -118,4 +118,14 @@ def run_evaluation():
     if weight_std < 0.01:
         logging.info("- Feature weights are uniform — model may not be learning any signal.")
     if test_perf['sharpe_ratio'] < 0.5:
-        logging.info("- Strategy underperf
+        logging.info("- Strategy underperforms — consider boosting model capacity, tuning lookback, or improving alpha features.")
+    else:
+        logging.info("- Model performing within acceptable thresholds.")
+
+    return results
+
+
+if __name__ == "__main__":
+    torch.manual_seed(42)
+    np.random.seed(42)
+    run_evaluation()
