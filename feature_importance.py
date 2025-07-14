@@ -36,7 +36,6 @@ def check_feature_weight_diversity(model: TransformerTrader):
 
 def run_evaluation():
     config = load_config()
-
     tickers = config["TICKERS"]
     feature_list = config["FEATURES"]
     macro_keys = config.get("MACRO", [])
@@ -51,7 +50,7 @@ def run_evaluation():
 
     # Step 2: Prepare data splits
     train_dataset, val_dataset, test_dataset = prepare_main_datasets(features, returns, config)
-    input_dim = train_dataset[0][0].shape[1]
+    dimen = train_dataset[0][0].shape[1]
 
     # Step 3: Train model
     logging.info("[Train] Initiating training cycle...")
@@ -86,8 +85,6 @@ def run_evaluation():
     )
 
     test_perf = results["portfolio"]
-
-    # Step 7: Print KPIs
     logging.info(f"\n[Results] Test Sharpe: {test_perf.get('sharpe_ratio', float('nan')):.4f} | Max DD: {test_perf.get('max_drawdown', float('nan')):.4f} | CAGR: {test_perf.get('cagr', float('nan')):.4f}")
     
     logging.info("\n[Conclusion]")

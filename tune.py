@@ -13,14 +13,14 @@ def run_experiment(trial):
         "MACRO":trial.suggest_categorical("MACRO", ["FEDFUNDS"]),
         "FEATURES": trial.suggest_categorical("FEATURES", ["ret,vol,log_ret,rolling_ret,volume"]),
         "INITIAL_CAPITAL": trial.suggest_float("INITIAL_CAPITAL", 100, 100),
-        "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 1.4,1.4),
+        "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 1.2,1.2),
 
         "BATCH_SIZE": trial.suggest_int("BATCH_SIZE",40,80),
         "LOOKBACK": trial.suggest_int("LOOKBACK",50,90),
         "PREDICT_DAYS": trial.suggest_int("PREDICT_DAYS",1,8),
         "WARMUP_FRAC": trial.suggest_float("WARMUP_FRAC", 0.17, 0.17),
-        "DROPOUT": trial.suggest_float("DROPOUT", 0.01, 0.1),
-        "DECAY": trial.suggest_float("DECAY", 1e-7, 1e-3),
+        "DROPOUT": trial.suggest_float("DROPOUT", 0.01, 0.2),
+        "DECAY": trial.suggest_float("DECAY", 1e-7, 1e-1),
 
         "FEATURE_ATTENTION_ENABLED": trial.suggest_int("FEATURE_ATTENTION_ENABLED", 1, 1),
         "L1_PENALTY": trial.suggest_float("L1_PENALTY", 1e-10, 1e-3),
@@ -67,7 +67,7 @@ def run_experiment(trial):
         avg_benchmark_outperformance = extract_avg_benchmark_outperformance(output)
         if sharpe is None or drawdown is None:
             return -float("inf")
-        score = (1 * sharpe) + (1 * avg_benchmark_outperformance) - (0.3 * abs(drawdown))
+        score = (1 * sharpe) + (1 * avg_benchmark_outperformance) - (1 * abs(drawdown))
         trial.set_user_attr("sharpe", sharpe)
         trial.set_user_attr("drawdown", drawdown)
         trial.set_user_attr("avg_benchmark_outperformance", avg_benchmark_outperformance)
@@ -83,7 +83,7 @@ def main():
     best = study.best_trial
     best_params = best.params.copy()
 
-    with open("hyperparameters.json", "w") as f:
+    with open("hyparams.json", "w") as f:
         json.dump(best_params, f, indent=4)
 
     print("\n=== Best trial parameters ===")

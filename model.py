@@ -15,15 +15,15 @@ if torch.cuda.is_available():
     torch.cuda.manual_seed_all(SEED)
 
 class TransformerTrader(nn.Module):
-    def __init__(self, input_dim, num_heads, num_layers, dropout, seq_len, tickers, feature_attention_enabled):
+    def __init__(self, dimen, num_heads, num_layers, dropout, seq_len, tickers, feature_attention_enabled):
         super().__init__()
         self.seq_len = seq_len
         self.feature_attention_enabled = feature_attention_enabled
-        self.pos_embedding = nn.Parameter(torch.randn(1, seq_len, input_dim))
-        self.feature_weights = nn.Parameter(torch.ones(input_dim))
-        encoder_layer = nn.TransformerEncoderLayer(d_model=input_dim,nhead=num_heads,dropout=dropout,batch_first=True)
+        self.pos_embedding = nn.Parameter(torch.randn(1, seq_len, dimen))
+        self.feature_weights = nn.Parameter(torch.ones(dimen))
+        encoder_layer = nn.TransformerEncoderLayer(d_model=dimen,nhead=num_heads,dropout=dropout,batch_first=True)
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
-        self.mlp_head = nn.Sequential(nn.Linear(input_dim, 64),nn.PReLU(),nn.Dropout(dropout),nn.Linear(64, len(tickers)))
+        self.mlp_head = nn.Sequential(nn.Linear(dimen, 64),nn.PReLU(),nn.Dropout(dropout),nn.Linear(64, len(tickers)))
     def forward(self, x):
         if self.feature_attention_enabled:
             x = x * self.feature_weights
@@ -34,18 +34,18 @@ class TransformerTrader(nn.Module):
         return weights
 
 
-def calculate_heads(input_dim, max_heads):
-    if input_dim % max_heads != 0:
+def calculate_heads(dimen, max_heads):
+    if dimen % max_heads != 0:
         for heads in range(max_heads, 0, -1):
-            if input_dim % heads == 0:
+            if dimen % heads == 0:
                 return heads
     else:
         return max_heads
 
-def create_model(input_dimension, config):
-    heads = calculate_heads(input_dimension, config["MAX_HEADS"])
-    print(f"[Model] Creating TransformerTrader with input_dim={input_dimension}, heads={heads}, device={DEVICE}")
-    return TransformerTrader(input_dim=input_dimension,num_heads=heads,num_layers=config["LAYER_COUNT"],dropout=config["DROPOUT"],seq_len=config["LOOKBACK"],tickers=config["TICKERS"],feature_attention_enabled=config["FEATURE_ATTENTION_ENABLED"]).to(DEVICE, non_blocking=True)
+def create_model(dimenension, config):
+    heads = calculate_heads(dimenension, config["MAX_HEADS"])
+    print(f"[Model] Creating TransformerTrader with dimen={dimenension}, heads={heads}, device={DEVICE}")
+    return TransformerTrader(dimen=dimenension,num_heads=heads,num_layers=config["LAYER_COUNT"],dropout=config["DROPOUT"],seq_len=config["LOOKBACK"],tickers=config["TICKERS"],feature_attention_enabled=config["FEATURE_ATTENTION_ENABLED"]).to(DEVICE, non_blocking=True)
 
 def split_train_validation(sequences, targets, validation_ratio):
     total_samples = len(sequences)
@@ -94,8 +94,8 @@ class TransformerLRScheduler(torch.optim.lr_scheduler._LRScheduler):
         lr = scale * min(step ** (-0.5), step * (self.warmup_steps ** -1.5))
         return [lr for _ in self.optimizer.param_groups]
 
-def load_trained_model(input_dimension, config, path=MODEL_PATH):
-    model = create_model(input_dimension, config)
+def load_trained_model(dimenension, config, path=MODEL_PATH):
+    model = create_model(dimenension, config)
     model.load_state_dict(torch.load(path, map_location=DEVICE))
     model.eval()
     print(f"[Model] Loaded trained model from {path}")

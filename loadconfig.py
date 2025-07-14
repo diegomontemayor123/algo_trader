@@ -73,15 +73,15 @@ def load_config():
                 raise ValueError(f"[ENV Missing] Required key: {key}")
             config[key] = parse_value(key, val)
         return config
-    if not os.path.exists("hyperparameters.json"):
-        raise FileNotFoundError("Configuration file 'hyperparameters.json' not found and some environment variables missing.")
-    with open("hyperparameters.json", "r") as f:
+    if not os.path.exists("hyparams.json"):
+        raise FileNotFoundError("Configuration file 'hyparams.json' not found and some environment variables missing.")
+    with open("hyparams.json", "r") as f:
         config_raw = json.load(f)
     missing_json_keys = [k for k in keys if k not in config_raw]
     if missing_json_keys:
         raise ValueError(f"[Config Missing] Keys missing from both environment and JSON: "
                          f"{missing_env_keys + missing_json_keys}")
-    print("[Config] Loading configuration from JSON file 'hyperparameters.json'.")
+    print("[Config] Loading configuration from JSON file 'hyparams.json'.")
     config = {}
     for key in keys:
         val = os.environ.get(key, config_raw[key])

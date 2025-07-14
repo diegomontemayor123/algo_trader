@@ -6,7 +6,7 @@ from features import FTR_FUNC, add_volume
 from loadconfig import load_config
 
 config = load_config()
-PRICE_CACHE_FILE = "cached_prices.csv"
+PRICE_CACHE_FILE = "prices.csv"
 
 # Load tickers and macro keys from config
 TICKERS = config["TICKERS"]
