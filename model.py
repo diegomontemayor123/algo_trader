@@ -138,6 +138,7 @@ if __name__ == "__main__":
         trained_model = load_trained_model(test_dataset[0][0].shape[1], config)
     else:
         trained_model = train_main_model(config, features, returns)
+        torch.save(trained_model.state_dict(), MODEL_PATH)
     save_top_features_csv(trained_model, features.columns.tolist())
     results = run_backtest(
         device=DEVICE,

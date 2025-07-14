@@ -218,7 +218,7 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
                 avg_outperformance[key] = np.mean(diffs)
     combined_portfolio_metrics = calculate_performance_metrics(portfolio_series)
     combined_benchmark_metrics = calculate_performance_metrics(benchmark_series)
-    report_path = "backtest.txt"
+    report_path = "backtest_report.txt"
     with open(report_path, "w") as f:
         f.write("=Combined Perform Over Full Period=\n")
         for key in combined_portfolio_metrics:

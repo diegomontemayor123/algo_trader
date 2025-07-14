@@ -13,7 +13,7 @@ def run_experiment(trial):
         "MACRO":trial.suggest_categorical("MACRO", ["FEDFUNDS"]),
         "FEATURES": trial.suggest_categorical("FEATURES", ["ret,vol,log_ret,rolling_ret,volume"]),
         "INITIAL_CAPITAL": trial.suggest_float("INITIAL_CAPITAL", 100, 100),
-        "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 1.2,2),
+        "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 1.4,1.4),
 
         "BATCH_SIZE": trial.suggest_int("BATCH_SIZE",40,80),
         "LOOKBACK": trial.suggest_int("LOOKBACK",50,90),
