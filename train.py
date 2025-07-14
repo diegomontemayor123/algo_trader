@@ -13,7 +13,6 @@ def train_model_with_validation(model, train_loader, val_loader, config):
     print(f"[Scheduler] Total steps: {total_steps}, warmup: {learning_warmup_steps}")
     learning_scheduler = TransformerLRScheduler(optimizer, d_model=model.mlp_head[0].in_features, warmup_steps=learning_warmup_steps)
     loss_function = DifferentiableSharpeLoss(
-        l2_lambda=1e-4,
         loss_min_mean=config["LOSS_MIN_MEAN"],
         loss_return_penalty=config["LOSS_RETURN_PENALTY"],
         l2_penalty_enabled=config["L2_PENALTY_ENABLED"],
