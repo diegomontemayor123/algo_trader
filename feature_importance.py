@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from compute_features import load_price_data, compute_features
 from data_prep import prepare_main_datasets
 from loadconfig import load_config
-from model import load_trained_model, train_main_model
+from train import train_main_model
 
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
