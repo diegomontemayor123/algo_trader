@@ -153,6 +153,7 @@ if __name__ == "__main__":
         start_date=config["START_DATE"],
         end_date=config["END_DATE"],
         features=feature_list,
+        macro_keys=macro_keys,
         test_chunk_months=config["TEST_CHUNK_MONTHS"],
         model=trained_model,
         plot=True,
