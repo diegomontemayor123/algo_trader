@@ -6,78 +6,70 @@ import json
 from optuna.samplers import TPESampler
 
 def run_experiment(trial):
-    config = {"START_DATE": trial.suggest_categorical("START_DATE", ["2012-01-01","2014-01-01","2016-01-01"]),
+    config = {"START_DATE": trial.suggest_categorical("START_DATE", ["2016-01-01","2017-01-01","2018-01-01"]),
         "END_DATE": trial.suggest_categorical("END_DATE", ["2025-06-29"]),
-        "SPLIT_DATE": trial.suggest_categorical("SPLIT_DATE", ["2019-01-01"]),
+        "SPLIT_DATE": trial.suggest_categorical("SPLIT_DATE", ["2021-01-01","2021-07-01","2022-01-01","2022-07-01"]),
         "TICKERS": trial.suggest_categorical("TICKERS", ["AAPL,MSFT,GOOGL,AMZN,META,NVDA,TSLA"]),
         "FEATURES": trial.suggest_categorical("FEATURES", ["ret,vol,log_ret,rolling_ret,volume"]),
         "INITIAL_CAPITAL": trial.suggest_float("INITIAL_CAPITAL", 100, 100),
-        "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 2,2),
+        "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 1,2),
 
-        "BATCH_SIZE": trial.suggest_int("BATCH_SIZE",40,60),
-        "LOOKBACK": trial.suggest_int("LOOKBACK",80,100),
-        "PREDICT_DAYS": trial.suggest_int("PREDICT_DAYS",1,10),
-        "WARMUP_FRAC": trial.suggest_float("WARMUP_FRAC", 0.15, 0.35),
-        "DROPOUT": trial.suggest_float("DROPOUT", 0.1, 0.3),
+        "BATCH_SIZE": trial.suggest_int("BATCH_SIZE",60,80),
+        "LOOKBACK": trial.suggest_int("LOOKBACK",89,89),
+        "PREDICT_DAYS": trial.suggest_int("PREDICT_DAYS",6,6),
+        "WARMUP_FRAC": trial.suggest_float("WARMUP_FRAC", 0.15, 0.2),
+        "DROPOUT": trial.suggest_float("DROPOUT", 0.1, 0.2),
         "DECAY": trial.suggest_float("DECAY", 0.01, 0.1),
 
-        "FEATURE_ATTENTION_ENABLED": trial.suggest_int("FEATURE_ATTENTION_ENABLED", 0, 1),
+        "FEATURE_ATTENTION_ENABLED": trial.suggest_int("FEATURE_ATTENTION_ENABLED", 1, 1),
         "L2_PENALTY_ENABLED": trial.suggest_int("L2_PENALTY_ENABLED", 0, 1),
         "LOSS_MIN_MEAN": trial.suggest_float("LOSS_MIN_MEAN", 0.01, 0.1),
-        "LOSS_RETURN_PENALTY": trial.suggest_float("LOSS_RETURN_PENALTY", 0, 2),
-        "TEST_CHUNK_MONTHS": trial.suggest_int("TEST_CHUNK_MONTHS", 6, 36),
+        "LOSS_RETURN_PENALTY": trial.suggest_float("LOSS_RETURN_PENALTY", 0, 1),
+        "TEST_CHUNK_MONTHS": trial.suggest_int("TEST_CHUNK_MONTHS", 12, 25),
         "RETRAIN_WINDOW": trial.suggest_int("RETRAIN_WINDOW", 0, 0), #months
 
         "EPOCHS": trial.suggest_int("EPOCHS", 20, 20),
         "MAX_HEADS": trial.suggest_int("MAX_HEADS", 20, 20),
         "LAYER_COUNT": trial.suggest_int("LAYER_COUNT", 6, 6),
-        "EARLY_STOP_PATIENCE": trial.suggest_int("EARLY_STOP_PATIENCE", 2, 6),
-        "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", 0.1,0.2),
+        "EARLY_STOP_PATIENCE": trial.suggest_int("EARLY_STOP_PATIENCE", 5, 5),
+        "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", 0.16,0.16),
     }
 
     env = os.environ.copy()
     for k, v in config.items():
         env[k] = str(v)
-
     try:
-        result = subprocess.run(
-            ["python", "model.py"],
-            capture_output=True,
-            text=True,
-            env=env,
-            timeout=1800,
-        )
+        result = subprocess.run(["python", "model.py"],capture_output=True,text=True,env=env,timeout=1800)
         output = result.stdout + result.stderr
         print(f"[Subprocess output]\n{output}\n")
-
         def extract_metric(label, out):
             match = re.search(rf"{label}:\s*Strategy:\s*([-+]?\d*\.\d+|\d+)%", out)
             return float(match.group(1)) / 100 if match else None
-
-        def extract_avg_benchmark_outperformance(out):
-            match = re.search(r"Average Benchmark Outperformance(?: Across Chunks)?:\s*([-+]?\d*\.\d+|\d+)%", out)
-            if match:
+        def extract_avg_benchmark_outperformance(output):
+            single_line_match = re.findall(r"Average Benchmark Outperformance(?: Across Chunks)?:\s*([-+]?\d*\.\d+|\d+)%", output)
+            if single_line_match:
+                for val in reversed(single_line_match):
+                    try:
+                        return float(val) / 100.0
+                    except:
+                        pass
+            multiline_match = re.search(r"Average Benchmark Outperformance Across Chunks:\s*\ncagr:\s*([-+]?\d*\.\d+|\d+)%", output, re.MULTILINE)
+            if multiline_match:
                 try:
-                    return float(match.group(1)) / 100.0
+                    return float(multiline_match.group(1)) / 100.0
                 except:
                     return 0.0
             return 0.0
-
         sharpe = extract_metric("Sharpe Ratio", output)
         drawdown = extract_metric("Max Drawdown", output)
         avg_benchmark_outperformance = extract_avg_benchmark_outperformance(output)
-
         if sharpe is None or drawdown is None:
             return -float("inf")
-        
-        score = (1 * sharpe) + (1 * avg_benchmark_outperformance) - (0.3 * abs(drawdown))
-
+        score = (1 * sharpe) + (1 * avg_benchmark_outperformance) - (0.7 * abs(drawdown))
         trial.set_user_attr("sharpe", sharpe)
         trial.set_user_attr("drawdown", drawdown)
         trial.set_user_attr("avg_benchmark_outperformance", avg_benchmark_outperformance)
-
         return score
-
     except subprocess.TimeoutExpired:
         print(f"[Timeout] Trial failed for config: {config}")
         return -float("inf")
