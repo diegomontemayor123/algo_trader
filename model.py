@@ -98,17 +98,6 @@ def load_trained_model(input_dimension, config, path=MODEL_PATH):
     print(f"[Model] Loaded trained model from {path}")
     return model
 
-def save_top_features_csv(model, feature_names, filepath="top_features.csv", top_k=50):
-    weights = model.feature_weights.detach().cpu().numpy()
-    feature_weight_pairs = list(zip(feature_names, weights))
-    feature_weight_pairs.sort(key=lambda x: abs(x[1]), reverse=True)
-    
-    with open(filepath, mode='w', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerow(["Feature", "Weight"])
-        for feat, weight in feature_weight_pairs[:top_k]:
-            writer.writerow([feat, weight])
-    print(f"Saved top {top_k} features to {filepath}")
 
 
 if __name__ == "__main__":
@@ -135,7 +124,7 @@ if __name__ == "__main__":
         trained_model = load_trained_model(test_dataset[0][0].shape[1], config)
     else:
         trained_model = train_main_model(config, features, returns)
-    save_top_features_csv(trained_model, features.columns.tolist(), filepath="top_features.csv", top_k=50)
+    save_top_features_csv(trained_model, features.columns.tolist(), filepath="top_features.csv", top_k=500)
     results = run_backtest(
         device=DEVICE,
         initial_capital=config["INITIAL_CAPITAL"],
