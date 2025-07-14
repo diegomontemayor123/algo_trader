@@ -13,14 +13,6 @@ torch.manual_seed(SEED)
 np.random.seed(SEED)
 if torch.cuda.is_available():
     torch.cuda.manual_seed_all(SEED)
-    
-    with open(filepath, mode='w', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerow(["Feature", "Weight"])
-        for feat, weight in feature_weight_pairs[:top_k]:
-            writer.writerow([feat, weight])
-    print(f"Saved top {top_k} features to {filepath}")
-
 
 class TransformerTrader(nn.Module):
     def __init__(self, input_dim, num_heads, num_layers, dropout, seq_len, tickers, feature_attention_enabled):
