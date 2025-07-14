@@ -9,14 +9,12 @@ from data_prep import prepare_main_datasets
 from model import create_model, save_top_features_csv, TransformerTrader
 from train import train_main_model
 from backtest import run_backtest
-from sklearn.metrics import r2_score
 
 logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
 def check_nan_or_constant(features: pd.DataFrame):
-    """Check for constant or NaN features."""
     logging.info("[Check] Validating feature matrix integrity...")
     nan_columns = features.columns[features.isna().any()]
     constant_columns = [col for col in features.columns if features[col].nunique() == 1]
@@ -28,28 +26,12 @@ def check_nan_or_constant(features: pd.DataFrame):
 
 
 def check_feature_weight_diversity(model: TransformerTrader):
-    """Check for uniform feature weights — indicates weak feature discrimination."""
     weights = model.feature_weights.detach().cpu().numpy()
     std = np.std(weights)
     logging.info(f"[Model] Feature weight std: {std:.6f}")
     if std < 0.01:
         logging.warning("[Model] All feature weights nearly equal — possible signal absence or over-regularization.")
     return std
-
-
-def check_model_under_overfit(train_perf: dict, test_perf: dict):
-    """Compare Sharpe ratio and drawdown to determine generalization."""
-    sharpe_gap = train_perf["sharpe_ratio"] - test_perf["sharpe_ratio"]
-    drawdown_gap = test_perf["max_drawdown"] - train_perf["max_drawdown"]
-
-    if sharpe_gap > 0.5:
-        logging.warning("[Eval] Model likely overfitting — large Sharpe drop from train to test.")
-    elif sharpe_gap < -0.5:
-        logging.warning("[Eval] Model possibly underfitting — better test than train (unexpected).")
-    else:
-        logging.info("[Eval] Model generalization within expected bounds.")
-
-    return sharpe_gap, drawdown_gap
 
 
 def run_evaluation():
@@ -105,17 +87,7 @@ def run_evaluation():
 
     test_perf = results["portfolio"]
 
-    # Optional dummy train_perf assumption (for diagnostic continuity)
-    train_perf = {
-        "sharpe_ratio": float("nan"),
-        "max_drawdown": float("nan"),
-        "cagr": float("nan"),
-    }
-
-    # Step 7: Diagnostics (limited without train_perf)
-    check_model_under_overfit(train_perf, test_perf)
-
-    # Step 8: Print KPIs
+    # Step 7: Print KPIs
     logging.info(f"\n[Results] Test Sharpe: {test_perf.get('sharpe_ratio', float('nan')):.4f} | Max DD: {test_perf.get('max_drawdown', float('nan')):.4f} | CAGR: {test_perf.get('cagr', float('nan')):.4f}")
     
     logging.info("\n[Conclusion]")
@@ -123,7 +95,7 @@ def run_evaluation():
         logging.info("- Feature engineering requires cleanup.")
     if weight_std < 0.01:
         logging.info("- Feature weights are uniform — model may not be learning any signal.")
-    if test_perf['sharpe_ratio'] < 0.5:
+    if test_perf.get('sharpe_ratio', 0.0) < 0.5:
         logging.info("- Strategy underperforms — consider boosting model capacity, tuning lookback, or improving alpha features.")
     else:
         logging.info("- Model performing within acceptable thresholds.")
