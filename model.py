@@ -1,4 +1,4 @@
-import os, torch, sys
+import os, torch, sys, csv
 import numpy as np
 import torch.nn as nn
 from features import FTR_FUNC
@@ -14,6 +14,19 @@ torch.manual_seed(SEED)
 np.random.seed(SEED)
 if torch.cuda.is_available():
     torch.cuda.manual_seed_all(SEED)
+
+def save_top_features_csv(model, feature_names, filepath="top_features.csv", top_k=50):
+    weights = model.feature_weights.detach().cpu().numpy()
+    feature_weight_pairs = list(zip(feature_names, weights))
+    feature_weight_pairs.sort(key=lambda x: abs(x[1]), reverse=True)
+    
+    with open(filepath, mode='w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(["Feature", "Weight"])
+        for feat, weight in feature_weight_pairs[:top_k]:
+            writer.writerow([feat, weight])
+    print(f"Saved top {top_k} features to {filepath}")
+
 
 class TransformerTrader(nn.Module):
     def __init__(self, input_dim, num_heads, num_layers, dropout, seq_len, tickers, feature_attention_enabled):
@@ -98,29 +111,71 @@ def load_trained_model(input_dimension, config, path=MODEL_PATH):
     return model
 
 if __name__ == "__main__":
+    import sys
     from backtest import run_backtest
     from train import train_main_model
+    from compute_features import load_price_data, compute_features, normalize_features
+    from data_prep import prepare_main_datasets
+    from loadconfig import load_config
+
     config = load_config()
-    features, returns = compute_features(config["TICKERS"], config["START_DATE"], config["END_DATE"], config["FEATURES"])
+
+    # Parse tickers, features, and macro keys from config
+    tickers = config["TICKERS"].split(",") if isinstance(config["TICKERS"], str) else config["TICKERS"]
+    feature_list = config["FEATURES"].split(",") if isinstance(config["FEATURES"], str) else config["FEATURES"]
+    macro_keys = config.get("MACRO", [])
+    if isinstance(macro_keys, str):
+        macro_keys = [k.strip() for k in macro_keys.split(",") if k.strip()]
+
+    # Load price and macro data once, passing macro keys
+    cached_data = load_price_data(config["START_DATE"], config["END_DATE"], macro_keys)
+
+    # Compute features and targets, passing macro keys
+    features, returns = compute_features(tickers, feature_list, cached_data, macro_keys)
+
+    # Prepare datasets
     _, _, test_dataset = prepare_main_datasets(features, returns, config)
+
     if LOAD_MODEL and os.path.exists(MODEL_PATH):
         trained_model = load_trained_model(test_dataset[0][0].shape[1], config)
     else:
         trained_model = train_main_model(config, features, returns)
-    results = run_backtest(device=DEVICE,initial_capital=config["INITIAL_CAPITAL"],split_date=config["SPLIT_DATE"],lookback=config["LOOKBACK"],max_leverage=config["MAX_LEVERAGE"],compute_features=compute_features,normalize_features=normalize_features,tickers=config["TICKERS"],start_date=config["START_DATE"],end_date=config["END_DATE"],features=config["FEATURES"],test_chunk_months=config["TEST_CHUNK_MONTHS"],model=trained_model,plot=True,config=config,retrain_window=config["RETRAIN_WINDOW"])
+
+    results = run_backtest(
+        device=DEVICE,
+        initial_capital=config["INITIAL_CAPITAL"],
+        split_date=config["SPLIT_DATE"],
+        lookback=config["LOOKBACK"],
+        max_leverage=config["MAX_LEVERAGE"],
+        compute_features=compute_features,
+        normalize_features=normalize_features,
+        tickers=tickers,
+        start_date=config["START_DATE"],
+        end_date=config["END_DATE"],
+        features=feature_list,
+        test_chunk_months=config["TEST_CHUNK_MONTHS"],
+        model=trained_model,
+        plot=True,
+        config=config,
+        retrain_window=config["RETRAIN_WINDOW"],
+    )
+
     sharpe_ratio = results["portfolio"].get("sharpe_ratio", float('nan'))
     max_drawdown = results["portfolio"].get("max_drawdown", float('nan'))
     benchmark_sharpe = results["benchmark"].get("sharpe_ratio", float('nan'))
     benchmark_drawdown = results["benchmark"].get("max_drawdown", float('nan'))
     cagr = results["portfolio"].get("cagr", float('nan'))
     benchmark_cagr = results["benchmark"].get("cagr", float('nan'))
+
     print(f"\nSharpe Ratio: Strategy: {sharpe_ratio * 100:.6f}%")
     print(f"Sharpe Ratio: Benchmark: {benchmark_sharpe * 100:.6f}%")
     print(f"Max Drawdown: Strategy: {max_drawdown * 100:.6f}%")
     print(f"Max Drawdown: Benchmark: {benchmark_drawdown * 100:.6f}%")
     print(f"CAGR: Strategy: {cagr * 100:.6f}%")
     print(f"CAGR: Benchmark: {benchmark_cagr * 100:.6f}%\n")
+
     print("Average Benchmark Outperformance Across Chunks:")
     for k, v in results["performance_outperformance"].items():
         print(f"{k}: {v * 100:.6f}%")
+    save_top_features_csv(trained_model, feature_list, filepath="feature_attention_weights.csv", top_k=50)
     sys.stdout.flush()

@@ -1,61 +1,144 @@
-
-import pandas as pd
-from features import add_volume
 import os
 import pandas as pd
 import yfinance as yf
-from features import FTR_FUNC
+from pandas_datareader.data import DataReader
+from features import FTR_FUNC, add_volume
 
 PRICE_CACHE_FILE = "cached_prices.csv"
 
-def load_price_data(TICKERS,START_DATE,END_DATE):
+TICKERS = ["AAPL", "MSFT", "GOOGL", "AMZN", "META", "NVDA", "TSLA"]
+
+# Fixed internal mapping from macro keys to ticker symbols
+MACRO_TICKERS = {
+    "TNX": "^TNX",         # US 10-Year Treasury Yield (Yahoo Finance)
+    "CPI": "CPIAUCSL",     # Consumer Price Index (FRED)
+    "FEDFUNDS": "FEDFUNDS" # Fed Funds Rate (FRED)
+}
+
+LOW_FREQ_MACROS = {"CPI", "FEDFUNDS"}  # Known low-frequency macros
+
+def fetch_macro_series(name, ticker, start, end):
+    try:
+        if ticker in ["CPIAUCSL", "FEDFUNDS"]:
+            # Fetch monthly/quarterly FRED data, resample daily with forward fill
+            series = DataReader(ticker, "fred", start, end).squeeze()
+            series = series.resample('D').ffill()
+        else:
+            # Higher frequency data from Yahoo Finance
+            yf_data = yf.download(ticker, start=start, end=end, auto_adjust=False)
+            if 'Adj Close' in yf_data:
+                series = yf_data['Adj Close']
+            elif 'Close' in yf_data:
+                series = yf_data['Close']
+            else:
+                raise ValueError(f"No valid price column found for {ticker}")
+            series = series.bfill().ffill()
+
+        series.name = name
+        return series
+
+    except Exception as e:
+        print(f"[Macro] Failed to fetch {name}: {e}")
+        return pd.Series(dtype='float64')
+
+def load_price_data(START_DATE, END_DATE, macro_keys):
     if os.path.exists(PRICE_CACHE_FILE):
-        price_data = pd.read_csv(PRICE_CACHE_FILE, index_col=0, parse_dates=True)
+        print(f"[Data] Using cached data from {PRICE_CACHE_FILE}")
+        data = pd.read_csv(PRICE_CACHE_FILE, index_col=0, parse_dates=True)
     else:
-        raw_data = yf.download(TICKERS, start=START_DATE, end=END_DATE, auto_adjust=False)
+        print("[Data] Downloading price and macro data...")
+        raw_data = yf.download(" ".join(TICKERS), start=START_DATE, end=END_DATE, auto_adjust=False)
+
         price = raw_data['Adj Close']
         volume = raw_data['Volume']
         volume.columns = [f"{ticker}_volume" for ticker in volume.columns]
-        price_data = pd.concat([price, volume], axis=1)
-        price_data.to_csv(PRICE_CACHE_FILE)
-    return price_data
+        data = pd.concat([price, volume], axis=1)
 
-def compute_features(TICKERS,START_DATE,END_DATE,FEATURES):
-    data = load_price_data(TICKERS,START_DATE,END_DATE)
-    price_cols = [col for col in data.columns if not col.endswith("_volume")]
-    volume_cols = [col for col in data.columns if col.endswith("_volume")]
-    prices = data[price_cols]
-    volume = data[volume_cols] if volume_cols else None
+        # Map macro keys to tickers and fetch only those macros
+        macro_dict = {key: MACRO_TICKERS[key] for key in macro_keys if key in MACRO_TICKERS}
+
+        for name, macro_ticker in macro_dict.items():
+            macro_series = fetch_macro_series(name, macro_ticker, START_DATE, END_DATE)
+            data[name] = macro_series
+
+        data = data.sort_index()
+        data.to_csv(PRICE_CACHE_FILE)
+        print(f"[Data] Cached to {PRICE_CACHE_FILE}")
+    return data
+
+def process_macro_features(cached_data, index, macro_keys, min_non_na_ratio=0.1):
+    macro_features = {}
+    for col in macro_keys:
+        if col not in cached_data.columns:
+            continue
+
+        series = cached_data[col].reindex(index)
+        non_na_ratio = series.notna().mean()
+
+        if col not in LOW_FREQ_MACROS and non_na_ratio < min_non_na_ratio:
+            print(f"[Macro] Excluding {col} due to low data coverage ({non_na_ratio:.2%} non-NA)")
+            continue
+        series = series.bfill().ffill()
+        try:
+            pct_series = series.pct_change(fill_method=None).fillna(0)
+        except Exception as e:
+            print(f"[Macro] Warning: pct_change failed for {col} with error {e}, filling zeros")
+            pct_series = pd.Series(0, index=series.index)
+        macro_features[col] = pct_series
+    return pd.DataFrame(macro_features, index=index)
+
+def compute_features(TICKERS, FEATURES, cached_data, macro_keys):
+    price_cols = [col for col in cached_data.columns if not col.endswith("_volume") and col in TICKERS]
+    volume_cols = [f"{ticker}_volume" for ticker in TICKERS if f"{ticker}_volume" in cached_data.columns]
+
+    prices = cached_data[price_cols]
+    volume = cached_data[volume_cols] if volume_cols else None
+
     all_features = {}
     for ticker in TICKERS:
-        price_data = prices[ticker].ffill().dropna()
-        df = pd.DataFrame(index=price_data.index)
-        df['close'] = price_data
+        if ticker not in prices:
+            continue
+        df = pd.DataFrame(index=prices.index)
+        df['close'] = prices[ticker].ffill().dropna()
+
         for feature_name in FEATURES:
             if feature_name.startswith('volume'):
                 continue
             feature_function = FTR_FUNC.get(feature_name)
-            if feature_function is not None:
+            if feature_function:
                 feature_function(df)
+
         if volume is not None and any(ftr.startswith('volume') for ftr in FEATURES):
-            volume_col = f"{ticker}_volume"
-            if volume_col in volume.columns:
-                vol_series = volume[volume_col].reindex(df.index).ffill().dropna()
+            vol_col = f"{ticker}_volume"
+            if vol_col in volume.columns:
+                vol_series = volume[vol_col].reindex(df.index).ffill().dropna()
                 if len(vol_series) == len(df):
-                    volume_feats = add_volume(pd.DataFrame({volume_col: vol_series}))
-                    df = pd.concat([df, volume_feats], axis=1)
-                else:
-                    print(f"[Warning] Volume series length mismatch for {ticker}")
+                    vol_feats = add_volume(pd.DataFrame({vol_col: vol_series}))
+                    df = pd.concat([df, vol_feats], axis=1)
+
         df = df.drop(columns=['close'], errors='ignore')
         df.columns = [f"{col}_{ticker}" for col in df.columns]
         all_features[ticker] = df
+
     features = pd.concat(all_features.values(), axis=1).dropna()
     returns = prices.pct_change().shift(-1).reindex(features.index)
-    print(f"Features shape: {features.shape}, Returns shape: {returns.shape}")
-    #print(f"Features sample:\n{features.head()}")
-    #print(f"[Features] Returns sample:\n{returns.head()}")
-    if not features.index.equals(returns.index):
-        print("[Features][Warning] Feature and Return indices do not match!")
+
+    macro_df = process_macro_features(cached_data, features.index, macro_keys)
+    features = pd.concat([features, macro_df], axis=1)
+
+    print(f"[Features] Combined features shape: {features.shape}")
+    print("[Features] Sample features (first 5 rows):")
+    print(features.head())
+
+    print(f"[Returns] Returns shape: {returns.shape}")
+    print("[Returns] Sample returns (first 5 rows):")
+    print(returns.head())
+
+    features = normalize_features(features)
+
+    print("[Features] Sample normalized features (first 5 rows):")
+    print(features.head())
+
     return features, returns
 
 def normalize_features(feature_window):

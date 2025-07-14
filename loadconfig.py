@@ -9,7 +9,7 @@ def load_config():
         "DROPOUT", "DECAY", "FEATURE_ATTENTION_ENABLED", "L2_PENALTY_ENABLED",
         "LOSS_MIN_MEAN", "LOSS_RETURN_PENALTY",
         "WARMUP_FRAC", "EARLY_STOP_PATIENCE", "INITIAL_CAPITAL", "TICKERS",
-        "START_DATE", "END_DATE", "TEST_CHUNK_MONTHS", "RETRAIN_WINDOW"
+        "START_DATE", "END_DATE", "TEST_CHUNK_MONTHS", "RETRAIN_WINDOW", "MACRO"
     ]
 
     float_keys = {
@@ -23,7 +23,7 @@ def load_config():
     bool_keys = {
         "FEATURE_ATTENTION_ENABLED", "L2_PENALTY_ENABLED"
     }
-    list_keys = {"FEATURES", "TICKERS"}
+    list_keys = {"FEATURES", "TICKERS"}  # Removed MACRO from here
     date_keys = {"SPLIT_DATE", "START_DATE", "END_DATE"}
 
     def parse_bool(val):
@@ -40,6 +40,14 @@ def load_config():
         return bool(val)
 
     def parse_value(key, val):
+        if key == "MACRO":
+            if isinstance(val, str):
+                return [x.strip() for x in val.split(",") if x.strip()]
+            elif isinstance(val, list):
+                return val
+            else:
+                raise ValueError(f"Expected list or comma-separated string for key '{key}', got {type(val)}")
+            
         if key in float_keys:
             return float(val)
         elif key in int_keys:
