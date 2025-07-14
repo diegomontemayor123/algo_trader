@@ -25,12 +25,14 @@ class TransformerTrader(nn.Module):
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
         self.mlp_head = nn.Sequential(nn.Linear(input_dim, 64),nn.PReLU(),nn.Dropout(dropout),nn.Linear(64, len(tickers)))
     def forward(self, x):
-        x = x * self.feature_weights * self.feature_attention_enabled
+        if self.feature_attention_enabled:
+            x = x * self.feature_weights
         x = x + self.pos_embedding
         encoded = self.transformer_encoder(x)
         last_hidden = encoded[:, -1, :]
         weights = self.mlp_head(last_hidden)
         return weights
+
 
 def calculate_heads(input_dim, max_heads):
     if input_dim % max_heads != 0:

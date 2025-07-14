@@ -4,7 +4,7 @@ import torch
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.decomposition import PCA
-from model import create_model, save_top_features_csv
+from model import create_model, save_top_features_csv, TransformerTrader
 from compute_features import load_price_data, compute_features, normalize_features
 from data_prep import prepare_main_datasets
 from loadconfig import load_config
@@ -90,7 +90,8 @@ def ablation_study(model, features, returns, config, feature_names, retrain=Fals
         print(f"[Ablation] Evaluating top {keep_n} features...")
         train_set, val_set, test_set = prepare_main_datasets(reduced_features, returns, config)
         temp_model = create_model(train_set[0][0].shape[1], config)
-        temp_model = train_model_with_validation(temp_model, DataLoader(train_set, batch_size=config["BATCH_SIZE"]), DataLoader(val_set, batch_size=config["BATCH_SIZE"]), config)
+        if retrain:
+            temp_model = train_model_with_validation(temp_model, DataLoader(train_set, batch_size=config["BATCH_SIZE"]), DataLoader(val_set, batch_size=config["BATCH_SIZE"]), config)
         sharpe = estimate_sharpe_on_raw_weights(temp_model, test_set)
         results[f"Top {keep_n}"] = sharpe
 
@@ -114,13 +115,14 @@ def evaluate_learning(retrain=False):
     feature_names = features.columns.tolist()
 
     model = create_model(train_set[0][0].shape[1], config)
-    model = train_model_with_validation(model, DataLoader(train_set, batch_size=config["BATCH_SIZE"]), DataLoader(val_set, batch_size=config["BATCH_SIZE"]), config) if retrain else model
+    if retrain:
+        model = train_model_with_validation(model, DataLoader(train_set, batch_size=config["BATCH_SIZE"]), DataLoader(val_set, batch_size=config["BATCH_SIZE"]), config)
 
     evaluate_feature_importance(model, feature_names)
     run_feature_reduction_analysis(features)
     evaluate_target_distribution(returns)
     estimate_sharpe_on_raw_weights(model, test_set)
-    ablation_study(model, features, returns, config, feature_names)
+    ablation_study(model, features, returns, config, feature_names, retrain=retrain)
 
 
 if __name__ == "__main__":
