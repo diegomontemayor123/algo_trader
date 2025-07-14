@@ -7,7 +7,7 @@ from data_prep import *
 
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 MODEL_PATH = "trained_model.pth"
-LOAD_MODEL = True
+LOAD_MODEL = False
 SEED = 42
 torch.manual_seed(SEED)
 np.random.seed(SEED)
@@ -66,12 +66,11 @@ class DifferentiableSharpeLoss(nn.Module):
         if returns.numel() > 1 and not torch.isnan(returns).all():
             std_return = torch.std(returns, unbiased=False)
             if std_return < 1e-4:
-                logging.warning("[Loss] Std dev of returns too low (<1e-6), skipping batch.")
+                logging.warning("[Loss] SD - returns too low (<1e-4), skipping batch.")
                 return None  
         else:
-            logging.warning("[Loss] Returns invalid or empty, skipping batch.")
+            logging.warning("[Loss] Returns invalid, skipping batch.")
             return None 
-
         sharpe_ratio = mean_return / (std_return + 1e-6)
         low_return = torch.clamp(self.loss_min_mean - mean_return, min=0.0)
         loss = -sharpe_ratio + self.loss_return_penalty * low_return 
