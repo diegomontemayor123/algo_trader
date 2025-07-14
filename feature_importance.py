@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from compute_features import load_price_data, compute_features
 from data_prep import prepare_main_datasets
 from loadconfig import load_config
-from model import load_trained_model
+from model import load_trained_model, train_main_model
 
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -76,7 +76,7 @@ def main():
     features, returns = compute_features(tickers, feature_list, cached_data, macro_keys)
     train_dataset, _, _ = prepare_main_datasets(features, returns, config)
 
-    model = load_trained_model(features.shape[1], config)
+    model = train_main_model(config,features,returns)
 
     print("[⚙] Extracting feature weights and sensitivities...")
     weights = get_feature_weights(model)
