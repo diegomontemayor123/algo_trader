@@ -1,16 +1,15 @@
-import os
+
 import numpy as np
 import torch
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.decomposition import PCA
-from model import create_model, save_top_features_csv, TransformerTrader
-from compute_features import load_price_data, compute_features, normalize_features
+from model import create_model, save_top_features_csv
+from compute_features import load_price_data, compute_features
 from data_prep import prepare_main_datasets
 from loadconfig import load_config
 from train import train_model_with_validation
 from torch.utils.data import DataLoader
-import logging
 
 
 def evaluate_feature_importance(model, feature_names, top_k=30, filepath="top_features_eval.csv"):
@@ -38,7 +37,6 @@ def run_feature_reduction_analysis(features):
     plt.close()
     print("[Eval] PCA curve saved to pca_variance.png")
 
-
 def evaluate_target_distribution(returns):
     print("[Eval] Plotting target return distribution...")
     flat_returns = returns.values.flatten()
@@ -53,7 +51,6 @@ def evaluate_target_distribution(returns):
     plt.savefig("target_distribution.png")
     plt.close()
     print("[Eval] Return distribution saved to target_distribution.png")
-
 
 def estimate_sharpe_on_raw_weights(model, dataset):
     print("[Eval] Estimating Sharpe on raw weights...")
@@ -72,7 +69,6 @@ def estimate_sharpe_on_raw_weights(model, dataset):
     sharpe = np.mean(all_returns) / (np.std(all_returns) + 1e-6)
     print(f"[Eval] Raw weight Sharpe estimate: {sharpe:.4f}")
     return sharpe
-
 
 def ablation_study(model, features, returns, config, feature_names, retrain=False):
     print("[Eval] Running ablation study...")
