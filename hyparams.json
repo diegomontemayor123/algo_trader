@@ -17,6 +17,7 @@
         "FEATURE_ATTENTION_ENABLED": 1,
         "L1_PENALTY": 0.000226,
         "L2_PENALTY": 0.0,
+        "INIT_LR": 1e-2,
         "LOSS_MIN_MEAN": 0.128,
         "LOSS_RETURN_PENALTY": 0.1449,
         "TEST_CHUNK_MONTHS": 12,

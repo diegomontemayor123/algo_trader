@@ -7,7 +7,7 @@ from model import DifferentiableSharpeLoss, TransformerLRScheduler, create_model
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 def train_model_with_validation(model, train_loader, val_loader, config):
-    optimizer = torch.optim.Adam(model.parameters(), lr=1.0, weight_decay=config["DECAY"])
+    optimizer = torch.optim.Adam(model.parameters(), lr=config["INIT_LR"], weight_decay=config["DECAY"])
     total_steps = config["EPOCHS"] * len(train_loader)
     learning_warmup_steps = int(total_steps * config["WARMUP_FRAC"])
     print(f"[Scheduler] Total steps: {total_steps}, warmup: {learning_warmup_steps}")
