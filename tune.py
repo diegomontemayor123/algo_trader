@@ -6,7 +6,7 @@ import json
 from optuna.samplers import TPESampler
 
 def run_experiment(trial):
-    config = {"START_DATE": trial.suggest_categorical("START_DATE", ["2014-01-01","2015-01-01","2016-01-01","2012-01-01"]),
+    config = {"START_DATE": trial.suggest_categorical("START_DATE", ["2012-01-01"]),
         "END_DATE": trial.suggest_categorical("END_DATE", ["2025-07-01"]),
         "SPLIT_DATE": trial.suggest_categorical("SPLIT_DATE", ["2019-01-01"]),
         "TICKERS": trial.suggest_categorical("TICKERS", ["AAPL,MSFT,GOOGL,AMZN,META,NVDA,TSLA,JPM,WMT,CVX,MCD,T,NKE"]),
@@ -15,18 +15,18 @@ def run_experiment(trial):
         "INITIAL_CAPITAL": trial.suggest_float("INITIAL_CAPITAL", 100, 100),
         "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 1.4,2),
 
-        "BATCH_SIZE": trial.suggest_int("BATCH_SIZE",40,60),
-        "LOOKBACK": trial.suggest_int("LOOKBACK",60,90),
+        "BATCH_SIZE": trial.suggest_int("BATCH_SIZE",50,60),
+        "LOOKBACK": trial.suggest_int("LOOKBACK",75,90),
         "PREDICT_DAYS": trial.suggest_int("PREDICT_DAYS",1,8),
         "WARMUP_FRAC": trial.suggest_float("WARMUP_FRAC", 0.17, 0.17),
-        "DROPOUT": trial.suggest_float("DROPOUT", 0.1, 0.3),
+        "DROPOUT": trial.suggest_float("DROPOUT", 0.1, 0.25),
         "DECAY": trial.suggest_float("DECAY", 0.03, 0.06),
 
         "FEATURE_ATTENTION_ENABLED": trial.suggest_int("FEATURE_ATTENTION_ENABLED", 1, 1),
         "L2_PENALTY_ENABLED": trial.suggest_int("L2_PENALTY_ENABLED", 0, 1),
         "LOSS_MIN_MEAN": trial.suggest_float("LOSS_MIN_MEAN", 0.01, 0.15),
         "LOSS_RETURN_PENALTY": trial.suggest_float("LOSS_RETURN_PENALTY", 0.01, 0.5),
-        "TEST_CHUNK_MONTHS": trial.suggest_int("TEST_CHUNK_MONTHS", 25, 36),
+        "TEST_CHUNK_MONTHS": trial.suggest_int("TEST_CHUNK_MONTHS", 20, 36),
         "RETRAIN_WINDOW": trial.suggest_int("RETRAIN_WINDOW", 0, 0), #months
 
         "EPOCHS": trial.suggest_int("EPOCHS", 20, 20),
