@@ -44,13 +44,11 @@ def train_model_with_validation(model, train_loader, val_loader, config):
 
             optimizer.zero_grad()
             loss.backward()
-
-            # Diagnostic: print gradient info of feature_weights
             if model.feature_weights.grad is None:
                 print(f"[Debug] Epoch {epoch} Batch {batch_idx}: feature_weights.grad is None")
             else:
                 grad_norm = model.feature_weights.grad.norm().item()
-                print(f"[Debug] Epoch {epoch} Batch {batch_idx}: feature_weights.grad norm = {grad_norm:.6f}")
+                #print(f"[Debug] Epoch {epoch} Batch {batch_idx}: feature_weights.grad norm = {grad_norm:.6f}")
 
             # Check for NaN or Inf gradients anywhere
             nan_grads = False
@@ -63,11 +61,9 @@ def train_model_with_validation(model, train_loader, val_loader, config):
                 return None
 
             optimizer.step()
-
-            # Diagnostic: compare feature_weights after step
             after_weights = model.feature_weights.detach().cpu()
             max_change = (after_weights - before_weights).abs().max().item()
-            print(f"[Debug] Epoch {epoch} Batch {batch_idx}: max feature_weights change = {max_change:.8f}")
+            #print(f"[Debug] Epoch {epoch} Batch {batch_idx}: max feature_weights change = {max_change:.8f}")
 
             learning_scheduler.step()
             current_lr = optimizer.param_groups[0]['lr']

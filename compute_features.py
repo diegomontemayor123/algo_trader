@@ -87,8 +87,6 @@ def process_macro_features(cached_data, index, macro_keys, min_non_na_ratio=0.1)
         macro_features[col] = pct_series
     return pd.DataFrame(macro_features, index=index)
 
-# compute_features and normalize_features unchanged, but ensure TICKERS and MACRO_KEYS are passed
-
 def compute_features(TICKERS, FEATURES, cached_data, macro_keys):
     price_cols = [col for col in cached_data.columns if not col.endswith("_volume") and col in TICKERS]
     volume_cols = [f"{ticker}_volume" for ticker in TICKERS if f"{ticker}_volume" in cached_data.columns]
@@ -124,23 +122,17 @@ def compute_features(TICKERS, FEATURES, cached_data, macro_keys):
 
     features = pd.concat(all_features.values(), axis=1).dropna()
     returns = prices.pct_change().shift(-1).reindex(features.index)
-
     macro_df = process_macro_features(cached_data, features.index, macro_keys)
     features = pd.concat([features, macro_df], axis=1)
-
     print(f"[Features] Combined features shape: {features.shape}")
-    print("[Features] Sample features (first 5 rows):")
-    print(features.head())
-
+    #print("[Features] Sample features (first 5 rows):")
+    #print(features.head())
     print(f"[Returns] Returns shape: {returns.shape}")
-    print("[Returns] Sample returns (first 5 rows):")
-    print(returns.head())
-
+    #print("[Returns] Sample returns (first 5 rows):")
+    #print(returns.head())
     features = normalize_features(features)
-
-    print("[Features] Sample normalized features (first 5 rows):")
-    print(features.head())
-
+    #print("[Features] Sample normalized features (first 5 rows):")
+    #print(features.head())
     return features, returns
 
 def normalize_features(feature_window):
