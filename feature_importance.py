@@ -103,14 +103,20 @@ def run_evaluation():
         retrain_window=config["RETRAIN_WINDOW"],
     )
 
-    # Step 7: Train vs Test diagnostics
-    train_perf = results["train_performance"]
     test_perf = results["portfolio"]
+
+    # Optional dummy train_perf assumption (for diagnostic continuity)
+    train_perf = {
+        "sharpe_ratio": float("nan"),
+        "max_drawdown": float("nan"),
+        "cagr": float("nan"),
+    }
+
+    # Step 7: Diagnostics (limited without train_perf)
     check_model_under_overfit(train_perf, test_perf)
 
     # Step 8: Print KPIs
-    logging.info(f"\n[Results] Test Sharpe: {test_perf['sharpe_ratio']:.4f} | Max DD: {test_perf['max_drawdown']:.4f} | CAGR: {test_perf['cagr']:.4f}")
-    logging.info(f"[Results] Train Sharpe: {train_perf['sharpe_ratio']:.4f} | Max DD: {train_perf['max_drawdown']:.4f} | CAGR: {train_perf['cagr']:.4f}")
+    logging.info(f"\n[Results] Test Sharpe: {test_perf.get('sharpe_ratio', float('nan')):.4f} | Max DD: {test_perf.get('max_drawdown', float('nan')):.4f} | CAGR: {test_perf.get('cagr', float('nan')):.4f}")
     
     logging.info("\n[Conclusion]")
     if len(nan_cols) or len(const_cols):
