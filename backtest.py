@@ -132,7 +132,7 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage, co
             avg_outperformance[key] = np.mean(diffs)
     comb_port_metrics = calculate_performance_metrics(portfolio_series)
     comb_bench_metrics = calculate_performance_metrics(benchmark_series)
-    with open("/img/backtest_report.txt", "w") as f:
+    with open("img/backtest_report.txt", "w") as f:
         f.write("=Combined Performance=\n")
         for k in comb_port_metrics:
             f.write(f"{k.title()}: Strategy {comb_port_metrics[k]:.2%}, Benchmark {comb_bench_metrics[k]:.2%}\n")
@@ -160,7 +160,7 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage, co
         plt.legend()
         plt.grid(alpha=0.3)
         plt.tight_layout()
-        plt.savefig("/img/combined_equity_curve.png", dpi=300)
+        plt.savefig("img/combined_equity_curve.png", dpi=300)
         plt.close()
         logging.info("[Backtest] Saved combined_equity_curve.png")
         plt.figure(figsize=(14, 8))
@@ -171,7 +171,7 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage, co
         plt.grid(alpha=0.3)
         plt.legend(ncol=2, fontsize="small")
         plt.tight_layout()
-        plt.savefig("/img/daily_weights_plot.png", dpi=300)
+        plt.savefig("img/daily_weights_plot.png", dpi=300)
         plt.close()
         logging.info("[Backtest] Saved daily_weights_plot.png")
     return {

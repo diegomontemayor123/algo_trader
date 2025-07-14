@@ -100,7 +100,7 @@ def train_model_with_validation(model, train_loader, val_loader, config):
     plt.xlabel('Training Step')
     plt.ylabel('Learning Rate')
     plt.grid(True)
-    plt.savefig('/img/learning_rate_schedule.png')
+    plt.savefig('img/learning_rate_schedule.png')
     plt.close()
 
     return model
