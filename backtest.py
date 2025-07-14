@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 from model import create_model
 from train import train_model_with_validation
 from copy import deepcopy
-from data_prep import load_price_data
+from compute_features import load_price_data
 
 
 def calculate_performance_metrics(equity_curve):
