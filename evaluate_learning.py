@@ -89,10 +89,9 @@ def ablation_study(model, features, returns, config, feature_names, retrain=Fals
         reduced_features = features[[f for f in features.columns if f in keep_set]]
         print(f"[Ablation] Evaluating top {keep_n} features...")
         train_set, val_set, test_set = prepare_main_datasets(reduced_features, returns, config)
-        if retrain:
-            model = create_model(train_set[0][0].shape[1], config)
-            model = train_model_with_validation(model, DataLoader(train_set, batch_size=config["BATCH_SIZE"]), DataLoader(val_set, batch_size=config["BATCH_SIZE"]), config)
-        sharpe = estimate_sharpe_on_raw_weights(model, test_set)
+        temp_model = create_model(train_set[0][0].shape[1], config)
+        temp_model = train_model_with_validation(temp_model, DataLoader(train_set, batch_size=config["BATCH_SIZE"]), DataLoader(val_set, batch_size=config["BATCH_SIZE"]), config)
+        sharpe = estimate_sharpe_on_raw_weights(temp_model, test_set)
         results[f"Top {keep_n}"] = sharpe
 
     print("\n[Ablation Results]")
@@ -121,7 +120,7 @@ def evaluate_learning(retrain=False):
     run_feature_reduction_analysis(features)
     evaluate_target_distribution(returns)
     estimate_sharpe_on_raw_weights(model, test_set)
-    ablation_study(model, features, returns, config, feature_names, retrain=retrain)
+    ablation_study(model, features, returns, config, feature_names)
 
 
 if __name__ == "__main__":
