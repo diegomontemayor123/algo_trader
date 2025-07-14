@@ -98,7 +98,7 @@ def load_trained_model(input_dimension, config, path=MODEL_PATH):
     print(f"[Model] Loaded trained model from {path}")
     return model
 
-def save_top_features_csv(model, feature_names, filepath="top_features.csv", top_k=50):
+def save_top_features_csv(model, feature_names, filepath="top_features.csv", top_k=500):
     weights = model.feature_weights.detach().cpu().numpy()
     feature_weight_pairs = list(zip(feature_names, weights))
     feature_weight_pairs.sort(key=lambda x: abs(x[1]), reverse=True)
