@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-PERIODS = [10, 20, 40]
+PERIODS = [15, 40]
 
 def add_ret(data):
     data['ret'] = data['close'].pct_change()
