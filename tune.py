@@ -15,12 +15,12 @@ def run_experiment(trial):
         "INITIAL_CAPITAL": trial.suggest_float("INITIAL_CAPITAL", 100, 100),
         "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 1.4,2),
 
-        "BATCH_SIZE": trial.suggest_int("BATCH_SIZE",60,60),
-        "LOOKBACK": trial.suggest_int("LOOKBACK",89,89),
+        "BATCH_SIZE": trial.suggest_int("BATCH_SIZE",40,60),
+        "LOOKBACK": trial.suggest_int("LOOKBACK",60,90),
         "PREDICT_DAYS": trial.suggest_int("PREDICT_DAYS",6,6),
         "WARMUP_FRAC": trial.suggest_float("WARMUP_FRAC", 0.17, 0.17),
-        "DROPOUT": trial.suggest_float("DROPOUT", 0.18, 0.18),
-        "DECAY": trial.suggest_float("DECAY", 0.057, 0.057),
+        "DROPOUT": trial.suggest_float("DROPOUT", 0.1, 0.3),
+        "DECAY": trial.suggest_float("DECAY", 0.03, 0.06),
 
         "FEATURE_ATTENTION_ENABLED": trial.suggest_int("FEATURE_ATTENTION_ENABLED", 1, 1),
         "L2_PENALTY_ENABLED": trial.suggest_int("L2_PENALTY_ENABLED", 0, 1),
