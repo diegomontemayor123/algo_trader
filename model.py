@@ -54,11 +54,12 @@ def split_train_validation(sequences, targets, validation_ratio):
     return (sequences[:train_size], targets[:train_size],    sequences[train_size:], targets[train_size:])
 
 class DifferentiableSharpeLoss(nn.Module):
-    def __init__(self, loss_min_mean, loss_return_penalty, l2_penalty_enabled):
+    def __init__(self, loss_min_mean, loss_return_penalty, l2_penalty, l1_penalty):
         super().__init__()
         self.loss_min_mean = loss_min_mean
         self.loss_return_penalty = loss_return_penalty
-        self.l2_penalty_enabled = l2_penalty_enabled
+        self.l2_penalty = l2_penalty
+        self.l1_penalty = l1_penalty
     def forward(self, portfolio_weights, target_returns, model=None):
         returns = (portfolio_weights * target_returns).sum(dim=1)
         mean_return = torch.mean(returns)
@@ -74,12 +75,12 @@ class DifferentiableSharpeLoss(nn.Module):
         sharpe_ratio = mean_return / (std_return + 1e-6)
         low_return = torch.clamp(self.loss_min_mean - mean_return, min=0.0)
         loss = -sharpe_ratio + self.loss_return_penalty * low_return 
-        if self.l2_penalty_enabled and model is not None:
-            l2_penalty = sum(p.pow(2.0).sum() for p in model.parameters())
-            loss += 1e-4 * l2_penalty
-        if  model is not None:
-            l1_penalty = sum(p.abs().sum() for p in model.parameters())
-            loss += 1e-4 * l1_penalty
+        if self.l2_penalty>0 and model is not None:
+            l2 = sum(p.pow(2.0).sum() for p in model.parameters())
+            loss += self.l2_penalty * l2
+        if self.l1_penalty>0 and model is not None:
+            l1 = sum(p.abs().sum() for p in model.parameters())
+            loss += self.l1_penalty * l1
         return loss
 
 class TransformerLRScheduler(torch.optim.lr_scheduler._LRScheduler):

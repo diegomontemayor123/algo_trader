@@ -23,7 +23,8 @@ def run_experiment(trial):
         "DECAY": trial.suggest_float("DECAY", 0.03, 0.06),
 
         "FEATURE_ATTENTION_ENABLED": trial.suggest_int("FEATURE_ATTENTION_ENABLED", 1, 1),
-        "L2_PENALTY_ENABLED": trial.suggest_int("L2_PENALTY_ENABLED", 0, 1),
+        "L1_PENALTY": trial.suggest_float("L1_PENALTY", 0, 1),
+        "L2_PENALTY": trial.suggest_float("L2_PENALTY", 0, 0),
         "LOSS_MIN_MEAN": trial.suggest_float("LOSS_MIN_MEAN", 0.01, 0.15),
         "LOSS_RETURN_PENALTY": trial.suggest_float("LOSS_RETURN_PENALTY", 0.01, 0.5),
         "TEST_CHUNK_MONTHS": trial.suggest_int("TEST_CHUNK_MONTHS", 20, 36),
