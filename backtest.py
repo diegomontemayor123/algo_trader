@@ -1,5 +1,5 @@
 import numpy as np
-import torch, logging, multiprocessing
+import torch, logging, multiprocessing, os
 import matplotlib.pyplot as plt
 import pandas as pd
 from dateutil.relativedelta import relativedelta
@@ -10,6 +10,8 @@ from train import train_model_with_validation
 from copy import deepcopy
 from compute_features import load_price_data
 from calc_perform import calculate_performance_metrics
+
+import os
 
 def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
                  compute_features, normalize_features, tickers, start_date, end_date,
@@ -67,24 +69,28 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
             input_tensor = torch.tensor(normalized_features).unsqueeze(0).to(device)
             with torch.no_grad():
                 raw_weights = model(input_tensor).cpu().numpy().flatten()
+            logging.debug(f"[Backtest] Date {current_date.date()} - Raw weights sample: {raw_weights[:5]}")
             weight_sum = np.sum(np.abs(raw_weights)) + 1e-6
             scaling_factor = min(max_leverage / weight_sum, 1.0)
             final_weights = raw_weights * scaling_factor
-            logging.debug(f"[Backtest] Date {current_date.date()} - Weight sum before scaling: {weight_sum:.4f}, scaling factor: {scaling_factor:.4f}")
+            logging.debug(f"[Backtest] Date {current_date.date()} - Final weights sample: {final_weights[:5]} (sum abs: {np.sum(np.abs(final_weights)):.4f})")
             period_returns = returns_df.loc[current_date].values
             portfolio_return = np.dot(final_weights, period_returns)
             benchmark_return = np.mean(period_returns)
             portfolio_values.append(portfolio_values[-1] * (1 + portfolio_return))
             benchmark_values.append(benchmark_values[-1] * (1 + benchmark_return))
             daily_weights.append(pd.Series(final_weights, index=asset_names, name=current_date))
-        logging.info("[Backtest] Completed w/o retraining.")
-        weights_df = pd.DataFrame(daily_weights)
-        logging.debug(f"[Backtest] Daily weights DataFrame created with shape: {weights_df.shape}")
+        logging.info(f"[Backtest] Number of daily weight entries: {len(daily_weights)}")
+        if len(daily_weights) == 0:
+            logging.warning("[Backtest] No daily weights collected!")
+        else:
+            logging.debug(f"[Backtest] Sample daily weight for date {daily_weights[0].name}: {daily_weights[0].head()}")
 
+        weights_df = pd.DataFrame(daily_weights)
         weights_df["total_exposure"] = weights_df.abs().sum(axis=1)
         weights_df.index.name = "Date"
 
-        logging.info(f"[Backtest] Saving combined weights DataFrame to CSV at: {weights_csv_path}")
+        logging.info(f"[Backtest] Saving combined weights DataFrame to CSV at: {os.path.abspath(weights_csv_path)}")
         try:
             weights_df.to_csv(weights_csv_path)
             logging.info(f"[Backtest] Successfully saved combined weights to {weights_csv_path}")
@@ -158,23 +164,30 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
                 input_tensor = torch.tensor(normalized_features).unsqueeze(0).to(device)
                 with torch.no_grad():
                     raw_weights = model(input_tensor).cpu().numpy().flatten()
+                logging.debug(f"[Backtest] Chunk {idx+1} Date {current_date.date()} - Raw weights sample: {raw_weights[:5]}")
                 weight_sum = np.sum(np.abs(raw_weights)) + 1e-6
                 scaling_factor = min(max_leverage / weight_sum, 1.0)
                 final_weights = raw_weights * scaling_factor
+                logging.debug(f"[Backtest] Chunk {idx+1} Date {current_date.date()} - Final weights sample: {final_weights[:5]} (sum abs: {np.sum(np.abs(final_weights)):.4f})")
                 period_returns = returns_df.loc[current_date].values
                 portfolio_return = np.dot(final_weights, period_returns)
                 benchmark_return = np.mean(period_returns)
                 portfolio_values.append(portfolio_values[-1] * (1 + portfolio_return))
                 benchmark_values.append(benchmark_values[-1] * (1 + benchmark_return))
                 daily_weights.append(pd.Series(final_weights, index=asset_names, name=current_date))
+            logging.info(f"[Backtest] Chunk {idx+1}: Number of daily weight entries so far: {len(daily_weights)}")
             logging.info(f"[Backtest] Chunk {idx+1}: Completed inference.")
-        weights_df = pd.DataFrame(daily_weights)
-        logging.debug(f"[Backtest] Daily weights DataFrame created with shape: {weights_df.shape}")
+        logging.info(f"[Backtest] Total daily weight entries collected: {len(daily_weights)}")
+        if len(daily_weights) == 0:
+            logging.warning("[Backtest] No daily weights collected!")
+        else:
+            logging.debug(f"[Backtest] Sample daily weight for date {daily_weights[0].name}: {daily_weights[0].head()}")
 
+        weights_df = pd.DataFrame(daily_weights)
         weights_df["total_exposure"] = weights_df.abs().sum(axis=1)
         weights_df.index.name = "Date"
 
-        logging.info(f"[Backtest] Saving combined weights DataFrame to CSV at: {weights_csv_path}")
+        logging.info(f"[Backtest] Saving combined weights DataFrame to CSV at: {os.path.abspath(weights_csv_path)}")
         try:
             weights_df.to_csv(weights_csv_path)
             logging.info(f"[Backtest] Successfully saved combined weights to {weights_csv_path}")
