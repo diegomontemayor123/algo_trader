@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-PERIODS = [15, 40]
+PERIODS = [5,20]
 
 def add_ret(data):
     data['ret'] = data['close'].pct_change()
@@ -17,7 +17,6 @@ def add_log_return(data):
 def add_rolling_returns(data):
     for p in PERIODS:
         data[f'rolling_ret{p}'] = data['close'].pct_change(p)
-
 
 def add_volume(volume_df):
     col = volume_df.columns[0]
