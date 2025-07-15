@@ -14,16 +14,17 @@ import numpy as np
 def add_log_return(data):
     days = 5
     ratio = data['close'] / data['close'].shift(1)
-    log_ret = np.log(ratio)
 
-    # Check for problematic values (NaN or <= 0), but ignore first NaN only
-    problematic = (ratio <= 0) | (ratio.isna())
-    # Ignore first NaN index if it exists
-    if ratio.isna().iloc[0]:
+    # Replace zeros or negatives with NaN (or a small positive number if you prefer)
+    ratio_safe = ratio.where(ratio > 0, np.nan)
+
+    # Log any problematic values except first NaN as before
+    problematic = (ratio_safe.isna())
+    if ratio_safe.isna().iloc[0]:
         problematic.iloc[0] = False
 
     if problematic.any():
-        print(f"[Warning] Problematic ratio values detected (excluding first NaN):")
+        print("[Warning] Problematic ratio values detected (excluding first NaN):")
         for idx in data.index[problematic]:
             val = ratio.loc[idx]
             try:
@@ -32,7 +33,7 @@ def add_log_return(data):
                 val_log = f"Error: {e}"
             print(f"  Index {idx}: value={val}, log(value)={val_log}")
 
-    data['log_ret'] = log_ret
+    data['log_ret'] = np.log(ratio_safe)
     data['log_ret_norm5'] = (
         data['log_ret'] - data['log_ret'].rolling(days).mean()
     ) / (data['log_ret'].rolling(days).std() + 1e-6)
