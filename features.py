@@ -13,40 +13,34 @@ import numpy as np
 
 def add_log_return(data):
     days = 5
-    
-    # Calculate ratio
     ratio = data['close'] / data['close'].shift(1)
-    
-    # Replace invalid ratios with NaN (<=0 or NaN)
+
+    # Create a copy to clean
     ratio_clean = ratio.copy()
+
+    # For the entire data, replace invalid ratios with NaN (<=0 or NaN)
     ratio_clean[(ratio_clean <= 0) | (ratio_clean.isna())] = np.nan
-    
-    # Log returns
+
+    # For the first 4 rows ONLY, replace NaNs with a small positive number to avoid warnings
+    first4 = ratio_clean.index[:4]
+    ratio_clean.loc[first4] = ratio_clean.loc[first4].fillna(1e-6)
+    ratio_clean.loc[first4] = ratio_clean.loc[first4].apply(lambda x: max(x, 1e-6))
+
+    # Calculate log returns on cleaned ratio
     data['log_ret'] = np.log(ratio_clean)
-    
-    # Rolling mean and std
+
+    # Compute rolling mean and std
     roll_mean = data['log_ret'].rolling(days).mean()
     roll_std = data['log_ret'].rolling(days).std()
-    
-    # Normalize log returns
+
+    # Calculate normalized log returns
     data['log_ret_norm5'] = (data['log_ret'] - roll_mean) / (roll_std + 1e-6)
-    
-    # Optional: If you want to avoid warnings or print problems only after row 4
-    problematic_mask = (ratio_clean.isna() | (ratio_clean <= 0))
-    # ignore first 4 rows for warnings
-    problematic_mask.iloc[:4] = False
-    
-    if problematic_mask.any():
-        for idx in ratio_clean.index[problematic_mask]:
-            val = ratio_clean.loc[idx]
-            prev_idx_pos = data.index.get_loc(idx) - 1
-            prev_idx = data.index[prev_idx_pos] if prev_idx_pos >= 0 else None
-            prev_close = data['close'].loc[prev_idx] if prev_idx is not None else None
-            curr_close = data['close'].loc[idx]
-            
-            print(f"[Warning] Problematic ratio value found at Index {idx}: value={val} (<=0 or NaN)")
-            print(f"    Previous close (index {prev_idx}): {prev_close}")
-            print(f"    Current close (index {idx}): {curr_close}")
+
+    # Override first 4 rows of normalized returns with 0 or any safe value
+    data.loc[first4, 'log_ret_norm5'] = 0
+
+    # You keep all rows, no drops
+
 
 def add_rolling_returns(data):
     for p in PERIODS:
