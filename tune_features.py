@@ -105,7 +105,7 @@ def run_experiment(trial):
         if sharpe is None or drawdown is None:
             return -float("inf")
 
-        score = (1 * sharpe) + (1 * avg_benchmark_outperformance) - (0.3 * abs(drawdown))
+        score = (1 * sharpe) + (0 * avg_benchmark_outperformance) - (0.7 * abs(drawdown))
 
         trial.set_user_attr("sharpe", sharpe)
         trial.set_user_attr("drawdown", drawdown)
