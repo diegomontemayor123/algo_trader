@@ -4,12 +4,11 @@ import yfinance as yf
 from pandas_datareader.data import DataReader
 from features import FTR_FUNC, add_volume
 from loadconfig import load_config
+from tune_data import TICKER_LIST  
 
 config = load_config()
 PRICE_CACHE_FILE = "prices.csv"
-TICKERS = "AAPL,MSFT,GOOGL,AMZN,NVDA,TSLA,JPM,XOM,PFE,KO,WMT,BA,PG,IBM,CAT,CVX,MCD,GE,VZ,T,UNH,NKE,ORCL" #config["TICKERS"]
-if isinstance(TICKERS, str):
-    TICKERS = [t.strip() for t in TICKERS.split(",") if t.strip()]
+TICKERS = TICKER_LIST
 
 MACRO_KEYS = config.get("MACRO", [])
 if isinstance(MACRO_KEYS, str):
