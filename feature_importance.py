@@ -24,7 +24,6 @@ def check_nan_or_constant(features: pd.DataFrame):
         logging.warning(f"[Data] Constant features: {constant_columns}")
     return nan_columns, constant_columns
 
-
 def check_feature_weight_diversity(model: TransformerTrader):
     weights = model.feature_weights.detach().cpu().numpy()
     std = np.std(weights)
@@ -33,7 +32,6 @@ def check_feature_weight_diversity(model: TransformerTrader):
         logging.warning("[Model] All feature weights nearly equal — possible signal absence or over-regularization.")
     return std
 
-
 def run_evaluation():
     config = load_config()
     tickers = config["TICKERS"]
@@ -41,28 +39,15 @@ def run_evaluation():
     macro_keys = config.get("MACRO", [])
     if isinstance(macro_keys, str):
         macro_keys = [k.strip() for k in macro_keys.split(",") if k.strip()]
-
     raw_data = load_price_data(config["START_DATE"], config["END_DATE"], macro_keys)
     features, returns = compute_features(tickers, feature_list, raw_data, macro_keys)
-
-    # Step 1: Check NaNs & constants
     nan_cols, const_cols = check_nan_or_constant(features)
-
-    # Step 2: Prepare data splits
     train_dataset, val_dataset, test_dataset = prepare_main_datasets(features, returns, config)
     dimen = train_dataset[0][0].shape[1]
-
-    # Step 3: Train model
     logging.info("[Train] Initiating training cycle...")
     model = train_main_model(config, features, returns)
-
-    # Step 4: Evaluate feature weight variance
     weight_std = check_feature_weight_diversity(model)
-
-    # Step 5: Save top features
     save_top_features_csv(model, features.columns.tolist())
-
-    # Step 6: Run backtest
     logging.info("[Backtest] Executing validation on test set...")
     results = run_backtest(
         device=DEVICE,

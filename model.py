@@ -7,7 +7,7 @@ from data_prep import *
 
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 MODEL_PATH = "trained_model.pth"
-LOAD_MODEL = False
+LOAD_MODEL = True
 SEED = 42
 torch.manual_seed(SEED)
 np.random.seed(SEED)
@@ -32,7 +32,6 @@ class TransformerTrader(nn.Module):
         last_hidden = encoded[:, -1, :]
         weights = self.mlp_head(last_hidden)
         return weights
-
 
 def calculate_heads(dimen, max_heads):
     if dimen % max_heads != 0:
@@ -104,14 +103,11 @@ def save_top_features_csv(model, feature_names, filepath="top_features.csv", top
     weights = model.feature_weights.detach().cpu().numpy()
     feature_weight_pairs = list(zip(feature_names, weights))
     feature_weight_pairs.sort(key=lambda x: abs(x[1]), reverse=True)
-    
     with open(filepath, mode='w', newline='') as f:
         writer = csv.writer(f)
         writer.writerow(["Feature", "Weight"])
         for feat, weight in feature_weight_pairs[:top_k]:
             writer.writerow([feat, weight])
-    print(f"Saved top {top_k} features to {filepath}")
-
 
 if __name__ == "__main__":
     import sys
