@@ -13,7 +13,7 @@ TICKER_LIST = [
 ]
 
 MACRO_LIST = [
-    "FEDFUNDS", "^GSPC", "^DJI", "^IXIC", "^RUT", "^FTSE", "^N225",
+    "FEDFUNDS", "^GSPC", "^DJI", "^IXIC", "^RUT", "^FTSE",
     "CL=F", "GC=F", "SI=F", "NG=F", "ZW=F",
     "EURUSD=X", "JPY=X", "GBPUSD=X", "USDJPY=X",
     "^TNX", "^FVX", "^IRX", "^TYX", "TLT", "IEF", "GLD", "USO", "UUP"
