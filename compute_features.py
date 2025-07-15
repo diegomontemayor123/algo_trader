@@ -7,7 +7,7 @@ from loadconfig import load_config
 
 config = load_config()
 PRICE_CACHE_FILE = "prices.csv"
-TICKERS = config["TICKERS"]
+TICKERS = "AAPL,MSFT,GOOGL,AMZN,NVDA,TSLA,JPM,XOM,PFE,KO,WMT,BA,PG,IBM,CAT,CVX,MCD,GE,VZ,T,UNH,NKE,ORCL" #config["TICKERS"]
 if isinstance(TICKERS, str):
     TICKERS = [t.strip() for t in TICKERS.split(",") if t.strip()]
 
@@ -37,37 +37,24 @@ def fetch_macro_series(name, ticker, start, end):
         return pd.Series(dtype='float64')
     
 def load_price_data(START_DATE, END_DATE, macro_keys):
-    def tickers_match_cache(cache_file, current_tickers):
-        if not os.path.exists(cache_file):
-            return False
-        cached_data = pd.read_csv(cache_file, index_col=0, nrows=1)
-        cached_tickers = set(col for col in cached_data.columns if not col.endswith("_volume"))
-        return cached_tickers == set(current_tickers)
-    
     if os.path.exists(PRICE_CACHE_FILE):
-        if tickers_match_cache(PRICE_CACHE_FILE, TICKERS):
-            print(f"[Data] Using cached data from {PRICE_CACHE_FILE}")
-            data = pd.read_csv(PRICE_CACHE_FILE, index_col=0, parse_dates=True)
-        else:
-            print("[Data] Ticker mismatch detected. Redownloading price and macro data...")
-            data = download_and_cache_data(START_DATE, END_DATE, macro_keys)
+        print(f"[Data] Using cached data from {PRICE_CACHE_FILE}")
+        data = pd.read_csv(PRICE_CACHE_FILE, index_col=0, parse_dates=True)
     else:
-        print("[Data] Cached data not found. Downloading price and macro data...")
-        data = download_and_cache_data(START_DATE, END_DATE, macro_keys)
-    return data
+        print("[Data] Downloading price and macro data...")
+        raw_data = yf.download(" ".join(TICKERS), start=START_DATE, end=END_DATE, auto_adjust=False)
 
-def download_and_cache_data(START_DATE, END_DATE, macro_keys):
-    raw_data = yf.download(" ".join(TICKERS), start=START_DATE, end=END_DATE, auto_adjust=False)
-    price = raw_data['Adj Close']
-    volume = raw_data['Volume']
-    volume.columns = [f"{ticker}_volume" for ticker in volume.columns]
-    data = pd.concat([price, volume], axis=1)
-    for macro_name in macro_keys:
-        macro_series = fetch_macro_series(macro_name, macro_name, START_DATE, END_DATE)
-        data[macro_name] = macro_series
-    data = data.sort_index()
-    data.to_csv(PRICE_CACHE_FILE)
-    print(f"[Data] Cached to {PRICE_CACHE_FILE}")
+        price = raw_data['Adj Close']
+        volume = raw_data['Volume']
+        volume.columns = [f"{ticker}_volume" for ticker in volume.columns]
+        data = pd.concat([price, volume], axis=1)
+        for macro_name in macro_keys:
+            macro_series = fetch_macro_series(macro_name, macro_name, START_DATE, END_DATE)
+            data[macro_name] = macro_series
+
+        data = data.sort_index()
+        data.to_csv(PRICE_CACHE_FILE)
+        print(f"[Data] Cached to {PRICE_CACHE_FILE}")
     return data
 
 def process_macro_features(cached_data, index, macro_keys, min_non_na_ratio=0.1):
