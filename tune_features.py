@@ -4,8 +4,14 @@ import re
 import json
 import optuna
 from optuna.samplers import TPESampler
+from collections import Counter
 
-# Split your macros into individual items
+TICKER_LIST = [
+    "AAPL", "MSFT", "GOOGL", "AMZN", "META", "NVDA", "TSLA",
+    "JPM", "XOM", "PFE", "KO", "WMT", "BA", "PG", "IBM", "CAT",
+    "CVX", "MCD", "GE", "VZ", "T", "UNH", "NKE", "ORCL"
+]
+
 MACRO_LIST = [
     "FEDFUNDS", "^GSPC", "^DJI", "^IXIC", "^RUT", "^FTSE", "^N225",
     "CL=F", "GC=F", "SI=F", "NG=F", "ZW=F",
@@ -18,36 +24,24 @@ FEATURE_LIST = [
     "sma", "rsi", "macd", "momentum", "ema", "boll", "williams", "cmo"
 ]
 
-def exactly_n_selected(trial, items, n, prefix):
-    """Helper: pick exactly n items out of the list by binary toggle"""
-    selected = []
-    for item in items:
-        if trial.suggest_categorical(f"{prefix}_{item}", [False, True]):
-            selected.append(item)
-    # If selected != n, force randomly to meet n by adding or removing
-    # But Optuna can handle this poorly; so we do a simple fix:
-    if len(selected) > n:
-        selected = selected[:n]
-    elif len(selected) < n:
-        # Add missing items (those not selected) until length == n
-        missing = [item for item in items if item not in selected]
-        selected.extend(missing[: (n - len(selected))])
-    return selected
+def binary_select(trial, items, prefix):
+    return [item for item in items if trial.suggest_categorical(f"{prefix}_{item}", [False, True])]
 
 def run_experiment(trial):
-    selected_macros = exactly_n_selected(trial, MACRO_LIST, 5, "macro")
-    selected_features = exactly_n_selected(trial, FEATURE_LIST, 5, "feature")
+    selected_macros = binary_select(trial, MACRO_LIST, "macro")
+    selected_features = binary_select(trial, FEATURE_LIST, "feature")
+    selected_tickers = binary_select(trial, TICKER_LIST, "ticker")
 
-    macro_str = ",".join(selected_macros)
-    features_str = ",".join(selected_features)
+    if len(selected_features) == 0 or len(selected_macros) == 0 or len(selected_tickers) == 0:
+        return -float("inf")  # Avoid empty configs
 
     config = {
         "START_DATE": "2012-01-01",
         "END_DATE": "2025-07-01",
         "SPLIT_DATE": "2023-07-01",
-        "TICKERS": "AAPL,MSFT,GOOGL,AMZN,NVDA,JPM,WMT,CVX,MCD,T,NKE",
-        "MACRO": macro_str,
-        "FEATURES": features_str,
+        "TICKERS": ",".join(selected_tickers),
+        "MACRO": ",".join(selected_macros),
+        "FEATURES": ",".join(selected_features),
         "INITIAL_CAPITAL": 100.0,
         "MAX_LEVERAGE": 1.3,
         "BATCH_SIZE": 53,
@@ -90,20 +84,17 @@ def run_experiment(trial):
             f.write(output)
             f.write("\n=== Trial output end ===\n")
 
-        print(f"[Subprocess output]\n{output}\n")
-
         def extract_metric(label, out):
             match = re.search(rf"{label}:\s*Strategy:\s*([-+]?\d*\.\d+|\d+)%", out)
             return float(match.group(1)) / 100 if match else None
 
         def extract_avg_benchmark_outperformance(output):
             matches = re.findall(r"Average Benchmark Outperformance(?: Across Chunks)?:\s*([-+]?\d*\.\d+|\d+)%", output)
-            if matches:
-                for val in reversed(matches):
-                    try:
-                        return float(val) / 100.0
-                    except:
-                        continue
+            for val in reversed(matches):
+                try:
+                    return float(val) / 100.0
+                except:
+                    continue
             return 0.0
 
         sharpe = extract_metric("Sharpe Ratio", output)
@@ -118,15 +109,15 @@ def run_experiment(trial):
         trial.set_user_attr("sharpe", sharpe)
         trial.set_user_attr("drawdown", drawdown)
         trial.set_user_attr("avg_benchmark_outperformance", avg_benchmark_outperformance)
-        trial.set_user_attr("selected_features", features_str)
-        trial.set_user_attr("selected_macro", macro_str)
+        trial.set_user_attr("selected_features", selected_features)
+        trial.set_user_attr("selected_macro", selected_macros)
+        trial.set_user_attr("selected_tickers", selected_tickers)
 
         return score
 
     except subprocess.TimeoutExpired:
         print(f"[Timeout] Trial failed for config: {config}")
         return -float("inf")
-
 
 def main():
     sampler = TPESampler(seed=42)
@@ -139,16 +130,49 @@ def main():
     with open("hyparams.json", "w") as f:
         json.dump(best_params, f, indent=4)
 
-    print("\n=== Best trial parameters ===")
-    for k, v in best_params.items():
-        print(f"{k}: {v}")
-
+    print("\n=== Best Trial Metrics ===")
     for m in ["sharpe", "drawdown", "avg_benchmark_outperformance"]:
         print(f"{m}: {best.user_attrs.get(m, float('nan')):.4f}")
 
     print(f"Selected features: {best.user_attrs.get('selected_features')}")
     print(f"Selected macros: {best.user_attrs.get('selected_macro')}")
+    print(f"Selected tickers: {best.user_attrs.get('selected_tickers')}")
 
+    # --- Frequency tracking ---
+    macro_counter = Counter()
+    feature_counter = Counter()
+    ticker_counter = Counter()
+
+    for trial in study.trials:
+        if trial.value is None or trial.value == -float("inf"):
+            continue
+        for macro in MACRO_LIST:
+            if trial.params.get(f"macro_{macro}"):
+                macro_counter[macro] += 1
+        for feature in FEATURE_LIST:
+            if trial.params.get(f"feature_{feature}"):
+                feature_counter[feature] += 1
+        for ticker in TICKER_LIST:
+            if trial.params.get(f"ticker_{ticker}"):
+                ticker_counter[ticker] += 1
+
+    print("\nMacro inclusion frequency:")
+    for macro, count in macro_counter.most_common():
+        print(f"{macro}: {count}")
+
+    print("\nFeature inclusion frequency:")
+    for feature, count in feature_counter.most_common():
+        print(f"{feature}: {count}")
+
+    print("\nTicker inclusion frequency:")
+    for ticker, count in ticker_counter.most_common():
+        print(f"{ticker}: {count}")
+
+    # --- Optional: Parameter importance ---
+    print("\nParam importances:")
+    importance = optuna.importance.get_param_importances(study)
+    for k, v in importance.items():
+        print(f"{k}: {v:.4f}")
 
 if __name__ == "__main__":
     main()

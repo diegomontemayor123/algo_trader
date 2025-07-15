@@ -1,13 +1,13 @@
 =Combined Performance=
-Cagr: Strategy 27.65%, Benchmark 17.55%
-Sharpe_Ratio: Strategy 108.17%, Benchmark 93.63%
-Max_Drawdown: Strategy -46.91%, Benchmark -26.15%
+Cagr: Strategy 17.55%, Benchmark 26.44%
+Sharpe_Ratio: Strategy 120.81%, Benchmark 153.39%
+Max_Drawdown: Strategy -10.23%, Benchmark -18.94%
 
 =Per‑Chunk Metrics=
--Chunk 1 (2021-07-01–2025-06-30)-
-Cagr: Strategy 27.65%, Benchmark 17.55%
-Sharpe_Ratio: Strategy 108.17%, Benchmark 93.63%
-Max_Drawdown: Strategy -46.91%, Benchmark -26.15%
+-Chunk 1 (2023-07-01–2025-06-30)-
+Cagr: Strategy 17.55%, Benchmark 26.44%
+Sharpe_Ratio: Strategy 120.81%, Benchmark 153.39%
+Max_Drawdown: Strategy -10.23%, Benchmark -18.94%
 
 =Std Dev of Metrics Across Chunks=
 Cagr: ±nan%
@@ -15,6 +15,6 @@ Sharpe_Ratio: ±nan%
 Max_Drawdown: ±nan%
 
 =Avg Outperformance Across Chunks=
-Cagr: 10.11%
-Sharpe_Ratio: 14.54%
-Max_Drawdown: -20.76%
+Cagr: -8.89%
+Sharpe_Ratio: -32.57%
+Max_Drawdown: 8.71%
