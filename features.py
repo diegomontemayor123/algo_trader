@@ -1,11 +1,10 @@
 import pandas as pd
 import numpy as np
 from loadconfig import load_config
-
 config= load_config()
 
 
-PERIODS = [config["PREDICT_DAYS"]/2,config["PREDICT_DAYS"],config["PREDICT_DAYS"]*2]
+PERIODS = [config["PREDICT_DAYS"],config["PREDICT_DAYS"]*2,config["PREDICT_DAYS"]*4]
 
 def add_ret(data):
     data['ret'] = data['close'].pct_change()
