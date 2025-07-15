@@ -12,9 +12,27 @@ def add_price(data):
 def add_log_return(data):
     days = 5
     ratio = data['close'] / data['close'].shift(1)
+    
+    # Find problematic values: NaN or <= 0
+    problematic = ratio[(ratio.isna()) | (ratio <= 0)]
+    
+    # If first row has NaN, exclude it from logging
+    if 0 in problematic.index and np.isnan(problematic.loc[0]):
+        problematic = problematic.drop(0)
+    
+    # Log remaining problematic values if any
+    if not problematic.empty:
+        print("[Warning] Problematic ratio values found:")
+        for idx, val in problematic.items():
+            print(f"  Index {idx}: value={val}, log(value)=invalid (<=0 or NaN)")
+    
+    # Replace invalid values with NaN for safe log
+    ratio_safe = ratio.where(ratio > 0, np.nan)
+    data['log_ret'] = np.log(ratio_safe)
+    data['log_ret_norm5'] = (
+        data['log_ret'] - data['log_ret'].rolling(days).mean()
+    ) / (data['log_ret'].rolling(days).std() + 1e-6)
 
-    # Identify all problematic values where ratio is NaN, <= 0, or invalid
-    problematic = (ratio.isna()) | (ratio <= 0)
 
     if problematic.any():
         print("[Warning] Problematic ratio values found:")
