@@ -43,7 +43,7 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage, co
     all_portfolio_metrics = []
     all_benchmark_metrics = []
     avg_outperformance = {}
-    asset_names = sorted([c for c in returns_df.columns if c in features_df.columns])
+    asset_names = returns_df.columns
     def infer_weight_vector(feature_window_np):
         norm_feats = normalize_features(feature_window_np.astype(np.float32))
         with torch.no_grad():
@@ -58,34 +58,9 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage, co
             cur_date = returns_df.index[i + lookback]
             if not split_date_dt <= cur_date <= end_date_dt:
                 continue
-            feature_window = features_df.iloc[i:i + lookback].values
-            w_full = infer_weight_vector(feature_window)
-
-            # Get actual returns and ensure alignment
-            r_series = returns_df.loc[cur_date]
-            common_assets = [a for a in r_series.index if a in features_df.columns]
-            if len(common_assets) == 0:
-                logging.warning(f"[Warning] No matching assets for returns on {cur_date.date()}, skipping day.")
-                continue
-
-            # Align weights with return tickers
-            w_series = pd.Series(w_full, index=features_df.columns)
-            w_aligned = w_series[common_assets]
-            r_aligned = r_series[common_assets]
-
-            # Logging alignment info
-            if len(w_aligned) != len(r_aligned):
-                logging.warning(f"[Shape Mismatch] On {cur_date.date()} - Weights: {len(w_aligned)}, Returns: {len(r_aligned)}")
-            else:
-                logging.debug(f"[Backtest] Date {cur_date.date()}: Computing return with {len(w_aligned)} assets")
-
-            # Portfolio and benchmark returns
-            port_ret = np.dot(w_aligned.values, r_aligned.values)
-            bench_ret = np.mean(r_aligned.values)
-            portfolio_values.append(portfolio_values[-1] * (1 + port_ret))
-            benchmark_values.append(benchmark_values[-1] * (1 + bench_ret))
-            daily_weights.append(pd.Series(w_aligned, index=w_aligned.index, name=cur_date))
-
+            w = infer_weight_vector(features_df.iloc[i:i + lookback].values)
+            r = returns_df.loc[cur_date].values
+            port_ret = np.dot(w, r)
             bench_ret = np.mean(r)
             portfolio_values.append(portfolio_values[-1] * (1 + port_ret))
             benchmark_values.append(benchmark_values[-1] * (1 + bench_ret))
@@ -120,34 +95,9 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage, co
                 cur_date = returns_df.index[i + lookback]
                 if not chunk_start <= cur_date <= chunk_end:
                     continue
-                feature_window = features_df.iloc[i:i + lookback].values
-                w_full = infer_weight_vector(feature_window)
-
-                # Get actual returns and ensure alignment
-                r_series = returns_df.loc[cur_date]
-                common_assets = [a for a in r_series.index if a in features_df.columns]
-                if len(common_assets) == 0:
-                    logging.warning(f"[Warning] No matching assets for returns on {cur_date.date()}, skipping day.")
-                    continue
-
-                # Align weights with return tickers
-                w_series = pd.Series(w_full, index=features_df.columns)
-                w_aligned = w_series[common_assets]
-                r_aligned = r_series[common_assets]
-
-                # Logging alignment info
-                if len(w_aligned) != len(r_aligned):
-                    logging.warning(f"[Shape Mismatch] On {cur_date.date()} - Weights: {len(w_aligned)}, Returns: {len(r_aligned)}")
-                else:
-                    logging.debug(f"[Backtest] Date {cur_date.date()}: Computing return with {len(w_aligned)} assets")
-
-                # Portfolio and benchmark returns
-                port_ret = np.dot(w_aligned.values, r_aligned.values)
-                bench_ret = np.mean(r_aligned.values)
-                portfolio_values.append(portfolio_values[-1] * (1 + port_ret))
-                benchmark_values.append(benchmark_values[-1] * (1 + bench_ret))
-                daily_weights.append(pd.Series(w_aligned, index=w_aligned.index, name=cur_date))
-
+                w = infer_weight_vector(features_df.iloc[i:i + lookback].values)
+                r = returns_df.loc[cur_date].values
+                port_ret = np.dot(w, r)
                 bench_ret = np.mean(r)
                 portfolio_values.append(portfolio_values[-1] * (1 + port_ret))
                 benchmark_values.append(benchmark_values[-1] * (1 + bench_ret))
