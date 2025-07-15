@@ -104,25 +104,18 @@ def compute_features(TICKERS, FEATURES, cached_data, macro_keys):
                 if len(vol_series) == len(df):
                     vol_feats = add_volume(pd.DataFrame({vol_col: vol_series}))
                     df = pd.concat([df, vol_feats], axis=1)
-
         df = df.drop(columns=['close'], errors='ignore')
         df.columns = [f"{col}_{ticker}" for col in df.columns]
         all_features[ticker] = df
-
     features = pd.concat(all_features.values(), axis=1).dropna()
     returns = prices.pct_change().shift(-1).reindex(features.index)
     macro_df = process_macro_features(cached_data, features.index, macro_keys)
     features = pd.concat([features, macro_df], axis=1)
-    print(f"[Features] Combined features shape: {features.shape}")
-    #print("[Features] Sample features (first 5 rows):")
-    #print(features.head())
-    print(f"[Returns] Returns shape: {returns.shape}")
-    #print("[Returns] Sample returns (first 5 rows):")
-    #print(returns.head())
     features = normalize_features(features)
-    #print("[Features] Sample normalized features (first 5 rows):")
-    #print(features.head())
+    features.to_csv("features_all.csv")
+
     return features, returns
+
 
 def normalize_features(feature_window):
     mean = feature_window.mean(axis=0)

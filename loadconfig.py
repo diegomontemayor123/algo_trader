@@ -66,7 +66,6 @@ def load_config():
     
     missing_env_keys = [k for k in keys if not os.environ.get(k)]
     if not missing_env_keys:
-        print("[Config] Loading configuration from environment variables.")
         config = {}
         for key in keys:
             val = os.environ.get(key)
