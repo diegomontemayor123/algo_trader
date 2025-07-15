@@ -9,31 +9,44 @@ def add_ret(data):
 def add_price(data):
     data['price'] = data['close']
 
+import numpy as np
+
 def add_log_return(data):
     days = 5
+    
+    # Calculate ratio
     ratio = data['close'] / data['close'].shift(1)
-
-    # Create mask for problematic values (NaN or <=0)
-    problematic_mask = ratio.isna() | (ratio <= 0)
-
-    # Skip first row because ratio will be NaN due to no previous data
-    problematic_mask.iloc[0] = False
-
+    
+    # Replace invalid ratios with NaN (<=0 or NaN)
+    ratio_clean = ratio.copy()
+    ratio_clean[(ratio_clean <= 0) | (ratio_clean.isna())] = np.nan
+    
+    # Log returns
+    data['log_ret'] = np.log(ratio_clean)
+    
+    # Rolling mean and std
+    roll_mean = data['log_ret'].rolling(days).mean()
+    roll_std = data['log_ret'].rolling(days).std()
+    
+    # Normalize log returns
+    data['log_ret_norm5'] = (data['log_ret'] - roll_mean) / (roll_std + 1e-6)
+    
+    # Optional: If you want to avoid warnings or print problems only after row 4
+    problematic_mask = (ratio_clean.isna() | (ratio_clean <= 0))
+    # ignore first 4 rows for warnings
+    problematic_mask.iloc[:4] = False
+    
     if problematic_mask.any():
-        problematic_indices = ratio.index[problematic_mask]
-        for idx in problematic_indices:
-            val = ratio.loc[idx]
+        for idx in ratio_clean.index[problematic_mask]:
+            val = ratio_clean.loc[idx]
             prev_idx_pos = data.index.get_loc(idx) - 1
             prev_idx = data.index[prev_idx_pos] if prev_idx_pos >= 0 else None
             prev_close = data['close'].loc[prev_idx] if prev_idx is not None else None
             curr_close = data['close'].loc[idx]
-
+            
             print(f"[Warning] Problematic ratio value found at Index {idx}: value={val} (<=0 or NaN)")
             print(f"    Previous close (index {prev_idx}): {prev_close}")
             print(f"    Current close (index {idx}): {curr_close}")
-
-    data['log_ret'] = np.log(ratio)
-    data['log_ret_norm5'] = (data['log_ret'] - data['log_ret'].rolling(days).mean()) / (data['log_ret'].rolling(days).std() + 1e-6)
 
 def add_rolling_returns(data):
     for p in PERIODS:
