@@ -9,10 +9,33 @@ def add_ret(data):
 def add_price(data):
     data['price'] = data['close']
 
+import numpy as np
+
 def add_log_return(data):
     days = 5
-    data['log_ret'] = np.log(data['close'] / data['close'].shift(1))
-    data['log_ret_norm5'] = (data['log_ret'] - data['log_ret'].rolling(days).mean()) / (data['log_ret'].rolling(days).std() + 1e-6)
+    
+    # Calculate ratio first
+    ratio = data['close'] / data['close'].shift(1)
+    
+    # Find problematic values (<= 0) before log
+    problematic = ratio <= 0
+    if problematic.any():
+        print("Problematic values found in ratio for log calculation:")
+        for idx in data.index[problematic]:
+            val = ratio.loc[idx]
+            try:
+                val_log = np.log(val)
+            except Exception as e:
+                val_log = f"Error: {e}"
+            print(f"Index {idx}: value={val}, log(value)={val_log}")
+
+    # Now safely compute log, will produce -inf or NaN for <=0 values
+    data['log_ret'] = np.log(ratio)
+
+    # Calculate normalized 5-day rolling log returns
+    data['log_ret_norm5'] = (
+        data['log_ret'] - data['log_ret'].rolling(days).mean()
+    ) / (data['log_ret'].rolling(days).std() + 1e-6)
 
 def add_rolling_returns(data):
     for p in PERIODS:

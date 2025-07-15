@@ -49,9 +49,7 @@ def run_experiment(trial):
             timeout=1800
         )
         output = result.stdout + result.stderr
-
-        # Save the full output (stdout + stderr) to a log file for debugging
-        with open("model_output.log", "a") as f:
+        with open("tune_output.log", "a") as f:
             f.write("\n\n=== Trial output start ===\n")
             f.write(output)
             f.write("\n=== Trial output end ===\n")
