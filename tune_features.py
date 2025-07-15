@@ -6,14 +6,8 @@ import optuna
 from optuna.samplers import TPESampler
 from collections import Counter
 
-TICKER_LIST = [
-    "AAPL", "MSFT", "GOOGL", "AMZN",  "NVDA", "TSLA",
-    "JPM", "XOM", "PFE", "KO", "WMT", "BA", "PG", "IBM", "CAT",
-    "CVX", "MCD", "GE", "VZ", "T", "UNH", "NKE", "ORCL"
-]
-
 MACRO_LIST = [
-    "FEDFUNDS", "^GSPC", "^DJI", "^IXIC", "^RUT", "^FTSE",
+    "FEDFUNDS", "^GSPC", "^DJI", "^IXIC", "^RUT", "^FTSE", "^N225",
     "CL=F", "GC=F", "SI=F", "NG=F", "ZW=F",
     "EURUSD=X", "JPY=X", "GBPUSD=X", "USDJPY=X",
     "^TNX", "^FVX", "^IRX", "^TYX", "TLT", "IEF", "GLD", "USO", "UUP"
@@ -30,18 +24,20 @@ def binary_select(trial, items, prefix):
 def run_experiment(trial):
     selected_macros = binary_select(trial, MACRO_LIST, "macro")
     selected_features = binary_select(trial, FEATURE_LIST, "feature")
-    selected_tickers = binary_select(trial, TICKER_LIST, "ticker")
 
-    if len(selected_features) == 0 or len(selected_macros) == 0 or len(selected_tickers) == 0:
-        return -float("inf")  # Avoid empty configs
+    if len(selected_features) == 0 or len(selected_macros) == 0:
+        return -float("inf")  # Skip useless trials
+
+    macro_str = ",".join(selected_macros)
+    features_str = ",".join(selected_features)
 
     config = {
         "START_DATE": "2012-01-01",
         "END_DATE": "2025-07-01",
         "SPLIT_DATE": "2023-07-01",
-        "TICKERS": ",".join(selected_tickers),
-        "MACRO": ",".join(selected_macros),
-        "FEATURES": ",".join(selected_features),
+        "TICKERS": "AAPL,MSFT,GOOGL,AMZN,NVDA,JPM,WMT,CVX,MCD,T,NKE",
+        "MACRO": macro_str,
+        "FEATURES": features_str,
         "INITIAL_CAPITAL": 100.0,
         "MAX_LEVERAGE": 1.3,
         "BATCH_SIZE": 53,
@@ -111,7 +107,6 @@ def run_experiment(trial):
         trial.set_user_attr("avg_benchmark_outperformance", avg_benchmark_outperformance)
         trial.set_user_attr("selected_features", selected_features)
         trial.set_user_attr("selected_macro", selected_macros)
-        trial.set_user_attr("selected_tickers", selected_tickers)
 
         return score
 
@@ -136,12 +131,10 @@ def main():
 
     print(f"Selected features: {best.user_attrs.get('selected_features')}")
     print(f"Selected macros: {best.user_attrs.get('selected_macro')}")
-    print(f"Selected tickers: {best.user_attrs.get('selected_tickers')}")
 
     # --- Frequency tracking ---
     macro_counter = Counter()
     feature_counter = Counter()
-    ticker_counter = Counter()
 
     for trial in study.trials:
         if trial.value is None or trial.value == -float("inf"):
@@ -152,21 +145,14 @@ def main():
         for feature in FEATURE_LIST:
             if trial.params.get(f"feature_{feature}"):
                 feature_counter[feature] += 1
-        for ticker in TICKER_LIST:
-            if trial.params.get(f"ticker_{ticker}"):
-                ticker_counter[ticker] += 1
 
-    print("\nMacro inclusion frequency:")
+    print("\nMacro inclusion frequency (top drivers):")
     for macro, count in macro_counter.most_common():
         print(f"{macro}: {count}")
 
-    print("\nFeature inclusion frequency:")
+    print("\nFeature inclusion frequency (top drivers):")
     for feature, count in feature_counter.most_common():
         print(f"{feature}: {count}")
-
-    print("\nTicker inclusion frequency:")
-    for ticker, count in ticker_counter.most_common():
-        print(f"{ticker}: {count}")
 
     # --- Optional: Parameter importance ---
     print("\nParam importances:")
