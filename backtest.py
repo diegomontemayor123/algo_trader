@@ -12,7 +12,7 @@ from compute_features import load_price_data
 from calc_perform import calculate_performance_metrics
 import os
 
-def run_backtest(device, initial_capital, split_date, lookback, max_leverage, compute_features, normalize_features, tickers, start_date, end_date, features, macro_keys, test_chunk_months, retrain_window, model=None, plot=False, weights_csv_path="daily_weights.csv", config=None):
+def run_backtest(device, initial_capital, split_date, lookback, max_leverage, compute_features, normalize_features, tickers, start_date, end_date, features, macro_keys, test_chunk_months, retrain_window, model=None, plot=False, weights_csv_path="weights.csv", config=None):
     if retrain_window > 0 and config is None:
         raise ValueError("Config needed when retrain_window>0")
     logging.info(f"[Backtest] Starting w retrain_window={retrain_window}")
@@ -171,9 +171,9 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage, co
         plt.grid(alpha=0.3)
         plt.legend(ncol=2, fontsize="small")
         plt.tight_layout()
-        plt.savefig("img/daily_weights_plot.png", dpi=300)
+        plt.savefig("img/weights_plot.png", dpi=300)
         plt.close()
-        logging.info("[Backtest] Saved daily_weights_plot.png")
+        logging.info("[Backtest] Saved weights_plot.png")
     return {
         "portfolio": comb_port_metrics,
         "benchmark": comb_bench_metrics,

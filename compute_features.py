@@ -7,8 +7,6 @@ from loadconfig import load_config
 
 config = load_config()
 PRICE_CACHE_FILE = "prices.csv"
-
-# Load tickers and macro keys from config
 TICKERS = config["TICKERS"]
 if isinstance(TICKERS, str):
     TICKERS = [t.strip() for t in TICKERS.split(",") if t.strip()]
@@ -16,18 +14,14 @@ if isinstance(TICKERS, str):
 MACRO_KEYS = config.get("MACRO", [])
 if isinstance(MACRO_KEYS, str):
     MACRO_KEYS = [m.strip() for m in MACRO_KEYS.split(",") if m.strip()]
-
-# Low frequency macros can also be loaded from config or hardcoded
 LOW_FREQ_MACROS = set(config.get("LOW_FREQ_MACROS", ["CPI", "FEDFUNDS"]))
 
 def fetch_macro_series(name, ticker, start, end):
     try:
         if ticker in LOW_FREQ_MACROS:
-            # Fetch monthly/quarterly FRED data, resample daily with forward fill
             series = DataReader(ticker, "fred", start, end).squeeze()
             series = series.resample('D').ffill()
         else:
-            # Higher frequency data from Yahoo Finance
             yf_data = yf.download(ticker, start=start, end=end, auto_adjust=False)
             if 'Adj Close' in yf_data:
                 series = yf_data['Adj Close']
@@ -36,14 +30,12 @@ def fetch_macro_series(name, ticker, start, end):
             else:
                 raise ValueError(f"No valid price column found for {ticker}")
             series = series.bfill().ffill()
-
         series.name = name
         return series
-
     except Exception as e:
         print(f"[Macro] Failed to fetch {name} ({ticker}): {e}")
         return pd.Series(dtype='float64')
-
+    
 def load_price_data(START_DATE, END_DATE, macro_keys):
     if os.path.exists(PRICE_CACHE_FILE):
         print(f"[Data] Using cached data from {PRICE_CACHE_FILE}")
@@ -56,7 +48,6 @@ def load_price_data(START_DATE, END_DATE, macro_keys):
         volume = raw_data['Volume']
         volume.columns = [f"{ticker}_volume" for ticker in volume.columns]
         data = pd.concat([price, volume], axis=1)
-
         for macro_name in macro_keys:
             macro_series = fetch_macro_series(macro_name, macro_name, START_DATE, END_DATE)
             data[macro_name] = macro_series
@@ -71,10 +62,8 @@ def process_macro_features(cached_data, index, macro_keys, min_non_na_ratio=0.1)
     for col in macro_keys:
         if col not in cached_data.columns:
             continue
-
         series = cached_data[col].reindex(index)
         non_na_ratio = series.notna().mean()
-
         if col not in LOW_FREQ_MACROS and non_na_ratio < min_non_na_ratio:
             print(f"[Macro] Excluding {col} due to low data coverage ({non_na_ratio:.2%} non-NA)")
             continue
