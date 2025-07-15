@@ -7,7 +7,7 @@ from optuna.samplers import TPESampler
 from collections import Counter
 
 TICKER_LIST = [
-    "AAPL", "MSFT", "GOOGL", "AMZN", "META", "NVDA", "TSLA",
+    "AAPL", "MSFT", "GOOGL", "AMZN",  "NVDA", "TSLA",
     "JPM", "XOM", "PFE", "KO", "WMT", "BA", "PG", "IBM", "CAT",
     "CVX", "MCD", "GE", "VZ", "T", "UNH", "NKE", "ORCL"
 ]
