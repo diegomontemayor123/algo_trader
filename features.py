@@ -11,20 +11,30 @@ def add_price(data):
 
 def add_log_return(data):
     days = 5
+
+    # Calculate the ratio (close / shifted close)
     ratio = data['close'] / data['close'].shift(1)
-    
-    # Find problematic values: NaN or <= 0
-    problematic = ratio[(ratio.isna()) | (ratio <= 0)]
-    
-    # If first row has NaN, exclude it from logging
-    if 0 in problematic.index and np.isnan(problematic.loc[0]):
-        problematic = problematic.drop(0)
-    
-    # Log remaining problematic values if any
-    if not problematic.empty:
-        print("[Warning] Problematic ratio values found:")
-        for idx, val in problematic.items():
-            print(f"  Index {idx}: value={val}, log(value)=invalid (<=0 or NaN)")
+
+    # Find all problematic indices where ratio is NaN or <= 0
+    problematic_mask = ratio.isna() | (ratio <= 0)
+    problematic_indices = ratio.index[problematic_mask]
+
+    for idx in problematic_indices:
+        val = ratio.loc[idx]
+        print(f"[Warning] Problematic ratio value found at Index {idx}: value={val} (<=0 or NaN)")
+
+        # Optional: Also print close prices causing the issue for context
+        prev_idx = data.index[data.index.get_loc(idx) - 1] if data.index.get_loc(idx) > 0 else None
+        prev_close = data['close'].loc[prev_idx] if prev_idx is not None else None
+        curr_close = data['close'].loc[idx]
+
+        print(f"    Previous close (index {prev_idx}): {prev_close}")
+        print(f"    Current close (index {idx}): {curr_close}")
+
+    # Now compute log return as usual (will still produce NaNs for these points)
+    data['log_ret'] = np.log(ratio)
+    data['log_ret_norm5'] = (data['log_ret'] - data['log_ret'].rolling(days).mean()) / (data['log_ret'].rolling(days).std() + 1e-6)
+
     
     # Replace invalid values with NaN for safe log
     ratio_safe = ratio.where(ratio > 0, np.nan)
