@@ -13,26 +13,26 @@ import numpy as np
 
 def add_log_return(data):
     days = 5
-    
-    # Calculate ratio first
     ratio = data['close'] / data['close'].shift(1)
-    
-    # Find problematic values (<= 0) before log
+    log_ret = np.log(ratio)
+
+    # Check for problematic values (NaN or <= 0), but ignore first NaN only
     problematic = (ratio <= 0) | (ratio.isna())
+    # Ignore first NaN index if it exists
+    if ratio.isna().iloc[0]:
+        problematic.iloc[0] = False
+
     if problematic.any():
-        print("Problematic values found in ratio for log calculation:")
+        print(f"[Warning] Problematic ratio values detected (excluding first NaN):")
         for idx in data.index[problematic]:
             val = ratio.loc[idx]
             try:
                 val_log = np.log(val)
             except Exception as e:
                 val_log = f"Error: {e}"
-            print(f"Index {idx}: value={val}, log(value)={val_log}")
+            print(f"  Index {idx}: value={val}, log(value)={val_log}")
 
-    # Now safely compute log, will produce -inf or NaN for <=0 values
-    data['log_ret'] = np.log(ratio)
-
-    # Calculate normalized 5-day rolling log returns
+    data['log_ret'] = log_ret
     data['log_ret_norm5'] = (
         data['log_ret'] - data['log_ret'].rolling(days).mean()
     ) / (data['log_ret'].rolling(days).std() + 1e-6)
