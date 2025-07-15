@@ -13,22 +13,22 @@ def run_experiment(trial):
         "MACRO":trial.suggest_categorical("MACRO", ["FEDFUNDS,^GSPC,^DJI,^IXIC,^RUT,^FTSE,^N225,CL=F,GC=F,SI=F,NG=F,ZC=F,ZW=F,EURUSD=X,JPY=X,GBPUSD=X,USDJPY=X,^TNX,^FVX,^IRX,^TYX,TLT,IEF,GLD,USO,UUP"]),
         "FEATURES": trial.suggest_categorical("FEATURES", ["ret,vol,log_ret,rolling_ret,volume"]),
         "INITIAL_CAPITAL": trial.suggest_float("INITIAL_CAPITAL", 100, 100),
-        "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 1.2,1.2),
+        "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 1.2,1.5),
 
         "BATCH_SIZE": trial.suggest_int("BATCH_SIZE",40,80),
         "LOOKBACK": trial.suggest_int("LOOKBACK",50,90),
-        "PREDICT_DAYS": trial.suggest_int("PREDICT_DAYS",1,8),
+        "PREDICT_DAYS": trial.suggest_int("PREDICT_DAYS",2,5),
         "WARMUP_FRAC": trial.suggest_float("WARMUP_FRAC", 0.17, 0.17),
         "DROPOUT": trial.suggest_float("DROPOUT", 0.01, 0.2),
-        "DECAY": trial.suggest_float("DECAY", 1e-7, 1e-1),
+        "DECAY": trial.suggest_float("DECAY", 1e-5, 1e-1),
 
         "FEATURE_ATTENTION_ENABLED": trial.suggest_int("FEATURE_ATTENTION_ENABLED", 1, 1),
-        "L1_PENALTY": trial.suggest_float("L1_PENALTY", 1e-10, 1e-2),
+        "L1_PENALTY": trial.suggest_float("L1_PENALTY", 1e-5, 1e-1),
         "L2_PENALTY": trial.suggest_float("L2_PENALTY", 0, 0),
-        "INIT_LR":trial.suggest_float("INIT_LR", 1e-4, 1),
-        "LOSS_MIN_MEAN": trial.suggest_float("LOSS_MIN_MEAN", 0.01, 0.15),
-        "LOSS_RETURN_PENALTY": trial.suggest_float("LOSS_RETURN_PENALTY", 0.01, 0.5),
-        "TEST_CHUNK_MONTHS": trial.suggest_int("TEST_CHUNK_MONTHS", 20, 36),
+        "INIT_LR":trial.suggest_float("INIT_LR", 1e-2, 1),
+        "LOSS_MIN_MEAN": trial.suggest_float("LOSS_MIN_MEAN", 0.01, 0.1),
+        "LOSS_RETURN_PENALTY": trial.suggest_float("LOSS_RETURN_PENALTY", 0.01, 0.3),
+        "TEST_CHUNK_MONTHS": trial.suggest_int("TEST_CHUNK_MONTHS", 24, 24),
         "RETRAIN_WINDOW": trial.suggest_int("RETRAIN_WINDOW", 0, 0), #months
 
         "EPOCHS": trial.suggest_int("EPOCHS", 20, 20),
@@ -68,7 +68,7 @@ def run_experiment(trial):
         avg_benchmark_outperformance = extract_avg_benchmark_outperformance(output)
         if sharpe is None or drawdown is None:
             return -float("inf")
-        score = (1 * sharpe) + (1 * avg_benchmark_outperformance) - (1 * abs(drawdown))
+        score = (1 * sharpe) + (1 * avg_benchmark_outperformance) - (0.7 * abs(drawdown))
         trial.set_user_attr("sharpe", sharpe)
         trial.set_user_attr("drawdown", drawdown)
         trial.set_user_attr("avg_benchmark_outperformance", avg_benchmark_outperformance)

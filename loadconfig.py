@@ -63,6 +63,7 @@ def load_config():
         elif key in date_keys:
             return pd.Timestamp(val)
         return val
+    
     missing_env_keys = [k for k in keys if not os.environ.get(k)]
     if not missing_env_keys:
         print("[Config] Loading configuration from environment variables.")
@@ -81,7 +82,6 @@ def load_config():
     if missing_json_keys:
         raise ValueError(f"[Config Missing] Keys missing from both environment and JSON: "
                          f"{missing_env_keys + missing_json_keys}")
-    print("[Config] Loading configuration from JSON file 'hyparams.json'.")
     config = {}
     for key in keys:
         val = os.environ.get(key, config_raw[key])
