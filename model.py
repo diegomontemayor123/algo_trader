@@ -34,12 +34,20 @@ class TransformerTrader(nn.Module):
         return weights
 
 def calculate_heads(dimen, max_heads):
-    if dimen % max_heads != 0:
-        for heads in range(max_heads, 0, -1):
-            if dimen % heads == 0:
-                return heads
+    candidates = [h for h in range(max_heads, 0, -1) if dimen % h == 0]
+    if not candidates:
+        return 1  # fallback
+
+    heads = candidates[0]
+
+    if heads % 2 == 1:  # odd number of heads
+        for h in range(heads + 1, max_heads + 1):
+            if dimen % h == 0 and h % 2 == 0:
+                return h
+        return heads
     else:
-        return max_heads
+        return heads
+
 
 def create_model(dimenension, config):
     heads = calculate_heads(dimenension, config["MAX_HEADS"])
