@@ -4,7 +4,8 @@ from loadconfig import load_config
 config= load_config()
 
 
-PERIODS = [config["FEATURE_PERIODS"]]
+PERIODS = list(map(int, config["FEATURE_PERIODS"].split(",")))
+
 
 def add_ret(data):
     data['ret'] = data['close'].pct_change()
