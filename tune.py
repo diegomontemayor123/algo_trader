@@ -10,7 +10,7 @@ def run_experiment(trial):
         "START_DATE": trial.suggest_categorical("START_DATE", ["2012-01-01"]),
         "END_DATE": trial.suggest_categorical("END_DATE", ["2025-07-01"]),
         "SPLIT_DATE": trial.suggest_categorical("SPLIT_DATE", ["2021-07-01"]),
-        "TICKERS": trial.suggest_categorical("TICKERS", ["AAPL,MSFT,GOOGL,AMZN,NVDA,JPM,WMT,CVX,MCD,T,NKE","A"]),
+        "TICKERS": trial.suggest_categorical("TICKERS", ["AAPL,MSFT,GOOGL,AMZN,NVDA,JPM,WMT,CVX,MCD,T,NKE","AAPL,MSFT"]),
         "MACRO": trial.suggest_categorical("MACRO",["USO,^N225, NG=F, GBPUSD=X,^IXIC,GLD,^RUT,CL=F,TLT,^IRX,^FTSE,^GSPC,^DJI,^FVX,IEF"]),
         "FEATURES": trial.suggest_categorical("FEATURES", ["ret,rolling_ret,ema,vol,rsi"]),
         "INITIAL_CAPITAL": trial.suggest_float("INITIAL_CAPITAL", 100.0, 100.0),
@@ -47,11 +47,9 @@ def run_experiment(trial):
             f.write(output)
             f.write("\n=== Trial output end ===\n")
         print(f"[Subprocess output]\n{output}\n")
-
         def extract_metric(label, out):
             match = re.search(rf"{label}:\s*Strategy:\s*([-+]?\d*\.\d+|\d+)%", out)
             return float(match.group(1)) / 100 if match else None
-
         def extract_avg_benchmark_outperformance(output):
             single_line_match = re.findall(r"Average Benchmark Outperformance(?: Across Chunks)?:\s*([-+]?\d*\.\d+|\d+)%", output)
             if single_line_match:
