@@ -11,8 +11,25 @@ def add_price(data):
 
 def add_log_return(data):
     days = 5
-    data['log_ret'] = np.log(data['close'] / data['close'].shift(1))
-    data['log_ret_norm5'] = (data['log_ret'] - data['log_ret'].rolling(days).mean()) / (data['log_ret'].rolling(days).std() + 1e-6)
+    # Calculate close-to-previous-close ratio
+    shifted_close = data['close'].shift(1)
+    log_input = data['close'] / shifted_close
+
+    # Handle invalid values before log
+    log_input = log_input.replace([np.inf, -np.inf], np.nan).clip(lower=1e-6)
+
+    # Optional: Debug output if invalid values are encountered
+    if (log_input <= 0).any():
+        print("[Warning] Non-positive values encountered in log return calculation:")
+        print(log_input[log_input <= 0])
+
+    # Safe log return
+    data['log_ret'] = np.log(log_input)
+
+    # Normalized log return over a rolling window
+    rolling_mean = data['log_ret'].rolling(days).mean()
+    rolling_std = data['log_ret'].rolling(days).std() + 1e-6
+    data['log_ret_norm5'] = (data['log_ret'] - rolling_mean) / rolling_std
 
 def add_rolling_returns(data):
     for p in PERIODS:
