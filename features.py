@@ -11,10 +11,8 @@ def add_price(data):
 
 def add_log_return(data):
     days = 5
-
     ratio = data['close'] / data['close'].shift(1)
 
-    # mask for problematic values (NaN or <= 0)
     problematic_mask = ratio.isna() | (ratio <= 0)
 
     if problematic_mask.any():
@@ -30,36 +28,8 @@ def add_log_return(data):
             print(f"    Previous close (index {prev_idx}): {prev_close}")
             print(f"    Current close (index {idx}): {curr_close}")
 
-    # Then compute log return normally (NaNs will remain)
     data['log_ret'] = np.log(ratio)
     data['log_ret_norm5'] = (data['log_ret'] - data['log_ret'].rolling(days).mean()) / (data['log_ret'].rolling(days).std() + 1e-6)
-
-    
-    # Replace invalid values with NaN for safe log
-    ratio_safe = ratio.where(ratio > 0, np.nan)
-    data['log_ret'] = np.log(ratio_safe)
-    data['log_ret_norm5'] = (
-        data['log_ret'] - data['log_ret'].rolling(days).mean()
-    ) / (data['log_ret'].rolling(days).std() + 1e-6)
-
-
-    if problematic.any():
-        print("[Warning] Problematic ratio values found:")
-        for idx in data.index[problematic]:
-            val = ratio.loc[idx]
-            try:
-                val_log = np.log(val) if val > 0 else "invalid (<=0)"
-            except Exception as e:
-                val_log = f"error: {e}"
-            print(f"  Index {idx}: value={val}, log(value)={val_log}")
-
-    # Replace invalid values with NaN before log to avoid runtime errors
-    ratio_safe = ratio.where(ratio > 0, np.nan)
-
-    data['log_ret'] = np.log(ratio_safe)
-    data['log_ret_norm5'] = (
-        data['log_ret'] - data['log_ret'].rolling(days).mean()
-    ) / (data['log_ret'].rolling(days).std() + 1e-6)
 
 def add_rolling_returns(data):
     for p in PERIODS:
