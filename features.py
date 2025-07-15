@@ -9,29 +9,25 @@ def add_ret(data):
 def add_price(data):
     data['price'] = data['close']
 
-import numpy as np
-
 def add_log_return(data):
     days = 5
     ratio = data['close'] / data['close'].shift(1)
 
-    # Replace zeros or negatives with NaN (or a small positive number if you prefer)
-    ratio_safe = ratio.where(ratio > 0, np.nan)
-
-    # Log any problematic values except first NaN as before
-    problematic = (ratio_safe.isna())
-    if ratio_safe.isna().iloc[0]:
-        problematic.iloc[0] = False
+    # Identify all problematic values where ratio is NaN, <= 0, or invalid
+    problematic = (ratio.isna()) | (ratio <= 0)
 
     if problematic.any():
-        print("[Warning] Problematic ratio values detected (excluding first NaN):")
+        print("[Warning] Problematic ratio values found:")
         for idx in data.index[problematic]:
             val = ratio.loc[idx]
             try:
-                val_log = np.log(val)
+                val_log = np.log(val) if val > 0 else "invalid (<=0)"
             except Exception as e:
-                val_log = f"Error: {e}"
+                val_log = f"error: {e}"
             print(f"  Index {idx}: value={val}, log(value)={val_log}")
+
+    # Replace invalid values with NaN before log to avoid runtime errors
+    ratio_safe = ratio.where(ratio > 0, np.nan)
 
     data['log_ret'] = np.log(ratio_safe)
     data['log_ret_norm5'] = (
