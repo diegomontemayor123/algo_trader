@@ -79,7 +79,7 @@ class DifferentiableSharpeLoss(nn.Module):
             l1 = sum(p.abs().sum() for p in model.parameters())
             loss += self.l1_penalty * l1
         return loss
-F
+
 class TransformerLRScheduler(torch.optim.lr_scheduler._LRScheduler):
     def __init__(self, optimizer, d_model, warmup_steps, last_epoch=-1):
         self.d_model = d_model
