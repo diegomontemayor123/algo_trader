@@ -59,7 +59,7 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage, co
             if not split_date_dt <= cur_date <= end_date_dt:
                 continue
             w = infer_weight_vector(features_df.iloc[i:i + lookback].values)
-            r = returns_df.loc[cur_date].values
+            r = returns_df.loc[cur_date, tickers].values
             port_ret = np.dot(w, r)
             bench_ret = np.mean(r)
             portfolio_values.append(portfolio_values[-1] * (1 + port_ret))
