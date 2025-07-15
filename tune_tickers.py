@@ -3,24 +3,15 @@ import subprocess
 import re
 import optuna
 import json
-import itertools
 from optuna.samplers import TPESampler
 
 def run_experiment(trial):
-    full_tickers = ["AAPL","MSFT","GOOGL","AMZN","NVDA","JPM","WMT","CVX","MCD","T","NKE"]
-
-    max_subset_size = 5
-    all_combinations = []
-    for r in range(1, max_subset_size + 1):
-        combos = itertools.combinations(full_tickers, r)
-        all_combinations.extend([",".join(combo) for combo in combos])
-
     config = {
         "START_DATE": trial.suggest_categorical("START_DATE", ["2012-01-01"]),
         "END_DATE": trial.suggest_categorical("END_DATE", ["2025-07-01"]),
         "SPLIT_DATE": trial.suggest_categorical("SPLIT_DATE", ["2023-07-01"]),
-        "TICKERS": trial.suggest_categorical("TICKERS", all_combinations),
-        "MACRO": trial.suggest_categorical("MACRO", ["FEDFUNDS,^GSPC,^DJI,^IXIC,^RUT,^FTSE,CL=F,GC=F,SI=F,NG=F,ZW=F,EURUSD=X,JPY=X,GBPUSD=X,USDJPY=X,^TNX,^FVX,^IRX,^TYX,TLT,IEF,GLD,USO,UUP"]),
+        "TICKERS": trial.suggest_categorical("TICKERS", ["AAPL,MSFT,GOOGL,AMZN,NVDA,JPM,WMT,CVX,MCD,T,NKE"],["AAPL"]),
+        "MACRO": trial.suggest_categorical("MACRO",["FEDFUNDS,^GSPC,^DJI,^IXIC,^RUT,^FTSE,CL=F,GC=F,SI=F,NG=F,ZW=F,EURUSD=X,JPY=X,GBPUSD=X,USDJPY=X,^TNX,^FVX,^IRX,^TYX,TLT,IEF,GLD,USO,UUP"]),
         "FEATURES": trial.suggest_categorical("FEATURES", ["ret,vol,log_ret,rolling_ret,volume"]),
         "INITIAL_CAPITAL": trial.suggest_float("INITIAL_CAPITAL", 100.0, 100.0),
         "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 1.3, 1.3),
@@ -127,3 +118,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
