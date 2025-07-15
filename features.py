@@ -18,7 +18,7 @@ def add_log_return(data):
     ratio = data['close'] / data['close'].shift(1)
     
     # Find problematic values (<= 0) before log
-    problematic = ratio <= 0
+    problematic = (ratio <= 0) | (ratio.isna())
     if problematic.any():
         print("Problematic values found in ratio for log calculation:")
         for idx in data.index[problematic]:
