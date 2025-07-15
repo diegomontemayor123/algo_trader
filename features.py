@@ -13,7 +13,11 @@ def add_log_return(data):
     days = 5
     ratio = data['close'] / data['close'].shift(1)
 
+    # Create mask for problematic values (NaN or <=0)
     problematic_mask = ratio.isna() | (ratio <= 0)
+
+    # Skip first row because ratio will be NaN due to no previous data
+    problematic_mask.iloc[0] = False
 
     if problematic_mask.any():
         problematic_indices = ratio.index[problematic_mask]
