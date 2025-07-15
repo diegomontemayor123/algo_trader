@@ -4,7 +4,7 @@ from loadconfig import load_config
 config= load_config()
 
 
-PERIODS = list(map(int, config["FEATURE_PERIODS"].split(",")))
+PERIODS = list(map(int, raw_periods))
 
 
 def add_ret(data):
