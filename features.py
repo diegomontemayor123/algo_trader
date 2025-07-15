@@ -4,7 +4,7 @@ from loadconfig import load_config
 config= load_config()
 
 
-PERIODS = [config["PREDICT_DAYS"],config["PREDICT_DAYS"]*2,config["PREDICT_DAYS"]*4]
+PERIODS = [config["FEATURE_PERIODS"]]
 
 def add_ret(data):
     data['ret'] = data['close'].pct_change()

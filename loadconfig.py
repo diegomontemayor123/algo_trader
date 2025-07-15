@@ -6,15 +6,15 @@ def load_config():
     keys = [
         "SPLIT_DATE", "VAL_SPLIT", "PREDICT_DAYS", "LOOKBACK", "EPOCHS",
         "MAX_HEADS", "BATCH_SIZE", "FEATURES", "MAX_LEVERAGE", "LAYER_COUNT",
-        "DROPOUT", "DECAY", "FEATURE_ATTENTION_ENABLED", "L2_PENALTY","L1_PENALTY",
+        "DROPOUT", "DECAY", "FEATURE_ATTENTION_ENABLED", "L1_PENALTY",
         "LOSS_MIN_MEAN", "LOSS_RETURN_PENALTY","INIT_LR",
         "WARMUP_FRAC", "EARLY_STOP_PATIENCE", "INITIAL_CAPITAL", "TICKERS",
-        "START_DATE", "END_DATE", "TEST_CHUNK_MONTHS", "RETRAIN_WINDOW", "MACRO"
+        "START_DATE", "END_DATE", "TEST_CHUNK_MONTHS", "RETRAIN_WINDOW", "MACRO", "FEATURE_PERIODS"
     ]
 
     float_keys = {
         "VAL_SPLIT", "MAX_LEVERAGE", "DROPOUT", "DECAY", "LOSS_MIN_MEAN",
-        "LOSS_RETURN_PENALTY", "WARMUP_FRAC", "INITIAL_CAPITAL","L2_PENALTY","L1_PENALTY","INIT_LR"
+        "LOSS_RETURN_PENALTY", "WARMUP_FRAC", "INITIAL_CAPITAL","L1_PENALTY","INIT_LR"
     }
     int_keys = {
         "PREDICT_DAYS", "LOOKBACK", "EPOCHS", "MAX_HEADS", "BATCH_SIZE",
@@ -23,7 +23,7 @@ def load_config():
     bool_keys = {
         "FEATURE_ATTENTION_ENABLED"
     }
-    list_keys = {"FEATURES", "TICKERS"}  # Removed MACRO from here
+    list_keys = {"FEATURES", "TICKERS", "FEATURE_PERIODS"}  # Removed MACRO from here
     date_keys = {"SPLIT_DATE", "START_DATE", "END_DATE"}
 
     def parse_bool(val):

@@ -9,47 +9,10 @@ def run_experiment(trial):
     config = {
         "START_DATE": trial.suggest_categorical("START_DATE", ["2012-01-01"]),
         "END_DATE": trial.suggest_categorical("END_DATE", ["2025-07-01"]),
-        "SPLIT_DATE": trial.suggest_categorical("SPLIT_DATE", ["2023-07-01"]),
-        "TICKERS": trial.suggest_categorical("TICKERS", 
-        ["AAPL,MSFT,GOOGL,AMZN,NVDA,JPM,WMT,CVX,MCD,T,NKE",
-        # "AAPL,MSFT,GOOGL,AMZN",
-         #"NVDA,JPM,WMT,CVX,MCD,T,NKE",
-         #"AAPL,MSFT,CVX,MCD,T,NKE",
-         #"AAPL,MSFT,GOOGL,AMZN,T,NKE",
-         #"AAPL,MSFT,GOOGL,AMZN,NVDA,JPM,WMT,CVX,MCD",
-         #"AAPL,MSFT,GOOGL,AMZN,NVDA,JPM,WMT,T,NKE",
-         #"AAPL,NVDA,JPM,WMT,CVX,MCD,T,NKE",
-         #"AAPL,MSFT,GOOGL,AMZN,NVDA,CVX,MCD,T,NKE",
-         #"AAPL,MSFT,GOOGL,JPM,WMT,CVX,MCD,T,NKE",
-         #"AAPL,MSFT,NVDA,JPM,WMT,CVX,MCD,T,NKE",
-         #"AAPL,AMZN,NVDA,JPM,WMT,CVX,MCD,T,NKE",
-         #"GOOGL,AMZN,NVDA,JPM,WMT,CVX,MCD,T,NKE",
-         #"MSFT,GOOGL,AMZN,NVDA,JPM,WMT,CVX,MCD,T,NKE",
-         #"AAPL,GOOGL,AMZN,NVDA,JPM,WMT,CVX,MCD,T,NKE",
-         #"AAPL,MSFT,AMZN,NVDA,JPM,WMT,CVX,MCD,T,NKE",
-         #"AAPL,MSFT,GOOGL,NVDA,JPM,WMT,CVX,MCD,T,NKE",
-         #"AAPL,MSFT,GOOGL,AMZN,JPM,WMT,CVX,MCD,T,NKE",
-         #"AAPL,MSFT,GOOGL,AMZN,NVDA,WMT,CVX,MCD,T,NKE",
-         #"AAPL,MSFT,GOOGL,AMZN,NVDA,JPM,CVX,MCD,T,NKE",
-         #"AAPL,MSFT,GOOGL,AMZN,NVDA,JPM,WMT,MCD,T,NKE",
-         #"AAPL,MSFT,GOOGL,AMZN,NVDA,JPM,WMT,CVX,T,NKE",
-         #"AAPL,MSFT,GOOGL,AMZN,NVDA,JPM,WMT,CVX,MCD,NKE",
-         #"AAPL,MSFT,GOOGL,AMZN,NVDA,JPM,WMT,CVX,MCD,T",
-         #"AAPL,MSFT,GOOGL,NKE",
-         #"AAPL,MSFT,T,NKE",
-         #"AAPL,MCD,T,NKE",
-         #"AAPL,MSFT,GOOGL,AMZN,NKE",
-         #"AAPL,MSFT,GOOGL,AMZNT,NKE",
-         ]),
-        "MACRO": trial.suggest_categorical("MACRO",
-        ["USO,^N225, NG=F, GBPUSD=X,^IXIC,GLD,^RUT,CL=F,TLT,^IRX,^FTSE,^GSPC,^DJI,^FVX,IEF",
-         #"USO,^N225, NG=F, GBPUSD=X,^IXIC,GLD,^RUT,CL=F,TLT,^IRX,^FTSE,^GSPC",
-         #"USO,^N225, NG=F, GBPUSD=X,^IXIC,GLD,^RUT,CL=F,TLT,^IRX",
-         "USO,^N225, NG=F, GBPUSD=X,^IXIC,GLD,"]),
-        "FEATURES": trial.suggest_categorical("FEATURES", 
-        ["ret,log_ret,ema,vol,rsi",
-         #"ret,log_ret,ema","ret,log_ret,ema,vol","ret,log_ret,ema,vol,rsi,cmo","ret,log_ret,ema,vol,rsi,momentum","ret,log_ret,ema,vol,rsi,vol",
-         "ret,log_ret,ema,vol,rsi,cmo,macd"]),
+        "SPLIT_DATE": trial.suggest_categorical("SPLIT_DATE", ["2021-07-01"]),
+        "TICKERS": trial.suggest_categorical("TICKERS", ["AAPL,MSFT,GOOGL,AMZN,NVDA,JPM,WMT,CVX,MCD,T,NKE"]),
+        "MACRO": trial.suggest_categorical("MACRO",["USO,^N225, NG=F, GBPUSD=X,^IXIC,GLD,^RUT,CL=F,TLT,^IRX,^FTSE,^GSPC,^DJI,^FVX,IEF"]),
+        "FEATURES": trial.suggest_categorical("FEATURES", ["ret,log_ret,ema,vol,rsi"]),
         "INITIAL_CAPITAL": trial.suggest_float("INITIAL_CAPITAL", 100.0, 100.0),
         "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 1.3, 1.3),
         "BATCH_SIZE": trial.suggest_int("BATCH_SIZE", 53, 53),
@@ -59,12 +22,12 @@ def run_experiment(trial):
         "DROPOUT": trial.suggest_float("DROPOUT", 0.0791, 0.0791),
         "DECAY": trial.suggest_float("DECAY", 0.04, 0.04),
         "FEATURE_ATTENTION_ENABLED": trial.suggest_int("FEATURE_ATTENTION_ENABLED", 1, 1),
-        "L1_PENALTY": trial.suggest_float("L1_PENALTY", 0.000667, 0.000667),
-        "L2_PENALTY": trial.suggest_float("L2_PENALTY", 0.0, 0.0),
-        "INIT_LR": trial.suggest_float("INIT_LR", 0.50, 0.50),
+        "FEATURE_PERIODS": trial.suggest_categorical("FEATURE_PERIODS",["5,10,20,40"]),
+        "L1_PENALTY": trial.suggest_float("L1_PENALTY", 0.000667, 0.000667), #can be negative now
+        "INIT_LR": trial.suggest_float("INIT_LR", 0.5, 0.5),
         "LOSS_MIN_MEAN": trial.suggest_float("LOSS_MIN_MEAN", 0.016676, 0.016676),
         "LOSS_RETURN_PENALTY": trial.suggest_float("LOSS_RETURN_PENALTY", 0.0247, 0.0247),
-        "TEST_CHUNK_MONTHS": trial.suggest_int("TEST_CHUNK_MONTHS", 24, 24),
+        "TEST_CHUNK_MONTHS": trial.suggest_int("TEST_CHUNK_MONTHS", 12, 12),
         "RETRAIN_WINDOW": trial.suggest_int("RETRAIN_WINDOW", 0, 0),
         "EPOCHS": trial.suggest_int("EPOCHS", 20, 20),
         "MAX_HEADS": trial.suggest_int("MAX_HEADS", 20, 20),
@@ -76,21 +39,13 @@ def run_experiment(trial):
     env = os.environ.copy()
     for k, v in config.items():
         env[k] = str(v)
-
     try:
-        result = subprocess.run(
-            ["python", "model.py"],
-            capture_output=True,
-            text=True,
-            env=env,
-            timeout=1800
-        )
+        result = subprocess.run(["python", "model.py"],capture_output=True,text=True,env=env,timeout=1800)
         output = result.stdout + result.stderr
         with open("tune_output.log", "a") as f:
             f.write("\n\n=== Trial output start ===\n")
             f.write(output)
             f.write("\n=== Trial output end ===\n")
-
         print(f"[Subprocess output]\n{output}\n")
 
         def extract_metric(label, out):
@@ -105,33 +60,23 @@ def run_experiment(trial):
                         return float(val) / 100.0
                     except:
                         pass
-            multiline_match = re.search(
-                r"Average Benchmark Outperformance Across Chunks:\s*\ncagr:\s*([-+]?\d*\.\d+|\d+)%", 
-                output, 
-                re.MULTILINE
-            )
+            multiline_match = re.search(r"Average Benchmark Outperformance Across Chunks:\s*\ncagr:\s*([-+]?\d*\.\d+|\d+)%", output, re.MULTILINE)
             if multiline_match:
                 try:
                     return float(multiline_match.group(1)) / 100.0
                 except:
                     return 0.0
             return 0.0
-
         sharpe = extract_metric("Sharpe Ratio", output)
         drawdown = extract_metric("Max Drawdown", output)
         avg_benchmark_outperformance = extract_avg_benchmark_outperformance(output)
-
         if sharpe is None or drawdown is None:
             return -float("inf")
-
-        score = (1 * sharpe) + (1 * avg_benchmark_outperformance) - (0.3 * abs(drawdown))
-
+        score = (1 * sharpe) - (0.5 * abs(drawdown)) +(0 * avg_benchmark_outperformance) 
         trial.set_user_attr("sharpe", sharpe)
         trial.set_user_attr("drawdown", drawdown)
         trial.set_user_attr("avg_benchmark_outperformance", avg_benchmark_outperformance)
-
         return score
-
     except subprocess.TimeoutExpired:
         print(f"[Timeout] Trial failed for config: {config}")
         return -float("inf")
@@ -142,14 +87,11 @@ def main():
     study.optimize(run_experiment, n_trials=30, n_jobs=1)
     best = study.best_trial
     best_params = best.params.copy()
-
     with open("hyparams.json", "w") as f:
         json.dump(best_params, f, indent=4)
-
     print("\n=== Best trial parameters ===")
     for k, v in best_params.items():
         print(f"{k}: {v}")
-
     for m in ["sharpe", "drawdown", "avg_benchmark_outperformance"]:
         print(f"{m}: {best.user_attrs.get(m, float('nan')):.4f}")
 

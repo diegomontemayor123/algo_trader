@@ -24,6 +24,7 @@ class TransformerTrader(nn.Module):
         encoder_layer = nn.TransformerEncoderLayer(d_model=dimen,nhead=num_heads,dropout=dropout,batch_first=True)
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
         self.mlp_head = nn.Sequential(nn.Linear(dimen, 64),nn.PReLU(),nn.Dropout(dropout),nn.Linear(64, len(tickers)))
+        print(f"[DEBUG] Model MLP head output dim: {len(tickers)}")
     def forward(self, x):
         if self.feature_attention_enabled:
             x = x * self.feature_weights
@@ -53,13 +54,14 @@ def split_train_validation(sequences, targets, validation_ratio):
     return (sequences[:train_size], targets[:train_size],    sequences[train_size:], targets[train_size:])
 
 class DifferentiableSharpeLoss(nn.Module):
-    def __init__(self, loss_min_mean, loss_return_penalty, l2_penalty, l1_penalty):
+    def __init__(self, loss_min_mean, loss_return_penalty, l1_penalty):
         super().__init__()
         self.loss_min_mean = loss_min_mean
         self.loss_return_penalty = loss_return_penalty
-        self.l2_penalty = l2_penalty
         self.l1_penalty = l1_penalty
     def forward(self, portfolio_weights, target_returns, model=None):
+        print(f"[DEBUG] portfolio_weights shape: {portfolio_weights.shape}")
+        print(f"[DEBUG] target_returns shape: {target_returns.shape}")
         returns = (portfolio_weights * target_returns).sum(dim=1)
         mean_return = torch.mean(returns)
         if returns.numel() > 1 and not torch.isnan(returns).all():
@@ -73,14 +75,11 @@ class DifferentiableSharpeLoss(nn.Module):
         sharpe_ratio = mean_return / (std_return + 1e-6)
         low_return = torch.clamp(self.loss_min_mean - mean_return, min=0.0)
         loss = -sharpe_ratio + self.loss_return_penalty * low_return 
-        if self.l2_penalty>0 and model is not None:
-            l2 = sum(p.pow(2.0).sum() for p in model.parameters())
-            loss += self.l2_penalty * l2
-        if self.l1_penalty>0 and model is not None:
+        if self.l1_penalty and model is not None:
             l1 = sum(p.abs().sum() for p in model.parameters())
             loss += self.l1_penalty * l1
         return loss
-
+F
 class TransformerLRScheduler(torch.optim.lr_scheduler._LRScheduler):
     def __init__(self, optimizer, d_model, warmup_steps, last_epoch=-1):
         self.d_model = d_model
@@ -118,6 +117,8 @@ if __name__ == "__main__":
     from loadconfig import load_config
 
     config = load_config()
+    print(f"[DEBUG] Configured TICKERS: {config['TICKERS']} (count: {len(config['TICKERS'])})")
+
 
     # Parse tickers, features, and macro keys from config
     tickers = config["TICKERS"].split(",") if isinstance(config["TICKERS"], str) else config["TICKERS"]
@@ -127,6 +128,9 @@ if __name__ == "__main__":
         macro_keys = [k.strip() for k in macro_keys.split(",") if k.strip()]
     cached_data = load_price_data(config["START_DATE"], config["END_DATE"], macro_keys)
     features, returns = compute_features(tickers, feature_list, cached_data, macro_keys)
+    print(f"[DEBUG] Features shape: {features.shape}, Columns: {features.columns[:5].tolist()}...")
+    print(f"[DEBUG] Returns shape: {returns.shape}, Columns: {returns.columns[:5].tolist()}...")
+
     _, _, test_dataset = prepare_main_datasets(features, returns, config)
 
     if LOAD_MODEL and os.path.exists(MODEL_PATH):
