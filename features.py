@@ -3,9 +3,7 @@ import numpy as np
 from loadconfig import load_config
 config= load_config()
 
-
-PERIODS = list(map(int, raw_periods))
-
+PERIODS = list(map(int, [config["FEATURE_PERIODS"]]))
 
 def add_ret(data):
     data['ret'] = data['close'].pct_change()
