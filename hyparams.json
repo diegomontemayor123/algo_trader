@@ -14,7 +14,7 @@
         "DROPOUT": 0.0591,
         "DECAY": 0.0704,
         "FEATURE_ATTENTION_ENABLED": 1,
-        "L1_PENALTY": 0.00867,
+        "L1_PENALTY": 0.000867,
         "L2_PENALTY": 0.0,
         "INIT_LR": 0.60720,
         "LOSS_MIN_MEAN": 0.066676,
