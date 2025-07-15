@@ -3,7 +3,15 @@ import numpy as np
 from loadconfig import load_config
 config= load_config()
 
-PERIODS = list(map(int, config["FEATURE_PERIODS"].split(",")))
+raw_periods = config["FEATURE_PERIODS"]
+
+if isinstance(raw_periods, str):
+    PERIODS = list(map(int, raw_periods.split(",")))
+elif isinstance(raw_periods, list):
+    PERIODS = list(map(int, raw_periods))
+else:
+    raise TypeError(f"Invalid type for FEATURE_PERIODS: {type(raw_periods)}")
+
 
 def add_ret(data):
     data['ret'] = data['close'].pct_change()
