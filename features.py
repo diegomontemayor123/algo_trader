@@ -12,26 +12,25 @@ def add_price(data):
 def add_log_return(data):
     days = 5
 
-    # Calculate the ratio (close / shifted close)
     ratio = data['close'] / data['close'].shift(1)
 
-    # Find all problematic indices where ratio is NaN or <= 0
+    # mask for problematic values (NaN or <= 0)
     problematic_mask = ratio.isna() | (ratio <= 0)
-    problematic_indices = ratio.index[problematic_mask]
 
-    for idx in problematic_indices:
-        val = ratio.loc[idx]
-        print(f"[Warning] Problematic ratio value found at Index {idx}: value={val} (<=0 or NaN)")
+    if problematic_mask.any():
+        problematic_indices = ratio.index[problematic_mask]
+        for idx in problematic_indices:
+            val = ratio.loc[idx]
+            prev_idx_pos = data.index.get_loc(idx) - 1
+            prev_idx = data.index[prev_idx_pos] if prev_idx_pos >= 0 else None
+            prev_close = data['close'].loc[prev_idx] if prev_idx is not None else None
+            curr_close = data['close'].loc[idx]
 
-        # Optional: Also print close prices causing the issue for context
-        prev_idx = data.index[data.index.get_loc(idx) - 1] if data.index.get_loc(idx) > 0 else None
-        prev_close = data['close'].loc[prev_idx] if prev_idx is not None else None
-        curr_close = data['close'].loc[idx]
+            print(f"[Warning] Problematic ratio value found at Index {idx}: value={val} (<=0 or NaN)")
+            print(f"    Previous close (index {prev_idx}): {prev_close}")
+            print(f"    Current close (index {idx}): {curr_close}")
 
-        print(f"    Previous close (index {prev_idx}): {prev_close}")
-        print(f"    Current close (index {idx}): {curr_close}")
-
-    # Now compute log return as usual (will still produce NaNs for these points)
+    # Then compute log return normally (NaNs will remain)
     data['log_ret'] = np.log(ratio)
     data['log_ret_norm5'] = (data['log_ret'] - data['log_ret'].rolling(days).mean()) / (data['log_ret'].rolling(days).std() + 1e-6)
 
