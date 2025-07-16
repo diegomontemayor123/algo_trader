@@ -26,11 +26,8 @@ def run_experiment(trial):
                                                          "BRK, TXN, HD, T, BA, GS, NVDA COST, MA, ABBV",
                                                          "BRK, TXN, HD, T, CAT, XOM, LLY, PEP, AVGO, MCD, COST",
                                                          "BRK, HD, T, BA, GS, NVDA, MSFT, LLY, PEP, MA, ABBV",
-                                                         "MSFT, LOW, TMO, CAT, XOM, LLY, PEP, AVGO MA, ABBV",
+                                                         "MSFT, LOW, TMO, CAT, XOM, LLY, PEP, AVGO, MA, ABBV",
                                                          "HD, T, BA, GS, MSFT, LOW, TMO, XOM, LLY, PEP, COST, ABBV",
-                                                         
-
-
                                                          ]),
         "MACRO": trial.suggest_categorical("MACRO",['^IXIC,CL=F,GC=F,NG=F,ZW=F,USDJPY=X,^TNX,^FVX,IEF,UUP',
                                                     '^N225, HG=F, ZC=F, TLT, ^GSPC, AUDUSD=X, CL=F, SHY, BRL=X, ^VIX, NG=F, ^FVX, UUP, SI=F, TIP, ^IRX, IEF, HYG, ^DJI, ^RUT, VEA, ^IXIC',

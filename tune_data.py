@@ -11,7 +11,7 @@ TICKER_LIST = [
     "JPM", "V", "MA", "HD", "PG", "CVX", "XOM", "ABBV", "PFE", "MRK", "PEP",
     "KO", "COST", "AVGO", "LLY", "WMT", "BAC", "WFC", "T", "VZ", "INTC",
     "IBM", "ORCL", "MCD", "NFLX", "ADBE", "CRM", "TXN", "TMO", "NEE", "BA",
-    "UPS", "CAT", "GS", "RTX", "AMAT", "LMT", "LOW", "GE", "BKNG", "DE"
+    "UPS", "CAT", "GS", "RTX", "AMAT", "LMT", "LOW", "GE", "BKNG", "DE", "NKE"
 ]
 
 

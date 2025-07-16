@@ -59,7 +59,7 @@ class DifferentiableSharpeLoss(nn.Module):
         self.loss_min_mean = loss_min_mean
         self.loss_return_penalty = loss_return_penalty
         self.l1_penalty = l1_penalty
-    def forward(self, portfolio_weights=None, target_returns=None, model=None):
+    def forward(self, portfolio_weights, target_returns, model=None):
         #print(f"[DEBUG] portfolio_weights shape: {portfolio_weights.shape}")
         #print(f"[DEBUG] target_returns shape: {target_returns.shape}")
         returns = (portfolio_weights * target_returns).sum(dim=1)
