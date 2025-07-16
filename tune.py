@@ -107,7 +107,7 @@ def run_experiment(trial):
         avg_benchmark_outperformance = extract_avg_benchmark_outperformance(output)
         if sharpe is None or drawdown is None:
             return -float("inf")
-        score = (1 * sharpe) - (0.7 * abs(drawdown)) + (1 * cagr) +(0 * avg_benchmark_outperformance) 
+        score = (0.8 * sharpe) - (1 * abs(drawdown)) + (1 * cagr) +(0 * avg_benchmark_outperformance) 
         trial.set_user_attr("sharpe", sharpe)
         trial.set_user_attr("drawdown", drawdown)
         trial.set_user_attr("avg_benchmark_outperformance", avg_benchmark_outperformance)
