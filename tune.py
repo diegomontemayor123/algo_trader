@@ -26,7 +26,7 @@ def run_experiment(trial):
         "L1_PENALTY": trial.suggest_float("L1_PENALTY", 0.00001, 0.01), #0.00089
         "INIT_LR": trial.suggest_float("INIT_LR",0.1,0.9),
         "LOSS_MIN_MEAN": trial.suggest_float("LOSS_MIN_MEAN", 0.01, 0.2),
-        "LOSS_RETURN_PENALTY": trial.suggest_float("LOSS_RETURN_PENALTY", 0.1, 0.9),
+        "LOSS_RETURN_PENALTY": trial.suggest_float("LOSS_RETURN_PENALTY", 0.1, 0.75),
         "TEST_CHUNK_MONTHS": trial.suggest_int("TEST_CHUNK_MONTHS", 12, 12),
         "RETRAIN_WINDOW": trial.suggest_int("RETRAIN_WINDOW", 0, 0),
         "EPOCHS": trial.suggest_int("EPOCHS", 20, 20),
@@ -39,6 +39,7 @@ def run_experiment(trial):
     env = os.environ.copy()
     for k, v in config.items():
         env[k] = str(v)
+
     try:
         result = subprocess.run(["python", "model.py"], capture_output=True, text=True, env=env, timeout=1800)
         output = result.stdout + result.stderr
@@ -48,31 +49,46 @@ def run_experiment(trial):
             return float(match.group(1)) / 100 if match else None
 
         def extract_avg_benchmark_outperformance(output):
-            single_line_match = re.findall(r"Average Benchmark Outperformance(?: Across Chunks)?:\s*([-+]?\d*\.\d+|\d+)%", output)
-            if single_line_match:
-                for val in reversed(single_line_match):
-                    try:
-                        return float(val) / 100.0
-                    except:
-                        pass
-            match = re.search(r"Average Benchmark Outperformance Across Chunks:\s*\ncagr:\s*([-+]?\d*\.\d+|\d+)%", output, re.MULTILINE)
+            match = re.search(r"Average Benchmark Outperformance(?: Across Chunks)?:\s*\ncagr:\s*([-+]?\d*\.\d+|\d+)%", output, re.MULTILINE)
             if match:
+                return float(match.group(1)) / 100.0
+            matches = re.findall(r"Average Benchmark Outperformance(?: Across Chunks)?:\s*([-+]?\d*\.\d+|\d+)%", output)
+            for val in reversed(matches):
                 try:
-                    return float(match.group(1)) / 100.0
+                    return float(val) / 100.0
                 except:
-                    return 0.0
+                    pass
             return 0.0
+
+        def extract_exposure_delta(output):
+            match = re.search(r"Total Exposure Delta:\s*([-+]?\d*\.\d+|\d+)", output)
+            return float(match.group(1)) if match else None
+
         sharpe = extract_metric("Sharpe Ratio", output)
         drawdown = extract_metric("Max Drawdown", output)
         cagr = extract_metric("CAGR", output)
         avg_benchmark_outperformance = extract_avg_benchmark_outperformance(output)
-        if sharpe is None or drawdown is None:
+        exp_delta = extract_exposure_delta(output)
+
+        if sharpe is None or drawdown is None or exp_delta is None:
             return -float("inf")
-        score = (1 * sharpe) - (1 * abs(drawdown)) + (1 * cagr) + (1 * avg_benchmark_outperformance)
+
+        # Scoring formula (you can tune weights as needed)
+        score = (
+            1 * sharpe
+            - 1 * abs(drawdown)
+            + 1 * cagr
+            + 1 * avg_benchmark_outperformance
+            - 0.25 * exp_delta  # you can change the weight here
+        )
+
+        # Save all metrics as user attributes
         trial.set_user_attr("sharpe", sharpe)
         trial.set_user_attr("drawdown", drawdown)
         trial.set_user_attr("CAGR", cagr)
         trial.set_user_attr("avg_benchmark_outperformance", avg_benchmark_outperformance)
+        trial.set_user_attr("exp_delta", exp_delta)
+
         with open("tune_output.log", "a") as f:
             f.write("\n\n=== Trial output start ===\n")
             f.write(f"Trial #{trial.number}\n")
@@ -80,16 +96,22 @@ def run_experiment(trial):
             f.write(f"Drawdown: {drawdown:.4f}\n")
             f.write(f"CAGR: {cagr:.4f}\n")
             f.write(f"Avg Benchmark Outperformance: {avg_benchmark_outperformance:.4f}\n")
+            f.write(f"Total Exposure Delta: {exp_delta:.4f}\n")
             f.write(output)
             f.write("\n=== Trial output end ===\n")
 
-        print(f"[Trial {trial.number}] Sharpe: {sharpe:.4f}, Drawdown: {drawdown:.4f}, CAGR: {cagr:.4f}, Benchmark Outperformance: {avg_benchmark_outperformance:.4f}")
+        print(
+            f"[Trial {trial.number}] Sharpe: {sharpe:.4f}, Drawdown: {drawdown:.4f}, "
+            f"CAGR: {cagr:.4f}, Benchmark Outperformance: {avg_benchmark_outperformance:.4f}, "
+            f"Exposure Δ: {exp_delta:.4f}"
+        )
 
         return score
 
     except subprocess.TimeoutExpired:
         print(f"[Timeout] Trial failed for config: {config}")
         return -float("inf")
+
 
 def main():
     sampler = TPESampler(seed=42)
@@ -102,8 +124,9 @@ def main():
     print("\n=== Best trial parameters ===")
     for k, v in best_params.items():
         print(f"{k}: {v}")
-    for m in ["sharpe", "drawdown", "CAGR", "avg_benchmark_outperformance"]:
+    for m in ["sharpe", "drawdown", "CAGR", "avg_benchmark_outperformance", "exp_delta"]:
         print(f"{m}: {best.user_attrs.get(m, float('nan')):.4f}")
+
 
 if __name__ == "__main__":
     main()

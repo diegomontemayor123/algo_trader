@@ -20,19 +20,24 @@ class TransformerTrader(nn.Module):
         self.seq_len = seq_len
         self.feature_attention_enabled = feature_attention_enabled
         self.pos_embedding = nn.Parameter(torch.randn(1, seq_len, dimen))
-        self.feature_weights = nn.Parameter(torch.ones(dimen))
+        self.day_embed = nn.Embedding(7, dimen)
+        self.month_embed = nn.Embedding(12, dimen)
+        self.feature_attention = nn.Sequential(nn.Linear(dimen, dimen), nn.Tanh(), nn.Linear(dimen, dimen), nn.Sigmoid())
         encoder_layer = nn.TransformerEncoderLayer(d_model=dimen,nhead=num_heads,dropout=dropout,batch_first=True)
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
         self.mlp_head = nn.Sequential(nn.Linear(dimen, 64),nn.PReLU(),nn.Dropout(dropout),nn.Linear(64, len(tickers)))
         print(f"[DEBUG] Model MLP head output dim: {len(tickers)}")
-    def forward(self, x):
+    def forward(self, x, date_tensor=None):
         if self.feature_attention_enabled:
-            x = x * self.feature_weights
+            x = x * self.feature_attention(x)
         x = x + self.pos_embedding
+        day_of_week = date_tensor[:, :, 0].long()  # (B, T)
+        month = date_tensor[:, :, 1].long()
+        temporal_embed = self.day_embed(day_of_week) + self.month_embed(month)
+        x = x + temporal_embed
         encoded = self.transformer_encoder(x)
         last_hidden = encoded[:, -1, :]
-        weights = self.mlp_head(last_hidden)
-        return weights
+        return self.mlp_head(last_hidden)
 
 def calculate_heads(dimen, max_heads):
     if dimen % max_heads != 0:
@@ -60,8 +65,6 @@ class DifferentiableSharpeLoss(nn.Module):
         self.loss_return_penalty = loss_return_penalty
         self.l1_penalty = l1_penalty
     def forward(self, portfolio_weights, target_returns, model=None):
-        #print(f"[DEBUG] portfolio_weights shape: {portfolio_weights.shape}")
-        #print(f"[DEBUG] target_returns shape: {target_returns.shape}")
         returns = (portfolio_weights * target_returns).sum(dim=1)
         mean_return = torch.mean(returns)
         if returns.numel() > 1 and not torch.isnan(returns).all():
@@ -74,7 +77,9 @@ class DifferentiableSharpeLoss(nn.Module):
             return None 
         sharpe_ratio = mean_return / (std_return + 1e-6)
         low_return = torch.clamp(self.loss_min_mean - mean_return, min=0.0)
-        loss = -sharpe_ratio + self.loss_return_penalty * low_return 
+        cum_returns = torch.cumsum(returns, dim=0)
+        max_drawdown = (torch.cummax(cum_returns, dim=0).values - cum_returns).max()
+        loss = -sharpe_ratio + self.loss_return_penalty * low_return + (0 * max_drawdown)
         if self.l1_penalty and model is not None:
             l1 = sum(p.abs().sum() for p in model.parameters())
             loss += self.l1_penalty * l1
@@ -162,6 +167,8 @@ if __name__ == "__main__":
     benchmark_drawdown = results["benchmark"].get("max_drawdown", float('nan'))
     cagr = results["portfolio"].get("cagr", float('nan'))
     benchmark_cagr = results["benchmark"].get("cagr", float('nan'))
+    weights_df = pd.read_csv("weights.csv", index_col="Date", parse_dates=True)
+    exp_delta = weights_df["total_exposure"].max() - weights_df["total_exposure"].min()
 
     print(f"\nSharpe Ratio: Strategy: {sharpe_ratio * 100:.6f}%")
     print(f"Sharpe Ratio: Benchmark: {benchmark_sharpe * 100:.6f}%")
@@ -169,7 +176,7 @@ if __name__ == "__main__":
     print(f"Max Drawdown: Benchmark: {benchmark_drawdown * 100:.6f}%")
     print(f"CAGR: Strategy: {cagr * 100:.6f}%")
     print(f"CAGR: Benchmark: {benchmark_cagr * 100:.6f}%\n")
-
+    print(f"Total Exposure Delta: {exp_delta:.4f}")
     print("Average Benchmark Outperformance Across Chunks:")
     for k, v in results["performance_outperformance"].items():
         print(f"{k}: {v * 100:.6f}%")
