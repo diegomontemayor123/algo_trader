@@ -20,18 +20,15 @@ class TransformerTrader(nn.Module):
         self.seq_len = seq_len
         self.feature_attention_enabled = feature_attention_enabled
         self.pos_embedding = nn.Parameter(torch.randn(1, seq_len, dimen))
-        #self.day_embed = nn.Embedding(7, dimen)
-        #self.month_embed = nn.Embedding(12, dimen)
         self.feature_attention = nn.Sequential(nn.Linear(dimen, dimen), nn.Tanh(), nn.Linear(dimen, dimen), nn.Sigmoid())
         encoder_layer = nn.TransformerEncoderLayer(d_model=dimen,nhead=num_heads,dropout=dropout,batch_first=True)
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
         self.mlp_head = nn.Sequential(nn.Linear(dimen, 64),nn.PReLU(),nn.Dropout(dropout),nn.Linear(64, len(tickers)))
         print(f"[DEBUG] Model MLP head output dim: {len(tickers)}")
-    def forward(self, x, date_tensor=None):
+    def forward(self, x):
         if self.feature_attention_enabled:
             x = x * self.feature_attention(x)
         x = x + self.pos_embedding
-        #x = x + self.day_embed(date_tensor[:, :, 0].long()  ) + self.month_embed(date_tensor[:, :, 1].long())
         encoded = self.transformer_encoder(x)
         last_hidden = encoded[:, -1, :]
         return self.mlp_head(last_hidden)

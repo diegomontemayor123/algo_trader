@@ -92,6 +92,8 @@ def compute_features(TICKERS, FEATURES, cached_data, macro_keys):
     returns = prices.pct_change().shift(-1).reindex(features.index)
     macro_df = process_macro_features(cached_data, features.index, macro_keys)
     features = pd.concat([features, macro_df], axis=1)
+    features['day_of_week'] = features.index.dayofweek
+    features['month'] = features.index.month - 1 
     features = normalize_features(features)
     features.to_csv("features_all.csv")
     return features, returns
