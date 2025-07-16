@@ -38,8 +38,6 @@ def train_model_with_validation(model, train_loader, val_loader, config):
                 return None
             optimizer.zero_grad()
             loss.backward()
-            if model.feature_weights.grad is None:
-                print(f"[Debug] Epoch {epoch} Batch {batch_idx}: feature_weights.grad is None")
             nan_grads = False
             for name, param in model.named_parameters():
                 if param.grad is not None and (torch.isnan(param.grad).any() or torch.isinf(param.grad).any()):
