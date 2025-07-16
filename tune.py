@@ -23,10 +23,10 @@ def run_experiment(trial):
         "DECAY": trial.suggest_float("DECAY", 1e-7, 0.02),#.015
         "FEATURE_ATTENTION_ENABLED": trial.suggest_int("FEATURE_ATTENTION_ENABLED", 1, 1),
         "FEATURE_PERIODS": trial.suggest_categorical("FEATURE_PERIODS",["8,12,24"]),
-        "L1_PENALTY": trial.suggest_float("L1_PENALTY", 1e-10, 0.000001), #0.00089
+        "L1_PENALTY": trial.suggest_float("L1_PENALTY", 0, 0), #0.00089
         "INIT_LR": trial.suggest_float("INIT_LR",0.5,0.5),        
-        "RETURN_PENALTY": trial.suggest_float("RETURN_PENALTY", 0.1, 5),
-        "DRAWDOWN_PENALTY": trial.suggest_float("DRAWDOWN_PENALTY", 1, 20),
+        "RETURN_PENALTY": trial.suggest_float("RETURN_PENALTY", 0, 0),
+        "DRAWDOWN_PENALTY": trial.suggest_float("DRAWDOWN_PENALTY", 0.1, 1),
         "TEST_CHUNK_MONTHS": trial.suggest_int("TEST_CHUNK_MONTHS", 12, 12),
         "RETRAIN_WINDOW": trial.suggest_int("RETRAIN_WINDOW", 0, 0),
         "EPOCHS": trial.suggest_int("EPOCHS", 20, 20),
