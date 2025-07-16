@@ -20,10 +20,10 @@ def create_sequences(features, returns, lookback, predict_days, tickers):
         feature_window = features.iloc[i:i + lookback].values.astype(np.float32)
         normalized_window = normalize_features(feature_window)
         if np.isnan(normalized_window).any():
-            print(f"[Sequence][Warning] NaN detected in normalized features at index {i}")
+            print(f"[Warning] NaN detected in normalized features at index {i}")
         future_returns = returns.iloc[i + lookback:i + lookback + predict_days].mean().values.astype(np.float32)
         if len(future_returns) != len(tickers):
-            print(f"[Sequence][Warning] Future returns length mismatch at index {i}: {future_returns.shape}")
+            print(f"[Warning] Future returns length mismatch at index {i}: {future_returns.shape}")
         sequences.append(normalized_window)
         targets.append(future_returns)
         indices.append(features.index[i + lookback])
@@ -32,9 +32,9 @@ def create_sequences(features, returns, lookback, predict_days, tickers):
 def prepare_main_datasets(features, returns, config):
     sequences, targets, seq_dates = create_sequences(features, returns, config["LOOKBACK"], config["PREDICT_DAYS"], config["TICKERS"])
     if len(set(seq_dates)) != len(seq_dates):
-        print("[Data][Warning] Duplicate dates found in sequence dates.")
+        print("[Warning] Duplicate dates found in sequence dates.")
     if any(pd.isna(seq_dates)):
-        print("[Data][Warning] NaN detected in sequence dates.")
+        print("[Warning] NaN detected in sequence dates.")
     train_sequences, train_targets, test_sequences, test_targets = [], [], [], []
     split_date = pd.to_datetime(config["SPLIT_DATE"])
     for seq, tgt, date in zip(sequences, targets, pd.to_datetime(seq_dates)):

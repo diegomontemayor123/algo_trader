@@ -19,15 +19,14 @@ def run_experiment(trial):
         "LOOKBACK": trial.suggest_int("LOOKBACK", 60, 90),#71
         "PREDICT_DAYS": trial.suggest_int("PREDICT_DAYS", 1, 9),#4
         "WARMUP_FRAC": trial.suggest_float("WARMUP_FRAC", 0.05, 0.3), #.12
-        "DROPOUT": trial.suggest_float("DROPOUT", 0.001, 0.03),#.024
-        "DECAY": trial.suggest_float("DECAY", 0.001, 0.02),#.015
+        "DROPOUT": trial.suggest_float("DROPOUT", 1e-7, 0.03),#.024
+        "DECAY": trial.suggest_float("DECAY", 1e-7, 0.02),#.015
         "FEATURE_ATTENTION_ENABLED": trial.suggest_int("FEATURE_ATTENTION_ENABLED", 1, 1),
         "FEATURE_PERIODS": trial.suggest_categorical("FEATURE_PERIODS",["8,12,24"]),
-        "L1_PENALTY": trial.suggest_float("L1_PENALTY", 0.00001, 0.01), #0.00089
-        "INIT_LR": trial.suggest_float("INIT_LR",0.1,0.9),
-        "LOSS_MIN_MEAN": trial.suggest_float("LOSS_MIN_MEAN", 0.01, 0.2),
-        "LOSS_RETURN_PENALTY": trial.suggest_float("LOSS_RETURN_PENALTY", 0.1, 0.75),
-        "DRAWDOWN_PENALTY": trial.suggest_float("DRAWDOWN_PENALTY", 1e-2, 1),
+        "L1_PENALTY": trial.suggest_float("L1_PENALTY", 1e-10, 0.000001), #0.00089
+        "INIT_LR": trial.suggest_float("INIT_LR",0.1,0.9),        
+        "RETURN_PENALTY": trial.suggest_float("RETURN_PENALTY", 0.1, 20),
+        "DRAWDOWN_PENALTY": trial.suggest_float("DRAWDOWN_PENALTY", 1e-2, 20),
         "TEST_CHUNK_MONTHS": trial.suggest_int("TEST_CHUNK_MONTHS", 12, 12),
         "RETRAIN_WINDOW": trial.suggest_int("RETRAIN_WINDOW", 0, 0),
         "EPOCHS": trial.suggest_int("EPOCHS", 20, 20),
@@ -79,10 +78,10 @@ def run_experiment(trial):
             1 * sharpe
             - 0.7 * abs(drawdown)
             + 0 * cagr
-            + 1 * avg_benchmark_outperformance
-            + 1 * exp_delta 
-        )
-
+            + 1 * avg_benchmark_outperformance)
+        if exp_delta>.15:
+            score+= 10
+        
         # Save all metrics as user attributes
         trial.set_user_attr("sharpe", sharpe)
         trial.set_user_attr("drawdown", drawdown)

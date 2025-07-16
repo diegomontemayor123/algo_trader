@@ -53,10 +53,9 @@ def split_train_validation(sequences, targets, validation_ratio):
     return (sequences[:train_size], targets[:train_size],    sequences[train_size:], targets[train_size:])
 
 class DifferentiableSharpeLoss(nn.Module):
-    def __init__(self, loss_min_mean, loss_return_penalty, l1_penalty, drawdown_penalty):
+    def __init__(self, return_penalty, l1_penalty, drawdown_penalty):
         super().__init__()
-        self.loss_min_mean = loss_min_mean
-        self.loss_return_penalty = loss_return_penalty
+        self.return_penalty = return_penalty
         self.drawdown_penalty = drawdown_penalty
         self.l1_penalty = l1_penalty
     def forward(self, portfolio_weights, target_returns, model=None):
@@ -71,13 +70,23 @@ class DifferentiableSharpeLoss(nn.Module):
             logging.warning("[Loss] Returns invalid, skipping batch.")
             return None 
         sharpe_ratio = mean_return / (std_return + 1e-6)
-        low_return = torch.clamp(self.loss_min_mean - mean_return, min=0.0)
         cum_returns = torch.cumsum(returns, dim=0)
-        max_drawdown = (torch.cummax(cum_returns, dim=0).values - cum_returns).max()
-        loss = -sharpe_ratio + (self.loss_return_penalty * low_return) + (self.drawdown_penalty * max_drawdown)
+        drawdown_approx = torch.nn.functional.relu(torch.cummax(cum_returns, dim=0).values - cum_returns)
+        max_drawdown = torch.mean(drawdown_approx)
+        loss = -sharpe_ratio - (self.return_penalty * mean_return) + (self.drawdown_penalty * max_drawdown)
         if self.l1_penalty and model is not None:
             l1 = sum(p.abs().sum() for p in model.parameters())
             loss += self.l1_penalty * l1
+        #beta = torch.cov(portfolio_returns, benchmark_returns)[0,1] / torch.var(benchmark_returns)
+        #loss += self.beta_penalty * torch.abs(beta - target_beta)
+        print(f"[Loss] Mean Return: {mean_return.item():.6f}")
+        print(f"[Loss] Std Return: {std_return.item():.6f}")
+        print(f"[Loss] Sharpe Ratio: {sharpe_ratio.item():.6f}")
+        print(f"[Loss] Low Return Penalty Term: {self.return_penalty * mean_return.item():.6f}")
+        print(f"[Loss] Max Drawdown Penalty Term: {self.drawdown_penalty * max_drawdown.item():.6f}")
+        print(f"[Loss] L1 Penalty Term: {self.l1_penalty * l1.item() if self.l1_penalty else 0.0:.6f}")
+        print(f"[Loss] Final Loss: {loss.item():.6f}")
+        print(f"[Returns] {returns.detach().cpu().numpy()}")
         return loss
 
 class TransformerLRScheduler(torch.optim.lr_scheduler._LRScheduler):
