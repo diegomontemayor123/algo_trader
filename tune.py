@@ -106,13 +106,11 @@ def run_experiment(trial):
             f"CAGR: {cagr:.4f}, Benchmark Outperformance: {avg_benchmark_outperformance:.4f}, "
             f"Exposure Δ: {exp_delta:.4f}"
         )
-
         return score
 
     except subprocess.TimeoutExpired:
         print(f"[Timeout] Trial failed for config: {config}")
         return -float("inf")
-
 
 def main():
     sampler = TPESampler(seed=42)
