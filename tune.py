@@ -7,9 +7,9 @@ from optuna.samplers import TPESampler
 
 def run_experiment(trial):
     config = {
-        "START_DATE": trial.suggest_categorical("START_DATE", ["2012-01-01","2014-01-01","2016-01-01","2017-01-01"]),
+        "START_DATE": trial.suggest_categorical("START_DATE", ["2015-01-01"]),
         "END_DATE": trial.suggest_categorical("END_DATE", ["2025-07-01"]),
-        "SPLIT_DATE": trial.suggest_categorical("SPLIT_DATE", ["2021-07-01","2023-07-01"]),
+        "SPLIT_DATE": trial.suggest_categorical("SPLIT_DATE", ["2023-07-01"]),
         "TICKERS": trial.suggest_categorical("TICKERS", ['ORCL,GOOGL,JPM,PFE,MSFT,T,KO,UNH,GE,CAT,TSLA,AAPL',
                                                          "AAPL,MSFT,GOOGL,AMZN,META,NVDA,TSLA,JPM,WMT,CVX,MCD,T,NKE",
                                                          "BRK, TXN, HD, T, BA, GS, NVDA, MSFT, LOW, TMO, CAT, XOM, LLY, PEP, AVGO, MCD, COST, MA, ABBV, VZ, BAC, WMT, LMT, JPM, DE",
@@ -103,10 +103,11 @@ def run_experiment(trial):
             return 0.0
         sharpe = extract_metric("Sharpe Ratio", output)
         drawdown = extract_metric("Max Drawdown", output)
+        cagr = extract_metric("CAGR",output)
         avg_benchmark_outperformance = extract_avg_benchmark_outperformance(output)
         if sharpe is None or drawdown is None:
             return -float("inf")
-        score = (1 * sharpe) - (0.5 * abs(drawdown)) +(0 * avg_benchmark_outperformance) 
+        score = (1 * sharpe) - (0.7 * abs(drawdown)) + (1 * cagr) +(0 * avg_benchmark_outperformance) 
         trial.set_user_attr("sharpe", sharpe)
         trial.set_user_attr("drawdown", drawdown)
         trial.set_user_attr("avg_benchmark_outperformance", avg_benchmark_outperformance)

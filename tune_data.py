@@ -34,15 +34,15 @@ MACRO_LIST = [
     "GBPUSD=X",     # GBP/USD
     "^TNX",         # 10-Year Treasury Yield
     "^FVX",         # 5-Year Treasury Yield
-    #"^UST2Y",       # 2-Year Treasury Yield
+    #"^UST2Y",      # 2-Year Treasury Yield (FRED)
     "^IRX",         # 13-Week T-Bill Rate
     "^TYX",         # 30-Year Treasury Yield
     "TLT",          # iShares 20+ Year Treasury Bond ETF
     "IEF",          # iShares 7-10 Year Treasury Bond ETF
     "SHY",          # iShares 1-3 Year Treasury Bond ETF
     "TIP",          # iShares TIPS Bond ETF (Inflation-Protected)
-    #"PPIACO",       # Producer Price Index (FRED)
-    #"CPIAUCSL",     # Consumer Price Index (FRED, monthly)
+    #"PPIACO",      # Producer Price Index (FRED)
+    #"CPIAUCSL",    # Consumer Price Index (FRED, monthly)
     "UUP",          # Invesco DB US Dollar Index Bullish Fund
     "^VIX",         # CBOE Volatility Index
     "LQD",          # Investment Grade Corporate Bond ETF
@@ -53,7 +53,6 @@ MACRO_LIST = [
     "BRL=X",        # USD/BRL exchange rate
     "AUDUSD=X"      # AUD/USD (commodity-linked FX pair)
 ]
-
 
 FEATURE_LIST = ["ret", "price", "log_ret", "rolling_ret", "volume", "vol", "macd", "momentum", "ema", "cmo"]
 
