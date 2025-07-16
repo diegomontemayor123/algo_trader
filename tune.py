@@ -61,7 +61,7 @@ def run_experiment(trial):
         "DROPOUT": trial.suggest_float("DROPOUT", 0.001, 0.07),
         "DECAY": trial.suggest_float("DECAY", 0.0001, 0.04),
         "FEATURE_ATTENTION_ENABLED": trial.suggest_int("FEATURE_ATTENTION_ENABLED", 1, 1),
-        "FEATURE_PERIODS": trial.suggest_categorical("FEATURE_PERIODS",["12,28","10,24","12,24"]),
+        "FEATURE_PERIODS": trial.suggest_categorical("FEATURE_PERIODS",["12,28","10,24","12,24","14,24","14,20","14,28","12,24,30","8,12,24"]),
         "L1_PENALTY": trial.suggest_float("L1_PENALTY", 1e-5, 0.001), #-0.001, 0.001
         "INIT_LR": trial.suggest_float("INIT_LR",0.5,0.5),
         "LOSS_MIN_MEAN": trial.suggest_float("LOSS_MIN_MEAN", 0.01, 0.05),
