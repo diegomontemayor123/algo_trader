@@ -2,11 +2,10 @@ import os
 import pandas as pd
 import yfinance as yf
 from features import FTR_FUNC, add_volume
-from tune_data import TICKER_LIST, MACRO_LIST
+from tune_data import TICKER_LIST
 
 PRICE_CACHE_FILE = "prices.csv"
 TICKERS = TICKER_LIST
-MACRO_KEYS = MACRO_LIST
 
 def fetch_macro_series(name, ticker, start, end):
     try:

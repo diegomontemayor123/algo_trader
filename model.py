@@ -115,18 +115,15 @@ if __name__ == "__main__":
     from compute_features import load_price_data, compute_features, normalize_features
     from data_prep import prepare_main_datasets
     from loadconfig import load_config
-
+    from tune_data import MACRO_LIST
     config = load_config()
     print(f"[DEBUG] Configured TICKERS: {config['TICKERS']} (count: {len(config['TICKERS'])})")
-
-
-    # Parse tickers, features, and macro keys from config
     tickers = config["TICKERS"].split(",") if isinstance(config["TICKERS"], str) else config["TICKERS"]
     feature_list = config["FEATURES"].split(",") if isinstance(config["FEATURES"], str) else config["FEATURES"]
     macro_keys = config.get("MACRO", [])
     if isinstance(macro_keys, str):
         macro_keys = [k.strip() for k in macro_keys.split(",") if k.strip()]
-    cached_data = load_price_data(config["START_DATE"], config["END_DATE"], macro_keys)
+    cached_data = load_price_data(config["START_DATE"], config["END_DATE"], MACRO_LIST)
     features, returns = compute_features(tickers, feature_list, cached_data, macro_keys)
     print(f"[DEBUG] Features shape: {features.shape}, Columns: {features.columns[:5].tolist()}...")
     print(f"[DEBUG] Returns shape: {returns.shape}, Columns: {returns.columns[:5].tolist()}...")
