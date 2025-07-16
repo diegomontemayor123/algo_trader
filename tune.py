@@ -14,10 +14,10 @@ def run_experiment(trial):
         "MACRO": trial.suggest_categorical("MACRO",['^N225, HG=F, ZC=F, TLT, ^GSPC, AUDUSD=X, CL=F, SHY, BRL=X, ^VIX, NG=F, ^FVX, UUP, SI=F, TIP, ^IRX, IEF, HYG']),
         "FEATURES": trial.suggest_categorical("FEATURES", ['price,vol,macd']),
         "INITIAL_CAPITAL": trial.suggest_float("INITIAL_CAPITAL", 100.0, 100.0),
-        "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 1, 2),
-        "BATCH_SIZE": trial.suggest_int("BATCH_SIZE", 40, 70), #68
-        "LOOKBACK": trial.suggest_int("LOOKBACK", 60, 90),#71
-        "PREDICT_DAYS": trial.suggest_int("PREDICT_DAYS", 1, 9),#4
+        "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 1.4, 1.4),
+        "BATCH_SIZE": trial.suggest_int("BATCH_SIZE", 50, 70), #68
+        "LOOKBACK": trial.suggest_int("LOOKBACK", 60, 80),#71
+        "PREDICT_DAYS": trial.suggest_int("PREDICT_DAYS", 4, 4),#4
         "WARMUP_FRAC": trial.suggest_float("WARMUP_FRAC", 0.05, 0.3), #.12
         "DROPOUT": trial.suggest_float("DROPOUT", 1e-7, 0.03),#.024
         "DECAY": trial.suggest_float("DECAY", 1e-7, 0.02),#.015
@@ -32,7 +32,7 @@ def run_experiment(trial):
         "EPOCHS": trial.suggest_int("EPOCHS", 20, 20),
         "MAX_HEADS": trial.suggest_int("MAX_HEADS", 20, 20),
         "LAYER_COUNT": trial.suggest_int("LAYER_COUNT", 6, 6),
-        "EARLY_STOP_PATIENCE": trial.suggest_int("EARLY_STOP_PATIENCE", 2, 6),
+        "EARLY_STOP_PATIENCE": trial.suggest_int("EARLY_STOP_PATIENCE", 4, 6),
         "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", 0.1, 0.2),
     }
 
