@@ -9,47 +9,44 @@ def run_experiment(trial):
     config = {
         "START_DATE": trial.suggest_categorical("START_DATE", ["2016-01-01"]),
         "END_DATE": trial.suggest_categorical("END_DATE", ["2025-07-01"]),
-        "SPLIT_DATE": trial.suggest_categorical("SPLIT_DATE", ["2023-03-01","2023-01-01","2022-10-01","2022-07-01","2022-04-01","2022-01-01","2021-10-01"]),
+        "SPLIT_DATE": trial.suggest_categorical("SPLIT_DATE", ["2023-01-01"]),
         "TICKERS": trial.suggest_categorical("TICKERS", ['BRK, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE']),
         "MACRO": trial.suggest_categorical("MACRO",['^N225, HG=F, ZC=F, TLT, ^GSPC, AUDUSD=X, CL=F, SHY, BRL=X, ^VIX, NG=F, ^FVX, UUP, SI=F, TIP, ^IRX, IEF, HYG']),
         "FEATURES": trial.suggest_categorical("FEATURES", ['price,vol,macd']),
         "INITIAL_CAPITAL": trial.suggest_float("INITIAL_CAPITAL", 100.0, 100.0),
-        "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 1.2, 1.2),
-        "BATCH_SIZE": trial.suggest_int("BATCH_SIZE", 68, 68),
-        "LOOKBACK": trial.suggest_int("LOOKBACK", 71, 71),
-        "PREDICT_DAYS": trial.suggest_int("PREDICT_DAYS", 4, 4),
-        "WARMUP_FRAC": trial.suggest_float("WARMUP_FRAC", 0.12, 0.12),
-        "DROPOUT": trial.suggest_float("DROPOUT", 0.024, 0.024),
-        "DECAY": trial.suggest_float("DECAY", 0.015, 0.015),
+        "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 1, 2),
+        "BATCH_SIZE": trial.suggest_int("BATCH_SIZE", 40, 70), #68
+        "LOOKBACK": trial.suggest_int("LOOKBACK", 60, 90),#71
+        "PREDICT_DAYS": trial.suggest_int("PREDICT_DAYS", 1, 9),#4
+        "WARMUP_FRAC": trial.suggest_float("WARMUP_FRAC", 0.05, 0.3), #.12
+        "DROPOUT": trial.suggest_float("DROPOUT", 0.001, 0.03),#.024
+        "DECAY": trial.suggest_float("DECAY", 0.001, 0.02),#.015
         "FEATURE_ATTENTION_ENABLED": trial.suggest_int("FEATURE_ATTENTION_ENABLED", 1, 1),
         "FEATURE_PERIODS": trial.suggest_categorical("FEATURE_PERIODS",["8,12,24"]),
-        "L1_PENALTY": trial.suggest_float("L1_PENALTY", 0.0002, 0.001), #-0.001, 0.001
-        "INIT_LR": trial.suggest_float("INIT_LR",0.5,0.5),
-        "LOSS_MIN_MEAN": trial.suggest_float("LOSS_MIN_MEAN", 0.05, 0.05),
-        "LOSS_RETURN_PENALTY": trial.suggest_float("LOSS_RETURN_PENALTY", 0.1, 0.1),
+        "L1_PENALTY": trial.suggest_float("L1_PENALTY", 0.00001, 0.01), #0.00089
+        "INIT_LR": trial.suggest_float("INIT_LR",0.1,0.9),
+        "LOSS_MIN_MEAN": trial.suggest_float("LOSS_MIN_MEAN", 0.01, 0.2),
+        "LOSS_RETURN_PENALTY": trial.suggest_float("LOSS_RETURN_PENALTY", 0.1, 0.9),
         "TEST_CHUNK_MONTHS": trial.suggest_int("TEST_CHUNK_MONTHS", 12, 12),
         "RETRAIN_WINDOW": trial.suggest_int("RETRAIN_WINDOW", 0, 0),
         "EPOCHS": trial.suggest_int("EPOCHS", 20, 20),
         "MAX_HEADS": trial.suggest_int("MAX_HEADS", 20, 20),
         "LAYER_COUNT": trial.suggest_int("LAYER_COUNT", 6, 6),
-        "EARLY_STOP_PATIENCE": trial.suggest_int("EARLY_STOP_PATIENCE", 5, 5),
-        "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", 0.1, 0.1),
+        "EARLY_STOP_PATIENCE": trial.suggest_int("EARLY_STOP_PATIENCE", 2, 6),
+        "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", 0.1, 0.2),
     }
 
     env = os.environ.copy()
     for k, v in config.items():
         env[k] = str(v)
     try:
-        result = subprocess.run(["python", "model.py"],capture_output=True,text=True,env=env,timeout=1800)
+        result = subprocess.run(["python", "model.py"], capture_output=True, text=True, env=env, timeout=1800)
         output = result.stdout + result.stderr
-        with open("tune_output.log", "a") as f:
-            f.write("\n\n=== Trial output start ===\n")
-            f.write(output)
-            f.write("\n=== Trial output end ===\n")
-        print(f"[Subprocess output]\n{output}\n")
+
         def extract_metric(label, out):
             match = re.search(rf"{label}:\s*Strategy:\s*([-+]?\d*\.\d+|\d+)%", out)
             return float(match.group(1)) / 100 if match else None
+
         def extract_avg_benchmark_outperformance(output):
             single_line_match = re.findall(r"Average Benchmark Outperformance(?: Across Chunks)?:\s*([-+]?\d*\.\d+|\d+)%", output)
             if single_line_match:
@@ -67,15 +64,29 @@ def run_experiment(trial):
             return 0.0
         sharpe = extract_metric("Sharpe Ratio", output)
         drawdown = extract_metric("Max Drawdown", output)
-        cagr = extract_metric("CAGR",output)
+        cagr = extract_metric("CAGR", output)
         avg_benchmark_outperformance = extract_avg_benchmark_outperformance(output)
         if sharpe is None or drawdown is None:
             return -float("inf")
-        score = (0 * sharpe) - (0 * abs(drawdown)) + (0 * cagr) +(1 * avg_benchmark_outperformance) 
+        score = (1 * sharpe) - (1 * abs(drawdown)) + (1 * cagr) + (1 * avg_benchmark_outperformance)
         trial.set_user_attr("sharpe", sharpe)
         trial.set_user_attr("drawdown", drawdown)
+        trial.set_user_attr("CAGR", cagr)
         trial.set_user_attr("avg_benchmark_outperformance", avg_benchmark_outperformance)
+        with open("tune_output.log", "a") as f:
+            f.write("\n\n=== Trial output start ===\n")
+            f.write(f"Trial #{trial.number}\n")
+            f.write(f"Sharpe: {sharpe:.4f}\n")
+            f.write(f"Drawdown: {drawdown:.4f}\n")
+            f.write(f"CAGR: {cagr:.4f}\n")
+            f.write(f"Avg Benchmark Outperformance: {avg_benchmark_outperformance:.4f}\n")
+            f.write(output)
+            f.write("\n=== Trial output end ===\n")
+
+        print(f"[Trial {trial.number}] Sharpe: {sharpe:.4f}, Drawdown: {drawdown:.4f}, CAGR: {cagr:.4f}, Benchmark Outperformance: {avg_benchmark_outperformance:.4f}")
+
         return score
+
     except subprocess.TimeoutExpired:
         print(f"[Timeout] Trial failed for config: {config}")
         return -float("inf")
@@ -83,7 +94,7 @@ def run_experiment(trial):
 def main():
     sampler = TPESampler(seed=42)
     study = optuna.create_study(direction="maximize", sampler=sampler)
-    study.optimize(run_experiment, n_trials=7, n_jobs=1)
+    study.optimize(run_experiment, n_trials=50, n_jobs=1)
     best = study.best_trial
     best_params = best.params.copy()
     with open("hyparams.json", "w") as f:
@@ -91,7 +102,7 @@ def main():
     print("\n=== Best trial parameters ===")
     for k, v in best_params.items():
         print(f"{k}: {v}")
-    for m in ["sharpe", "drawdown", "avg_benchmark_outperformance"]:
+    for m in ["sharpe", "drawdown", "CAGR", "avg_benchmark_outperformance"]:
         print(f"{m}: {best.user_attrs.get(m, float('nan')):.4f}")
 
 if __name__ == "__main__":

@@ -27,29 +27,18 @@ def train_model_with_validation(model, train_loader, val_loader, config):
         for batch_idx, (batch_features, batch_returns) in enumerate(train_loader):
             batch_features = batch_features.to(DEVICE, non_blocking=True)
             batch_returns = batch_returns.to(DEVICE, non_blocking=True)
-
-            # Save feature_weights before update
-            before_weights = model.feature_weights.detach().cpu().clone()
-
             raw_weights = model(batch_features)
             abs_sum = torch.sum(torch.abs(raw_weights), dim=1, keepdim=True) + 1e-6
             scaling_factor = torch.clamp(config["MAX_LEVERAGE"] / abs_sum, max=1.0)
             normalized_weights = raw_weights * scaling_factor
             loss = loss_function(normalized_weights, batch_returns, model)
-
             if torch.isnan(loss) or torch.isinf(loss):
                 logging.warning("[Train] NaN or Inf loss detected — skipping model.")
                 return None
-
             optimizer.zero_grad()
             loss.backward()
             if model.feature_weights.grad is None:
                 print(f"[Debug] Epoch {epoch} Batch {batch_idx}: feature_weights.grad is None")
-            else:
-                grad_norm = model.feature_weights.grad.norm().item()
-                #print(f"[Debug] Epoch {epoch} Batch {batch_idx}: feature_weights.grad norm = {grad_norm:.6f}")
-
-            # Check for NaN or Inf gradients anywhere
             nan_grads = False
             for name, param in model.named_parameters():
                 if param.grad is not None and (torch.isnan(param.grad).any() or torch.isinf(param.grad).any()):
@@ -60,10 +49,6 @@ def train_model_with_validation(model, train_loader, val_loader, config):
                 return None
 
             optimizer.step()
-            after_weights = model.feature_weights.detach().cpu()
-            max_change = (after_weights - before_weights).abs().max().item()
-            #print(f"[Debug] Epoch {epoch} Batch {batch_idx}: max feature_weights change = {max_change:.8f}")
-
             learning_scheduler.step()
             current_lr = optimizer.param_groups[0]['lr']
             lrs.append(current_lr)
@@ -92,7 +77,6 @@ def train_model_with_validation(model, train_loader, val_loader, config):
             patience_counter += 1
             if patience_counter >= config["EARLY_STOP_PATIENCE"]:
                 break
-
     plt.figure(figsize=(10, 4))
     plt.plot(lrs)
     plt.title('Learning Rate Schedule During Training')
@@ -101,9 +85,7 @@ def train_model_with_validation(model, train_loader, val_loader, config):
     plt.grid(True)
     plt.savefig('img/learning_rate_schedule.png')
     plt.close()
-
     return model
-
 
 def train_main_model(config, features, returns):
     from data_prep import prepare_main_datasets
