@@ -14,26 +14,26 @@ def run_experiment(trial):
         "MACRO": trial.suggest_categorical("MACRO",['^N225, HG=F, ZC=F, TLT, ^GSPC, AUDUSD=X, CL=F, SHY, BRL=X, ^VIX, NG=F, ^FVX, UUP, SI=F, TIP, ^IRX, IEF, HYG']),
         "FEATURES": trial.suggest_categorical("FEATURES", ['price,vol,macd']),
         "INITIAL_CAPITAL": trial.suggest_float("INITIAL_CAPITAL", 100.0, 100.0),
-        "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 1.4, 1.4),
-        "BATCH_SIZE": trial.suggest_int("BATCH_SIZE", 68, 68), #68
-        "LOOKBACK": trial.suggest_int("LOOKBACK", 71, 71),#71
-        "PREDICT_DAYS": trial.suggest_int("PREDICT_DAYS", 4, 4),#4
+        "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 1, 2),
+        "BATCH_SIZE": trial.suggest_int("BATCH_SIZE", 60, 80), #68
+        "LOOKBACK": trial.suggest_int("LOOKBACK", 60, 80),#71
+        "PREDICT_DAYS": trial.suggest_int("PREDICT_DAYS", 1, 8),#4
         "WARMUP_FRAC": trial.suggest_float("WARMUP_FRAC", 0.05, 0.3), #.12
         "DROPOUT": trial.suggest_float("DROPOUT", 1e-7, 0.03),#.024
         "DECAY": trial.suggest_float("DECAY", 1e-7, 0.02),#.015
-        "FEATURE_ATTENTION_ENABLED": trial.suggest_int("FEATURE_ATTENTION_ENABLED", 1, 1),
+        "FEATURE_ATTENTION_ENABLED": trial.suggest_int("FEATURE_ATTENTION_ENABLED", 0, 1),
         "FEATURE_PERIODS": trial.suggest_categorical("FEATURE_PERIODS",["8,12,24"]),
-        "L1_PENALTY": trial.suggest_float("L1_PENALTY", 0, 0), #0.00089
-        "INIT_LR": trial.suggest_float("INIT_LR",0.5,0.5),        
-        "RETURN_PENALTY": trial.suggest_float("RETURN_PENALTY", 0, 0),
-        "DRAWDOWN_PENALTY": trial.suggest_float("DRAWDOWN_PENALTY", 0.1, 1),
+        "L1_PENALTY": trial.suggest_float("L1_PENALTY", 0, 10), #0.00089
+        "INIT_LR": trial.suggest_float("INIT_LR",0.1,0.9),        
+        "RETURN_PENALTY": trial.suggest_float("RETURN_PENALTY", 0, 10),
+        "DRAWDOWN_PENALTY": trial.suggest_float("DRAWDOWN_PENALTY", 0.1, 10),
         "TEST_CHUNK_MONTHS": trial.suggest_int("TEST_CHUNK_MONTHS", 12, 12),
         "RETRAIN_WINDOW": trial.suggest_int("RETRAIN_WINDOW", 0, 0),
         "EPOCHS": trial.suggest_int("EPOCHS", 20, 20),
         "MAX_HEADS": trial.suggest_int("MAX_HEADS", 20, 20),
         "LAYER_COUNT": trial.suggest_int("LAYER_COUNT", 6, 6),
-        "EARLY_STOP_PATIENCE": trial.suggest_int("EARLY_STOP_PATIENCE", 5, 5),
-        "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", 0.15, 0.15),
+        "EARLY_STOP_PATIENCE": trial.suggest_int("EARLY_STOP_PATIENCE", 3, 6),
+        "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", 0.1, 0.3),
     }
 
     env = os.environ.copy()
@@ -77,7 +77,7 @@ def run_experiment(trial):
         score = (
             1 * sharpe
             - 0.7 * abs(drawdown)
-            + 0 * cagr
+            + 0.01 * cagr
             + 1 * avg_benchmark_outperformance)
         if exp_delta<.15:
             score-= 10
