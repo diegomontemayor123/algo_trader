@@ -15,6 +15,7 @@ def train_model_with_validation(model, train_loader, val_loader, config):
     loss_function = DifferentiableSharpeLoss(
         loss_min_mean=config["LOSS_MIN_MEAN"],
         loss_return_penalty=config["LOSS_RETURN_PENALTY"],
+        drawdown_penalty=config["DRAWDOWN_PENALTY"],
         l1_penalty=config["L1_PENALTY"],
     )
     best_val_loss = float('inf')

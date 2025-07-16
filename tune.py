@@ -27,6 +27,7 @@ def run_experiment(trial):
         "INIT_LR": trial.suggest_float("INIT_LR",0.1,0.9),
         "LOSS_MIN_MEAN": trial.suggest_float("LOSS_MIN_MEAN", 0.01, 0.2),
         "LOSS_RETURN_PENALTY": trial.suggest_float("LOSS_RETURN_PENALTY", 0.1, 0.75),
+        "DRAWDOWN_PENALTY": trial.suggest_float("DRAWDOWN_PENALTY", 1e-2, 1),
         "TEST_CHUNK_MONTHS": trial.suggest_int("TEST_CHUNK_MONTHS", 12, 12),
         "RETRAIN_WINDOW": trial.suggest_int("RETRAIN_WINDOW", 0, 0),
         "EPOCHS": trial.suggest_int("EPOCHS", 20, 20),
@@ -73,13 +74,13 @@ def run_experiment(trial):
         if sharpe is None or drawdown is None or exp_delta is None:
             return -float("inf")
 
-        # Scoring formula (you can tune weights as needed)
+
         score = (
             1 * sharpe
-            - 1 * abs(drawdown)
-            + 1 * cagr
+            - 0.7 * abs(drawdown)
+            + 0 * cagr
             + 1 * avg_benchmark_outperformance
-            - 0.25 * exp_delta  # you can change the weight here
+            + 1 * exp_delta 
         )
 
         # Save all metrics as user attributes

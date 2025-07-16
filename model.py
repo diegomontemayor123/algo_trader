@@ -31,7 +31,7 @@ class TransformerTrader(nn.Module):
         if self.feature_attention_enabled:
             x = x * self.feature_attention(x)
         x = x + self.pos_embedding
-        day_of_week = date_tensor[:, :, 0].long()  # (B, T)
+        day_of_week = date_tensor[:, :, 0].long()  
         month = date_tensor[:, :, 1].long()
         temporal_embed = self.day_embed(day_of_week) + self.month_embed(month)
         x = x + temporal_embed
@@ -59,10 +59,11 @@ def split_train_validation(sequences, targets, validation_ratio):
     return (sequences[:train_size], targets[:train_size],    sequences[train_size:], targets[train_size:])
 
 class DifferentiableSharpeLoss(nn.Module):
-    def __init__(self, loss_min_mean, loss_return_penalty, l1_penalty):
+    def __init__(self, loss_min_mean, loss_return_penalty, l1_penalty, drawdown_penalty):
         super().__init__()
         self.loss_min_mean = loss_min_mean
         self.loss_return_penalty = loss_return_penalty
+        self.drawdown_penalty = drawdown_penalty
         self.l1_penalty = l1_penalty
     def forward(self, portfolio_weights, target_returns, model=None):
         returns = (portfolio_weights * target_returns).sum(dim=1)
@@ -79,7 +80,7 @@ class DifferentiableSharpeLoss(nn.Module):
         low_return = torch.clamp(self.loss_min_mean - mean_return, min=0.0)
         cum_returns = torch.cumsum(returns, dim=0)
         max_drawdown = (torch.cummax(cum_returns, dim=0).values - cum_returns).max()
-        loss = -sharpe_ratio + self.loss_return_penalty * low_return + (0 * max_drawdown)
+        loss = -sharpe_ratio + (self.loss_return_penalty * low_return) + (self.drawdown_penalty * max_drawdown)
         if self.l1_penalty and model is not None:
             l1 = sum(p.abs().sum() for p in model.parameters())
             loss += self.l1_penalty * l1
