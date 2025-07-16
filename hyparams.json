@@ -27,5 +27,5 @@
         "MAX_HEADS": 20,
         "LAYER_COUNT": 6,
         "EARLY_STOP_PATIENCE": 5,
-        "VAL_SPLIT": 0.16
+        "VAL_SPLIT": 0.1
     }
