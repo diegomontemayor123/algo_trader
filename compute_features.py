@@ -1,34 +1,22 @@
 import os
 import pandas as pd
 import yfinance as yf
-from pandas_datareader.data import DataReader
 from features import FTR_FUNC, add_volume
-from loadconfig import load_config
-from tune_data import TICKER_LIST  
+from tune_data import TICKER_LIST, MACRO_LIST
 
-config = load_config()
 PRICE_CACHE_FILE = "prices.csv"
 TICKERS = TICKER_LIST
-
-MACRO_KEYS = config.get("MACRO", [])
-if isinstance(MACRO_KEYS, str):
-    MACRO_KEYS = [m.strip() for m in MACRO_KEYS.split(",") if m.strip()]
-LOW_FREQ_MACROS = set(config.get("LOW_FREQ_MACROS", ["CPI", "FEDFUNDS"]))
+MACRO_KEYS = MACRO_LIST
 
 def fetch_macro_series(name, ticker, start, end):
     try:
-        if ticker in LOW_FREQ_MACROS:
-            series = DataReader(ticker, "fred", start, end).squeeze()
-            series = series.resample('D').ffill()
+        yf_data = yf.download(ticker, start=start, end=end, auto_adjust=False)
+        if 'Adj Close' in yf_data:
+            series = yf_data['Adj Close']
+        elif 'Close' in yf_data:
+            series = yf_data['Close']
         else:
-            yf_data = yf.download(ticker, start=start, end=end, auto_adjust=False)
-            if 'Adj Close' in yf_data:
-                series = yf_data['Adj Close']
-            elif 'Close' in yf_data:
-                series = yf_data['Close']
-            else:
-                raise ValueError(f"No valid price column found for {ticker}")
-            series = series.bfill().ffill()
+            raise ValueError(f"No valid price column found for {ticker}")
         series.name = name
         return series
     except Exception as e:
@@ -42,7 +30,6 @@ def load_price_data(START_DATE, END_DATE, macro_keys):
     else:
         print("[Data] Downloading price and macro data...")
         raw_data = yf.download(" ".join(TICKERS), start=START_DATE, end=END_DATE, auto_adjust=False)
-
         price = raw_data['Adj Close']
         volume = raw_data['Volume']
         volume.columns = [f"{ticker}_volume" for ticker in volume.columns]
@@ -63,7 +50,7 @@ def process_macro_features(cached_data, index, macro_keys, min_non_na_ratio=0.1)
             continue
         series = cached_data[col].reindex(index)
         non_na_ratio = series.notna().mean()
-        if col not in LOW_FREQ_MACROS and non_na_ratio < min_non_na_ratio:
+        if  non_na_ratio < min_non_na_ratio:
             print(f"[Macro] Excluding {col} due to low data coverage ({non_na_ratio:.2%} non-NA)")
             continue
         series = series.bfill().ffill()
@@ -78,24 +65,20 @@ def process_macro_features(cached_data, index, macro_keys, min_non_na_ratio=0.1)
 def compute_features(TICKERS, FEATURES, cached_data, macro_keys):
     price_cols = [col for col in cached_data.columns if not col.endswith("_volume") and col in TICKERS]
     volume_cols = [f"{ticker}_volume" for ticker in TICKERS if f"{ticker}_volume" in cached_data.columns]
-
     prices = cached_data[price_cols]
     volume = cached_data[volume_cols] if volume_cols else None
-
     all_features = {}
     for ticker in TICKERS:
         if ticker not in prices:
             continue
         df = pd.DataFrame(index=prices.index)
         df['close'] = prices[ticker].ffill().dropna()
-
         for feature_name in FEATURES:
             if feature_name.startswith('volume'):
                 continue
             feature_function = FTR_FUNC.get(feature_name)
             if feature_function:
                 feature_function(df)
-
         if volume is not None and any(ftr.startswith('volume') for ftr in FEATURES):
             vol_col = f"{ticker}_volume"
             if vol_col in volume.columns:
@@ -112,7 +95,6 @@ def compute_features(TICKERS, FEATURES, cached_data, macro_keys):
     features = pd.concat([features, macro_df], axis=1)
     features = normalize_features(features)
     features.to_csv("features_all.csv")
-
     return features, returns
 
 

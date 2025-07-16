@@ -7,22 +7,55 @@ from optuna.samplers import TPESampler
 from collections import Counter
 
 TICKER_LIST = [
-    "AAPL", "MSFT", "GOOGL", "AMZN", "META", "NVDA", "TSLA",
-    "JPM", "XOM", "PFE", "KO", "WMT", "BA", "PG", "IBM", "CAT",
-    "CVX", "MCD", "GE", "VZ", "T", "UNH", "NKE", "ORCL"
+    "AAPL", "MSFT", "GOOGL", "AMZN", "META", "NVDA", "TSLA", "BRK.B", "UNH", "JNJ",
+    "JPM", "V", "MA", "HD", "PG", "CVX", "XOM", "ABBV", "PFE", "MRK", "PEP",
+    "KO", "COST", "AVGO", "LLY", "WMT", "BAC", "WFC", "T", "VZ", "INTC",
+    "IBM", "ORCL", "MCD", "NFLX", "ADBE", "CRM", "TXN", "TMO", "NEE", "BA",
+    "UPS", "CAT", "GS", "RTX", "AMAT", "LMT", "LOW", "GE", "BKNG", "DE"
 ]
+
 
 MACRO_LIST = [
-    "FEDFUNDS", "^GSPC", "^DJI", "^IXIC", "^RUT", "^FTSE", "^N225",
-    "CL=F", "GC=F", "SI=F", "NG=F", "ZW=F",
-    "EURUSD=X", "JPY=X", "GBPUSD=X", "USDJPY=X",
-    "^TNX", "^FVX", "^IRX", "^TYX", "TLT", "IEF", "GLD", "USO", "UUP"
+    "^GSPC",        # S&P 500
+    "^IXIC",        # Nasdaq Composite
+    "^DJI",         # Dow Jones Industrial Average
+    "^RUT",         # Russell 2000
+    "^FTSE",        # FTSE 100
+    "^N225",        # Nikkei 225 (Japan)
+    "CL=F",         # Crude Oil (WTI)
+    "GC=F",         # Gold
+    "SI=F",         # Silver
+    "NG=F",         # Natural Gas
+    "ZW=F",         # Wheat Futures
+    "HG=F",         # Copper Futures
+    "ZC=F",         # Corn Futures
+    "USDJPY=X",     # USD/JPY
+    "EURUSD=X",     # EUR/USD
+    "GBPUSD=X",     # GBP/USD
+    "^TNX",         # 10-Year Treasury Yield
+    "^FVX",         # 5-Year Treasury Yield
+    "^UST2Y",       # 2-Year Treasury Yield
+    "^IRX",         # 13-Week T-Bill Rate
+    "^TYX",         # 30-Year Treasury Yield
+    "TLT",          # iShares 20+ Year Treasury Bond ETF
+    "IEF",          # iShares 7-10 Year Treasury Bond ETF
+    "SHY",          # iShares 1-3 Year Treasury Bond ETF
+    "TIP",          # iShares TIPS Bond ETF (Inflation-Protected)
+    "PPIACO",       # Producer Price Index (FRED)
+    "CPIAUCSL",     # Consumer Price Index (FRED, monthly)
+    "UUP",          # Invesco DB US Dollar Index Bullish Fund
+    "^VIX",         # CBOE Volatility Index
+    "LQD",          # Investment Grade Corporate Bond ETF
+    "HYG",          # High Yield Corporate Bond ETF
+    "EEM",          # Emerging Markets ETF
+    "VEA",          # Developed ex-US Markets ETF
+    "FXI",          # China Large-Cap ETF
+    "BRL=X",        # USD/BRL exchange rate
+    "AUDUSD=X"      # AUD/USD (commodity-linked FX pair)
 ]
 
-FEATURE_LIST = [
-    "ret", "price", "log_ret", "rolling_ret", "volume", "vol",
-    "sma", "rsi", "macd", "momentum", "ema", "boll", "williams", "cmo"
-]
+
+FEATURE_LIST = ["ret", "price", "log_ret", "rolling_ret", "volume", "vol", "macd", "momentum", "ema", "cmo"]
 
 def load_fixed_params(filepath="hyparams.json"):
     with open(filepath, "r") as f:
@@ -92,7 +125,7 @@ def run_experiment(trial):
 def main():
     sampler = TPESampler(seed=42)
     study = optuna.create_study(direction="maximize", sampler=sampler)
-    study.optimize(run_experiment, n_trials=50, n_jobs=1)
+    study.optimize(run_experiment, n_trials=70, n_jobs=1)
     best = study.best_trial
     best_params = best.params.copy()
     with open("hyparams.json", "w") as f:
