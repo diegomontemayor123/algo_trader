@@ -20,8 +20,8 @@ class TransformerTrader(nn.Module):
         self.seq_len = seq_len
         self.feature_attention_enabled = feature_attention_enabled
         self.pos_embedding = nn.Parameter(torch.randn(1, seq_len, dimen))
-        self.day_embed = nn.Embedding(7, dimen)
-        self.month_embed = nn.Embedding(12, dimen)
+        #self.day_embed = nn.Embedding(7, dimen)
+        #self.month_embed = nn.Embedding(12, dimen)
         self.feature_attention = nn.Sequential(nn.Linear(dimen, dimen), nn.Tanh(), nn.Linear(dimen, dimen), nn.Sigmoid())
         encoder_layer = nn.TransformerEncoderLayer(d_model=dimen,nhead=num_heads,dropout=dropout,batch_first=True)
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
@@ -31,10 +31,7 @@ class TransformerTrader(nn.Module):
         if self.feature_attention_enabled:
             x = x * self.feature_attention(x)
         x = x + self.pos_embedding
-        day_of_week = date_tensor[:, :, 0].long()  
-        month = date_tensor[:, :, 1].long()
-        temporal_embed = self.day_embed(day_of_week) + self.month_embed(month)
-        x = x + temporal_embed
+        #x = x + self.day_embed(date_tensor[:, :, 0].long()  ) + self.month_embed(date_tensor[:, :, 1].long())
         encoded = self.transformer_encoder(x)
         last_hidden = encoded[:, -1, :]
         return self.mlp_head(last_hidden)
