@@ -9,7 +9,7 @@ def run_experiment(trial):
     config = {
         "START_DATE": trial.suggest_categorical("START_DATE", ["2016-01-01"]),
         "END_DATE": trial.suggest_categorical("END_DATE", ["2025-07-01"]),
-        "SPLIT_DATE": trial.suggest_categorical("SPLIT_DATE", ["2024-07-01","2024-06-01","2024-05-01","2024-03-01","2024-01-01","2023-11-01","2023-09-01","2023-07-01","2023-05-01","2023-03-01","2023-01-01"]),
+        "SPLIT_DATE": trial.suggest_categorical("SPLIT_DATE", ["2023-03-01","2023-01-01","2022-10-01","2022-07-01","2022-04-01","2022-01-01","2021-10-01"]),
         "TICKERS": trial.suggest_categorical("TICKERS", ['BRK, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE']),
         "MACRO": trial.suggest_categorical("MACRO",['^N225, HG=F, ZC=F, TLT, ^GSPC, AUDUSD=X, CL=F, SHY, BRL=X, ^VIX, NG=F, ^FVX, UUP, SI=F, TIP, ^IRX, IEF, HYG']),
         "FEATURES": trial.suggest_categorical("FEATURES", ['price,vol,macd']),
@@ -83,7 +83,7 @@ def run_experiment(trial):
 def main():
     sampler = TPESampler(seed=42)
     study = optuna.create_study(direction="maximize", sampler=sampler)
-    study.optimize(run_experiment, n_trials=10, n_jobs=1)
+    study.optimize(run_experiment, n_trials=7, n_jobs=1)
     best = study.best_trial
     best_params = best.params.copy()
     with open("hyparams.json", "w") as f:
