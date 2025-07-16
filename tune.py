@@ -7,14 +7,14 @@ from optuna.samplers import TPESampler
 
 def run_experiment(trial):
     config = {
-        "START_DATE": trial.suggest_categorical("START_DATE", ["2019-01-01","2018-01-01","2017-01-01","2016-01-01","2015-01-01","2014-01-01","2013-01-01","2012-01-01"]),
+        "START_DATE": trial.suggest_categorical("START_DATE", ["2016-01-01"]),
         "END_DATE": trial.suggest_categorical("END_DATE", ["2025-07-01"]),
-        "SPLIT_DATE": trial.suggest_categorical("SPLIT_DATE", ["2023-07-01"]),
+        "SPLIT_DATE": trial.suggest_categorical("SPLIT_DATE", ["2024-07-01","2024-06-01","2024-05-01","2024-03-01","2024-01-01","2023-11-01","2023-09-01","2023-07-01","2023-05-01","2023-03-01","2023-01-01"]),
         "TICKERS": trial.suggest_categorical("TICKERS", ['BRK, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE']),
         "MACRO": trial.suggest_categorical("MACRO",['^N225, HG=F, ZC=F, TLT, ^GSPC, AUDUSD=X, CL=F, SHY, BRL=X, ^VIX, NG=F, ^FVX, UUP, SI=F, TIP, ^IRX, IEF, HYG']),
         "FEATURES": trial.suggest_categorical("FEATURES", ['price,vol,macd']),
         "INITIAL_CAPITAL": trial.suggest_float("INITIAL_CAPITAL", 100.0, 100.0),
-        "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 0.1, 2),
+        "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 1.2, 1.2),
         "BATCH_SIZE": trial.suggest_int("BATCH_SIZE", 68, 68),
         "LOOKBACK": trial.suggest_int("LOOKBACK", 71, 71),
         "PREDICT_DAYS": trial.suggest_int("PREDICT_DAYS", 4, 4),
@@ -71,7 +71,7 @@ def run_experiment(trial):
         avg_benchmark_outperformance = extract_avg_benchmark_outperformance(output)
         if sharpe is None or drawdown is None:
             return -float("inf")
-        score = (0.8 * sharpe) - (1 * abs(drawdown)) + (1 * cagr) +(0 * avg_benchmark_outperformance) 
+        score = (0 * sharpe) - (0 * abs(drawdown)) + (0 * cagr) +(1 * avg_benchmark_outperformance) 
         trial.set_user_attr("sharpe", sharpe)
         trial.set_user_attr("drawdown", drawdown)
         trial.set_user_attr("avg_benchmark_outperformance", avg_benchmark_outperformance)
