@@ -50,7 +50,7 @@ def run_experiment(trial):
                                                            'ret,volume,momentum,cmo,log_ret',
                                                            "ret,vol,log_ret,rolling_ret,volume"]),
         "INITIAL_CAPITAL": trial.suggest_float("INITIAL_CAPITAL", 100.0, 100.0),
-        "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 0.2, 2.0),
+        "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 1.3, 1.3),
         "BATCH_SIZE": trial.suggest_int("BATCH_SIZE", 60, 70),
         "LOOKBACK": trial.suggest_int("LOOKBACK", 70, 75),
         "PREDICT_DAYS": trial.suggest_int("PREDICT_DAYS", 4, 8),
