@@ -10,27 +10,23 @@ def run_experiment(trial):
         "START_DATE": trial.suggest_categorical("START_DATE", ["2019-01-01","2018-01-01","2017-01-01","2016-01-01","2015-01-01","2014-01-01","2013-01-01","2012-01-01"]),
         "END_DATE": trial.suggest_categorical("END_DATE", ["2025-07-01"]),
         "SPLIT_DATE": trial.suggest_categorical("SPLIT_DATE", ["2023-07-01"]),
-        "TICKERS": trial.suggest_categorical("TICKERS", ['BRK, TXN, HD, T, BA, GS, NVDA, COST, MA, ABBV',
-                                                         'BRK, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, PEP, GS, UNH, AMZN, CAT, NKE, ADBE',
-                                                         'BRK, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE',
-                                                         'BRK, MSFT, NVDA, LLY, COST, MA, XOM, UNH, AMZN, CAT',
-                                                         ]),
+        "TICKERS": trial.suggest_categorical("TICKERS", ['BRK, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE']),
         "MACRO": trial.suggest_categorical("MACRO",['^N225, HG=F, ZC=F, TLT, ^GSPC, AUDUSD=X, CL=F, SHY, BRL=X, ^VIX, NG=F, ^FVX, UUP, SI=F, TIP, ^IRX, IEF, HYG']),
         "FEATURES": trial.suggest_categorical("FEATURES", ['price,vol,macd']),
         "INITIAL_CAPITAL": trial.suggest_float("INITIAL_CAPITAL", 100.0, 100.0),
-        "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 1.3, 1.3),
+        "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 0.1, 2),
         "BATCH_SIZE": trial.suggest_int("BATCH_SIZE", 68, 68),
         "LOOKBACK": trial.suggest_int("LOOKBACK", 71, 71),
         "PREDICT_DAYS": trial.suggest_int("PREDICT_DAYS", 4, 4),
         "WARMUP_FRAC": trial.suggest_float("WARMUP_FRAC", 0.12, 0.12),
-        "DROPOUT": trial.suggest_float("DROPOUT", 0.02, 0.04),
-        "DECAY": trial.suggest_float("DECAY", 0.005, 0.02),
+        "DROPOUT": trial.suggest_float("DROPOUT", 0.024, 0.024),
+        "DECAY": trial.suggest_float("DECAY", 0.015, 0.015),
         "FEATURE_ATTENTION_ENABLED": trial.suggest_int("FEATURE_ATTENTION_ENABLED", 1, 1),
-        "FEATURE_PERIODS": trial.suggest_categorical("FEATURE_PERIODS",["16,30","14,28","8,12,24","8,14,28","8,16,30"]),
+        "FEATURE_PERIODS": trial.suggest_categorical("FEATURE_PERIODS",["8,12,24"]),
         "L1_PENALTY": trial.suggest_float("L1_PENALTY", 0.0002, 0.001), #-0.001, 0.001
         "INIT_LR": trial.suggest_float("INIT_LR",0.5,0.5),
-        "LOSS_MIN_MEAN": trial.suggest_float("LOSS_MIN_MEAN", 0.01, 0.05),
-        "LOSS_RETURN_PENALTY": trial.suggest_float("LOSS_RETURN_PENALTY", 0.01, 0.15),
+        "LOSS_MIN_MEAN": trial.suggest_float("LOSS_MIN_MEAN", 0.05, 0.05),
+        "LOSS_RETURN_PENALTY": trial.suggest_float("LOSS_RETURN_PENALTY", 0.1, 0.1),
         "TEST_CHUNK_MONTHS": trial.suggest_int("TEST_CHUNK_MONTHS", 12, 12),
         "RETRAIN_WINDOW": trial.suggest_int("RETRAIN_WINDOW", 0, 0),
         "EPOCHS": trial.suggest_int("EPOCHS", 20, 20),
@@ -62,10 +58,10 @@ def run_experiment(trial):
                         return float(val) / 100.0
                     except:
                         pass
-            multiline_match = re.search(r"Average Benchmark Outperformance Across Chunks:\s*\ncagr:\s*([-+]?\d*\.\d+|\d+)%", output, re.MULTILINE)
-            if multiline_match:
+            match = re.search(r"Average Benchmark Outperformance Across Chunks:\s*\ncagr:\s*([-+]?\d*\.\d+|\d+)%", output, re.MULTILINE)
+            if match:
                 try:
-                    return float(multiline_match.group(1)) / 100.0
+                    return float(match.group(1)) / 100.0
                 except:
                     return 0.0
             return 0.0
@@ -87,7 +83,7 @@ def run_experiment(trial):
 def main():
     sampler = TPESampler(seed=42)
     study = optuna.create_study(direction="maximize", sampler=sampler)
-    study.optimize(run_experiment, n_trials=50, n_jobs=1)
+    study.optimize(run_experiment, n_trials=10, n_jobs=1)
     best = study.best_trial
     best_params = best.params.copy()
     with open("hyparams.json", "w") as f:
