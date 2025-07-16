@@ -48,8 +48,8 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage, co
         norm_feats = normalize_features(feature_window_np.astype(np.float32))
         with torch.no_grad():
             raw = model(torch.tensor(norm_feats).unsqueeze(0).to(device)).cpu().numpy().flatten()
-        scale = min(max_leverage / (np.sum(np.abs(raw)) + 1e-6), 1.0)
-        return raw * scale
+        #scale = min(max_leverage / (np.sum(np.abs(raw)) + 1e-6), 1.0)
+        return raw #* scale
     if retrain_window < 1:
         logging.info("[Backtest] Running w/o retraining.")
         model.eval()
