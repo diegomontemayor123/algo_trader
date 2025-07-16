@@ -14,8 +14,8 @@ def run_experiment(trial):
                                                          'ORCL,GOOGL,JPM,PFE,MSFT,T,KO,UNH,GE',
                                                          "AAPL,MSFT,GOOGL,AMZN,META,NVDA,TSLA,JPM,WMT,CVX,MCD,T,NKE",
                                                          ]),
-        "MACRO": trial.suggest_categorical("MACRO",['FEDFUNDS,^IXIC,CL=F,GC=F,NG=F,ZW=F,USDJPY=X,^TNX,^FVX,IEF,UUP',
-                                                    'FEDFUNDS,ZW=F,^FVX,^IXIC,^TNX']),
+        "MACRO": trial.suggest_categorical("MACRO",['^IXIC,CL=F,GC=F,NG=F,ZW=F,USDJPY=X,^TNX,^FVX,IEF,UUP',
+                                                    'ZW=F,^FVX,^IXIC,^TNX']),
         "FEATURES": trial.suggest_categorical("FEATURES", ['ret,volume,momentum,cmo,rolling_ret',
                                                            'ret,volume,momentum,cmo,log_ret',
                                                            "ret,vol,log_ret,rolling_ret,volume"]),
@@ -39,7 +39,7 @@ def run_experiment(trial):
         "MAX_HEADS": trial.suggest_int("MAX_HEADS", 20, 20),
         "LAYER_COUNT": trial.suggest_int("LAYER_COUNT", 6, 6),
         "EARLY_STOP_PATIENCE": trial.suggest_int("EARLY_STOP_PATIENCE", 5, 5),
-        "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", 0.16, 0.16),
+        "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", 0.1, 0.1),
     }
 
     env = os.environ.copy()

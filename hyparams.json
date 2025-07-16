@@ -5,7 +5,7 @@
         "END_DATE": "2025-07-01",
         "SPLIT_DATE": "2021-07-01",
         "TICKERS": "ORCL,GOOGL,JPM,PFE,MSFT,T,KO,UNH,GE",
-        "MACRO": "FEDFUNDS,ZW=F,^FVX,^IXIC,^TNX",
+        "MACRO": "ZW=F,^FVX,^IXIC,^TNX",
         "FEATURES": "ret,volume,momentum,cmo,log_ret",
         "INITIAL_CAPITAL": 100.0,
         "MAX_LEVERAGE": 1.55,
