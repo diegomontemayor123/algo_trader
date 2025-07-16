@@ -1,5 +1,5 @@
 import numpy as np
-import torch, logging, multiprocessing
+import torch, logging, multiprocessing, os
 import matplotlib.pyplot as plt
 import pandas as pd
 from dateutil.relativedelta import relativedelta
@@ -10,7 +10,6 @@ from train import train_model_with_validation
 from copy import deepcopy
 from compute_features import load_price_data
 from calc_perform import calculate_performance_metrics
-import os
 
 def run_backtest(device, initial_capital, split_date, lookback, max_leverage, compute_features, normalize_features, tickers, start_date, end_date, features, macro_keys, test_chunk_months, retrain_window, model=None, plot=False, weights_csv_path="weights.csv", config=None):
     if retrain_window > 0 and config is None:
@@ -48,8 +47,7 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage, co
         norm_feats = normalize_features(feature_window_np.astype(np.float32))
         with torch.no_grad():
             raw = model(torch.tensor(norm_feats).unsqueeze(0).to(device)).cpu().numpy().flatten()
-        #scale = min(max_leverage / (np.sum(np.abs(raw)) + 1e-6), 1.0)
-        return raw #* scale
+        return raw 
     if retrain_window < 1:
         logging.info("[Backtest] Running w/o retraining.")
         model.eval()
