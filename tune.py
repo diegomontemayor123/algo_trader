@@ -66,7 +66,10 @@ def run_experiment(trial):
 
         sharpe = extract_metric("Sharpe Ratio", output)
         drawdown = extract_metric("Max Drawdown", output)
-        cagr = extract_metric("CAGR", output)
+        if extract_metric("CAGR", output) >0:
+            cagr = extract_metric("CAGR", output)
+        else: 
+            cagr = 0
         avg_benchmark_outperformance = extract_avg_benchmark_outperformance(output)
         exp_delta = extract_exposure_delta(output)
 
@@ -74,21 +77,17 @@ def run_experiment(trial):
             return -float("inf")
 
 
-        score = (
-            1 * sharpe
-            - 0.7 * abs(drawdown)
-            + 0 #* cagr
-            + 1 * avg_benchmark_outperformance)
-        if exp_delta<.15:
+        score = (1 * sharpe
+                - 0.7 * abs(drawdown)
+                + 0 #* cagr
+                + 1 * avg_benchmark_outperformance)
+        if exp_delta<15:
             score-= 10
-        
-        # Save all metrics as user attributes
         trial.set_user_attr("sharpe", sharpe)
         trial.set_user_attr("drawdown", drawdown)
         trial.set_user_attr("CAGR", cagr)
         trial.set_user_attr("avg_benchmark_outperformance", avg_benchmark_outperformance)
         trial.set_user_attr("exp_delta", exp_delta)
-
         with open("tune_output.log", "a") as f:
             f.write("\n\n=== Trial output start ===\n")
             f.write(f"Trial #{trial.number}\n")
@@ -99,7 +98,6 @@ def run_experiment(trial):
             f.write(f"Total Exposure Delta: {exp_delta:.4f}\n")
             f.write(output)
             f.write("\n=== Trial output end ===\n")
-
         print(
             f"[Trial {trial.number}] Sharpe: {sharpe:.4f}, Drawdown: {drawdown:.4f}, "
             f"CAGR: {cagr:.4f}, Benchmark Outperformance: {avg_benchmark_outperformance:.4f}, "
