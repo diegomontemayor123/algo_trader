@@ -65,15 +65,15 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
             feature_window = features_df.iloc[i:i + lookback].values.astype(np.float32)
             normalized_features = normalize_features(feature_window)
             input_tensor = torch.tensor(normalized_features).unsqueeze(0).to(device)
-            print(f"[{current_date.date()}] Input mean: {input_tensor.mean().item():.4f}, std: {input_tensor.std().item():.4f}")
+            #print(f"[{current_date.date()}] Input mean: {input_tensor.mean().item():.4f}, std: {input_tensor.std().item():.4f}")
             with torch.no_grad():
                 raw_weights = model(input_tensor).cpu().numpy().flatten()
-                print(f"[{current_date.date()}] Raw weights std: {raw_weights.std():.6f}, sum abs: {np.sum(np.abs(raw_weights)):.3f}")
-            logging.debug(f"[Backtest] Date {current_date.date()} - Raw weights sample: {raw_weights[:5]}")
+                #print(f"[{current_date.date()}] Raw weights std: {raw_weights.std():.6f}, sum abs: {np.sum(np.abs(raw_weights)):.3f}")
+            print(f"[Backtest] Date {current_date.date()} - Raw weights sample: {raw_weights[:20]}")
             weight_sum = np.sum(np.abs(raw_weights)) + 1e-6
             scaling_factor = min(max_leverage / weight_sum, 1.0)
             final_weights = raw_weights * scaling_factor
-            logging.debug(f"[Backtest] Date {current_date.date()} - Final weights sample: {final_weights[:5]} (sum abs: {np.sum(np.abs(final_weights)):.4f})")
+            print(f"[Backtest] Date {current_date.date()} - Final weights sample: {final_weights[:20]} (sum abs: {np.sum(np.abs(final_weights)):.4f})")
             period_returns = returns_df.loc[current_date].values
             portfolio_return = np.dot(final_weights, period_returns)
             benchmark_return = np.mean(period_returns)
@@ -83,8 +83,6 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
         weights_df = pd.DataFrame(daily_weights)
         weights_df["total_exposure"] = weights_df.abs().sum(axis=1)
         weights_df.index.name = "Date"
-        print(f"[Backtest]-rawweights{raw_weights}")
-        print(f"[Backtest]-normalizedweights{final_weights}")
         try:
             weights_df.to_csv(weights_csv_path)
         except Exception as e:
