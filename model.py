@@ -53,12 +53,13 @@ def split_train_validation(sequences, targets, validation_ratio):
     return (sequences[:train_size], targets[:train_size],    sequences[train_size:], targets[train_size:])
 
 class DifferentiableSharpeLoss(nn.Module):
-    def __init__(self, return_penalty, l1_penalty, drawdown_penalty):
+    def __init__(self, return_penalty, move_penalty, drawdown_penalty):
         super().__init__()
         self.return_penalty = return_penalty
         self.drawdown_penalty = drawdown_penalty
-        self.l1_penalty = l1_penalty
-    def forward(self, portfolio_weights, target_returns, model=None):
+        self.move_penalty = move_penalty
+
+    def forward(self, portfolio_weights, target_returns, model=None, prev_parameters=None, epoch=0):
         returns = (portfolio_weights * target_returns).sum(dim=1)
         mean_return = torch.mean(returns)
         if returns.numel() > 1 and not torch.isnan(returns).all():
@@ -74,7 +75,11 @@ class DifferentiableSharpeLoss(nn.Module):
         drawdown_approx = torch.nn.functional.relu(torch.cummax(cum_returns, dim=0).values - cum_returns)
         max_drawdown = torch.mean(drawdown_approx)
         loss = -sharpe_ratio - (self.return_penalty * mean_return) + (self.drawdown_penalty * max_drawdown)
-        loss += self.l1_penalty * sum(p.abs().sum() for p in model.parameters())
+        decay_factor = 1#/(1+epoch)
+        movement = decay_factor*sum((p-p_prev).abs().sum()for p,p_prev in zip(model.parameters(),prev_parameters))
+        static_penalty = self.move_penalty / (movement + 1)
+        loss += static_penalty
+        #loss += self.move_penalty * sum(p.abs().sum() for p in model.parameters())
         #beta = torch.cov(portfolio_returns, benchmark_returns)[0,1] / torch.var(benchmark_returns)
         #loss += self.beta_penalty * torch.abs(beta - target_beta)
         #print(f"[Loss] Mean Return: {mean_return.item():.6f}")
@@ -82,7 +87,7 @@ class DifferentiableSharpeLoss(nn.Module):
         print(f"[Loss] -Sharpe Ratio: {sharpe_ratio.item():.6f}")
         print(f"[Loss] -Return Penalty Term: {self.return_penalty * mean_return.item():.6f}")
         print(f"[Loss] +Max Drawdown Penalty Term: {self.drawdown_penalty * max_drawdown.item():.6f}")
-        print(f"[Loss] +L1 Penalty Term: {self.l1_penalty * sum(p.abs().sum() for p in model.parameters()):.6f}")
+        print(f"[Loss] +Move Penalty Term (decayed): {static_penalty:.6f}")
         print(f"[Loss] Final Loss: {loss.item():.6f}\n")
         #print(f"[Returns] {returns.detach().cpu().numpy()}")
         return loss

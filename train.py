@@ -15,11 +15,12 @@ def train_model_with_validation(model, train_loader, val_loader, config):
     loss_function = DifferentiableSharpeLoss(        
         return_penalty=config["RETURN_PENALTY"],
         drawdown_penalty=config["DRAWDOWN_PENALTY"],
-        l1_penalty=config["L1_PENALTY"],
+        move_penalty=config["MOVE_PENALTY"],
     )
     best_val_loss = float('inf')
     patience_counter = 0
     lrs = []
+    prev_parameters = [p.detach().clone() for p in model.parameters()]
 
     for epoch in range(config["EPOCHS"]):
         model.train()
@@ -31,7 +32,7 @@ def train_model_with_validation(model, train_loader, val_loader, config):
             abs_sum = torch.sum(torch.abs(raw_weights), dim=1, keepdim=True) + 1e-6
             scaling_factor = torch.clamp(config["MAX_LEVERAGE"] / abs_sum, max=1.0)
             normalized_weights = raw_weights * scaling_factor
-            loss = loss_function(normalized_weights, batch_returns, model)
+            loss = loss_function(normalized_weights, batch_returns, model=model, prev_parameters=prev_parameters, epoch=epoch)
             if torch.isnan(loss) or torch.isinf(loss):
                 logging.warning("[Train] NaN or Inf loss detected — skipping model.")
                 return None
@@ -45,13 +46,13 @@ def train_model_with_validation(model, train_loader, val_loader, config):
             if nan_grads:
                 print("[Warning] Skipping retraining chunk due to NaNs in gradients.")
                 return None
-
             optimizer.step()
+            prev_parameters = [p.detach().clone() for p in model.parameters()]
             learning_scheduler.step()
             current_lr = optimizer.param_groups[0]['lr']
             lrs.append(current_lr)
             train_losses.append(loss.item())
-
+            prev_parameters = [p.detach().clone() for p in model.parameters()]
         model.eval()
         val_portfolio_returns = []
         with torch.no_grad():
