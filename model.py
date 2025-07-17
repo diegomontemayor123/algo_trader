@@ -87,6 +87,7 @@ class DifferentiableSharpeLoss(nn.Module):
         print(f"[Loss] -Sharpe Ratio: {sharpe_ratio.item():.6f}")
         print(f"[Loss] -Return Penalty Term: {self.return_penalty * mean_return.item():.6f}")
         print(f"[Loss] +Max Drawdown Penalty Term: {self.drawdown_penalty * max_drawdown.item():.6f}")
+        print(f"[Debug] Raw movement: {movement.item():.8f}")
         print(f"[Loss] +Move Penalty Term (decayed): {static_penalty:.6f}")
         print(f"[Loss] Final Loss: {loss.item():.6f}\n")
         #print(f"[Returns] {returns.detach().cpu().numpy()}")

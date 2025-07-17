@@ -52,7 +52,6 @@ def train_model_with_validation(model, train_loader, val_loader, config):
             current_lr = optimizer.param_groups[0]['lr']
             lrs.append(current_lr)
             train_losses.append(loss.item())
-            prev_parameters = [p.detach().clone() for p in model.parameters()]
         model.eval()
         val_portfolio_returns = []
         with torch.no_grad():
