@@ -7,36 +7,31 @@ from optuna.samplers import TPESampler
 from collections import Counter
 
 TICKER_LIST = [
-    "AAPL", "MSFT", "GOOGL", "AMZN", "META", "NVDA", "TSLA", "UNH", "JNJ",
-    "JPM", "V", "MA", "HD", "PG", "CVX", "XOM", "ABBV", "PFE", "MRK", "PEP",
-    "KO", "COST", "AVGO", "LLY", "WMT", "BAC", "WFC", "T", "VZ", "INTC",
-    "IBM", "ORCL", "MCD", "NFLX", "ADBE", "CRM", "TXN", "TMO", "NEE", "BA",
-    "UPS", "CAT", "GS", "RTX", "AMAT", "LMT", "LOW", "GE", "BKNG", "DE", "NKE"
+'JPM', 'MSFT', 'NVDA', 'AVGO', ' LLY', ' COST', ' MA', ' XOM', ' UNH', ' AMZN', ' CAT', ' ADBE'
 ]
-
 
 MACRO_LIST = [
     "^GSPC",        # S&P 500
-    "^IXIC",        # Nasdaq Composite
-    "^DJI",         # Dow Jones Industrial Average
-    "^RUT",         # Russell 2000
-    "^FTSE",        # FTSE 100
+    #"^IXIC",        # Nasdaq Composite
+    #"^DJI",         # Dow Jones Industrial Average
+    #"^RUT",         # Russell 2000
+    #"^FTSE",        # FTSE 100
     "^N225",        # Nikkei 225 (Japan)
     "CL=F",         # Crude Oil (WTI)
-    "GC=F",         # Gold
+    #"GC=F",         # Gold
     "SI=F",         # Silver
     "NG=F",         # Natural Gas
-    "ZW=F",         # Wheat Futures
+    #"ZW=F",         # Wheat Futures
     "HG=F",         # Copper Futures
     "ZC=F",         # Corn Futures
-    "USDJPY=X",     # USD/JPY
-    "EURUSD=X",     # EUR/USD
-    "GBPUSD=X",     # GBP/USD
-    "^TNX",         # 10-Year Treasury Yield
+    #"USDJPY=X",     # USD/JPY
+    #"EURUSD=X",     # EUR/USD
+    #"GBPUSD=X",     # GBP/USD
+    #"^TNX",         # 10-Year Treasury Yield
     "^FVX",         # 5-Year Treasury Yield
     #"^UST2Y",      # 2-Year Treasury Yield (FRED)
     "^IRX",         # 13-Week T-Bill Rate
-    "^TYX",         # 30-Year Treasury Yield
+    #"^TYX",         # 30-Year Treasury Yield
     "TLT",          # iShares 20+ Year Treasury Bond ETF
     "IEF",          # iShares 7-10 Year Treasury Bond ETF
     "SHY",          # iShares 1-3 Year Treasury Bond ETF
@@ -45,11 +40,11 @@ MACRO_LIST = [
     #"CPIAUCSL",    # Consumer Price Index (FRED, monthly)
     "UUP",          # Invesco DB US Dollar Index Bullish Fund
     "^VIX",         # CBOE Volatility Index
-    "LQD",          # Investment Grade Corporate Bond ETF
+    #"LQD",          # Investment Grade Corporate Bond ETF
     "HYG",          # High Yield Corporate Bond ETF
-    "EEM",          # Emerging Markets ETF
-    "VEA",          # Developed ex-US Markets ETF
-    "FXI",          # China Large-Cap ETF
+    #"EEM",          # Emerging Markets ETF
+    #"VEA",          # Developed ex-US Markets ETF
+    #"FXI",          # China Large-Cap ETF
     "BRL=X",        # USD/BRL exchange rate
     "AUDUSD=X"      # AUD/USD (commodity-linked FX pair)
 ]
