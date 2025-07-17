@@ -88,7 +88,10 @@ def run_experiment(trial):
             f.write(f"Trial #{trial.number}\n")
             f.write(f"Sharpe: {sharpe:.4f}\n")
             f.write(f"Drawdown: {drawdown:.4f}\n")
-            f.write(f"CAGR: {cagr:.4f}\n")
+            if cagr is not None:
+                f.write(f"CAGR: {cagr:.4f}\n")
+            else:
+                f.write("CAGR: None\n")
             f.write(f"Avg Benchmark Outperformance: {avg_benchmark_outperformance:.4f}\n")
             f.write(f"Total Exposure Delta: {exp_delta:.4f}\n")
             f.write(output)
