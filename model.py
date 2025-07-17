@@ -73,7 +73,7 @@ class DifferentiableSharpeLoss(nn.Module):
         cum_returns = torch.cumsum(returns, dim=0)
         drawdown_approx = torch.nn.functional.relu(torch.cummax(cum_returns, dim=0).values - cum_returns)
         max_drawdown = torch.mean(drawdown_approx)
-        loss = -400*sharpe_ratio - (self.return_penalty * mean_return) + (self.drawdown_penalty * max_drawdown)
+        loss = -sharpe_ratio - (self.return_penalty * mean_return) + (self.drawdown_penalty * max_drawdown)
         loss += self.l1_penalty * sum(p.abs().sum() for p in model.parameters())
         #beta = torch.cov(portfolio_returns, benchmark_returns)[0,1] / torch.var(benchmark_returns)
         #loss += self.beta_penalty * torch.abs(beta - target_beta)
@@ -82,7 +82,7 @@ class DifferentiableSharpeLoss(nn.Module):
         print(f"[Loss] -Sharpe Ratio: {sharpe_ratio.item():.6f}")
         print(f"[Loss] -Return Penalty Term: {self.return_penalty * mean_return.item():.6f}")
         print(f"[Loss] +Max Drawdown Penalty Term: {self.drawdown_penalty * max_drawdown.item():.6f}")
-        print(f"[Loss] +L1 Penalty Term: {self.l1_penalty * sum(p.abs().sum() for p in model.parameters()) if self.l1_penalty else 0.0:.6f}")
+        print(f"[Loss] +L1 Penalty Term: {self.l1_penalty * sum(p.abs().sum() for p in model.parameters()):.6f}")
         print(f"[Loss] Final Loss: {loss.item():.6f}\n")
         #print(f"[Returns] {returns.detach().cpu().numpy()}")
         return loss
