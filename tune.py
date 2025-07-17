@@ -66,10 +66,10 @@ def run_experiment(trial):
 
         sharpe = extract_metric("Sharpe Ratio", output)
         drawdown = extract_metric("Max Drawdown", output)
-        if extract_metric("CAGR", output) >0:
+        if extract_metric("CAGR", output)!=None:
             cagr = extract_metric("CAGR", output)
         else: 
-            cagr = 0
+            cagr = None
         avg_benchmark_outperformance = extract_avg_benchmark_outperformance(output)
         exp_delta = extract_exposure_delta(output)
 
