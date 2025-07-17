@@ -18,7 +18,7 @@ def run_experiment(trial):
         "BATCH_SIZE": trial.suggest_int("BATCH_SIZE", 60, 80), #68
         "LOOKBACK": trial.suggest_int("LOOKBACK", 60, 80),#71
         "PREDICT_DAYS": trial.suggest_int("PREDICT_DAYS", 1, 8),#4
-        "WARMUP_FRAC": trial.suggest_float("WARMUP_FRAC", 0.05, 0.3), #.12
+        "WARMUP_FRAC": trial.suggest_float("WARMUP_FRAC", 0.1, 0.1), #.12
         "DROPOUT": trial.suggest_float("DROPOUT", 1e-5, 0.02),#.024
         "DECAY": trial.suggest_float("DECAY", 1e-5, 0.02),#.015
         "FEATURE_ATTENTION_ENABLED": trial.suggest_int("FEATURE_ATTENTION_ENABLED", 0, 1),
