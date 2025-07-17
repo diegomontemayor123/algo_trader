@@ -84,18 +84,15 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
             logging.warning("[Backtest] No daily weights collected!")
         else:
             logging.debug(f"[Backtest] Sample daily weight for date {daily_weights[0].name}: {daily_weights[0].head()}")
-
         weights_df = pd.DataFrame(daily_weights)
         weights_df["total_exposure"] = weights_df.abs().sum(axis=1)
         weights_df.index.name = "Date"
-
         logging.info(f"[Backtest] Saving combined weights DataFrame to CSV at: {os.path.abspath(weights_csv_path)}")
         try:
             weights_df.to_csv(weights_csv_path)
             logging.info(f"[Backtest] Successfully saved combined weights to {weights_csv_path}")
         except Exception as e:
             logging.error(f"[Backtest] Error saving daily weights to {weights_csv_path}: {e}")
-
         portfolio_series = pd.Series(portfolio_values[1:], index=weights_df.index)
         benchmark_series = pd.Series(benchmark_values[1:], index=weights_df.index)
         for idx, (chunk_start, chunk_end) in enumerate(chunks):

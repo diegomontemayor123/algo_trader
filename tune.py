@@ -23,17 +23,17 @@ def run_experiment(trial):
         "DECAY": trial.suggest_float("DECAY", 1e-3, 0.02),#.015
         "FEATURE_ATTENTION_ENABLED": trial.suggest_int("FEATURE_ATTENTION_ENABLED", 1, 1),
         "FEATURE_PERIODS": trial.suggest_categorical("FEATURE_PERIODS",["8,12,24"]),
-        "L1_PENALTY": trial.suggest_float("L1_PENALTY", 0,0), #0.00089
+        "L1_PENALTY": trial.suggest_float("L1_PENALTY", 0.0000001,0.00001), #0.00089
         "INIT_LR": trial.suggest_float("INIT_LR",0.1,1),        
-        "RETURN_PENALTY": trial.suggest_float("RETURN_PENALTY", 0,0),
-        "DRAWDOWN_PENALTY": trial.suggest_float("DRAWDOWN_PENALTY", 0,0),
+        "RETURN_PENALTY": trial.suggest_float("RETURN_PENALTY", 50,150),
+        "DRAWDOWN_PENALTY": trial.suggest_float("DRAWDOWN_PENALTY", 5,15),
         "TEST_CHUNK_MONTHS": trial.suggest_int("TEST_CHUNK_MONTHS", 12, 12),
         "RETRAIN_WINDOW": trial.suggest_int("RETRAIN_WINDOW", 0, 0),
         "EPOCHS": trial.suggest_int("EPOCHS", 20, 20),
         "MAX_HEADS": trial.suggest_int("MAX_HEADS", 20, 20),
         "LAYER_COUNT": trial.suggest_int("LAYER_COUNT", 6, 6),
-        "EARLY_STOP_PATIENCE": trial.suggest_int("EARLY_STOP_PATIENCE", 5, 5),
-        "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", 0.1, 0.1),
+        "EARLY_STOP_PATIENCE": trial.suggest_int("EARLY_STOP_PATIENCE", 3, 6),
+        "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", 0.1, 0.2),
     }
     env = os.environ.copy()
     for k, v in config.items():
