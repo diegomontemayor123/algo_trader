@@ -26,7 +26,7 @@ def run_experiment(trial):
         "FEATURE_PERIODS": trial.suggest_categorical("FEATURE_PERIODS",["8,12,24"]),
         "L1_PENALTY": trial.suggest_float("L1_PENALTY", 0.000000001,0.001), #0.00089
         "INIT_LR": trial.suggest_float("INIT_LR",0.1,1),        
-        "RETURN_PENALTY": trial.suggest_float("RETURN_PENALTY", 0.11,150),
+        "RETURN_PENALTY": trial.suggest_float("RETURN_PENALTY", 0,0),
         "DRAWDOWN_PENALTY": trial.suggest_float("DRAWDOWN_PENALTY", 0.1,15),
         "TEST_CHUNK_MONTHS": trial.suggest_int("TEST_CHUNK_MONTHS", 12, 12),
         "RETRAIN_WINDOW": trial.suggest_int("RETRAIN_WINDOW", 0, 0),
