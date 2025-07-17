@@ -10,7 +10,7 @@ def run_experiment(trial):
         "START_DATE": trial.suggest_categorical("START_DATE", ["2016-01-01"]),
         "END_DATE": trial.suggest_categorical("END_DATE", ["2025-07-01"]),
         "SPLIT_DATE": trial.suggest_categorical("SPLIT_DATE", ["2023-01-01"]),
-        "TICKERS": trial.suggest_categorical("TICKERS", ['BRK, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE']),
+        "TICKERS": trial.suggest_categorical("TICKERS", ['JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE']),
         "MACRO": trial.suggest_categorical("MACRO",['^N225, HG=F, ZC=F, TLT, ^GSPC, AUDUSD=X, CL=F, SHY, BRL=X, ^VIX, NG=F, ^FVX, UUP, SI=F, TIP, ^IRX, IEF, HYG']),
         "FEATURES": trial.suggest_categorical("FEATURES", ['price,vol,macd']),
         "INITIAL_CAPITAL": trial.suggest_float("INITIAL_CAPITAL", 100.0, 100.0),
