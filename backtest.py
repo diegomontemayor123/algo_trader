@@ -66,11 +66,9 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
             normalized_features = normalize_features(feature_window)
             input_tensor = torch.tensor(normalized_features).unsqueeze(0).to(device)
             print(f"[{current_date.date()}] Input mean: {input_tensor.mean().item():.4f}, std: {input_tensor.std().item():.4f}")
-
             with torch.no_grad():
                 raw_weights = model(input_tensor).cpu().numpy().flatten()
                 print(f"[{current_date.date()}] Raw weights std: {raw_weights.std():.6f}, sum abs: {np.sum(np.abs(raw_weights)):.3f}")
-
             logging.debug(f"[Backtest] Date {current_date.date()} - Raw weights sample: {raw_weights[:5]}")
             weight_sum = np.sum(np.abs(raw_weights)) + 1e-6
             scaling_factor = min(max_leverage / weight_sum, 1.0)
@@ -82,18 +80,13 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
             portfolio_values.append(portfolio_values[-1] * (1 + portfolio_return))
             benchmark_values.append(benchmark_values[-1] * (1 + benchmark_return))
             daily_weights.append(pd.Series(final_weights, index=asset_names, name=current_date))
-        logging.info(f"[Backtest] Number of daily weight entries: {len(daily_weights)}")
-        if len(daily_weights) == 0:
-            logging.warning("[Backtest] No daily weights collected!")
-        else:
-            logging.debug(f"[Backtest] Sample daily weight for date {daily_weights[0].name}: {daily_weights[0].head()}")
         weights_df = pd.DataFrame(daily_weights)
         weights_df["total_exposure"] = weights_df.abs().sum(axis=1)
         weights_df.index.name = "Date"
-        logging.info(f"[Backtest] Saving combined weights DataFrame to CSV at: {os.path.abspath(weights_csv_path)}")
         try:
             weights_df.to_csv(weights_csv_path)
-            logging.info(f"[Backtest] Successfully saved combined weights to {weights_csv_path}")
+            logging.info(f"[Backtest]-rawweights{raw_weights}")
+            logging.info(f"[Backtest]-normalizedweights{final_weights}")
         except Exception as e:
             logging.error(f"[Backtest] Error saving daily weights to {weights_csv_path}: {e}")
         portfolio_series = pd.Series(portfolio_values[1:], index=weights_df.index)
@@ -176,25 +169,15 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
                 daily_weights.append(pd.Series(final_weights, index=asset_names, name=current_date))
             logging.info(f"[Backtest] Chunk {idx+1}: Number of daily weight entries so far: {len(daily_weights)}")
             logging.info(f"[Backtest] Chunk {idx+1}: Completed inference.")
-        logging.info(f"[Backtest] Total daily weight entries collected: {len(daily_weights)}")
-        if len(daily_weights) == 0:
-            logging.warning("[Backtest] No daily weights collected!")
-        else:
-            logging.debug(f"[Backtest] Sample daily weight for date {daily_weights[0].name}: {daily_weights[0].head()}")
-
         weights_df = pd.DataFrame(daily_weights)
         weights_df["total_exposure"] = weights_df.abs().sum(axis=1)
         weights_df.index.name = "Date"
-
         try:
             weights_df.to_csv(weights_csv_path)
-            logging.info(f"[Backtest] Successfully saved combined weights to {weights_csv_path}")
         except Exception as e:
             logging.error(f"[Backtest] Error saving daily weights to {weights_csv_path}: {e}")
-
         portfolio_series = pd.Series(portfolio_values[1:], index=weights_df.index)
         benchmark_series = pd.Series(benchmark_values[1:], index=weights_df.index)
-
         for idx, (chunk_start, chunk_end) in enumerate(chunks):
             chunk_portfolio = portfolio_series.loc[chunk_start:chunk_end]
             chunk_benchmark = benchmark_series.loc[chunk_start:chunk_end]
@@ -206,7 +189,6 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
             all_benchmark_metrics.append(benchmark_metrics)
             logging.info(f"[Backtest] Chunk {idx+1}: Portfolio Metrics: {portfolio_metrics}")
             logging.info(f"[Backtest] Chunk {idx+1}: Benchmark Metrics: {benchmark_metrics}")
-
         if all_portfolio_metrics and all_benchmark_metrics:
             metrics_keys = all_portfolio_metrics[0].keys()
             for key in metrics_keys:
