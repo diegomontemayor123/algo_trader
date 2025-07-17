@@ -19,8 +19,8 @@ def run_experiment(trial):
         "LOOKBACK": trial.suggest_int("LOOKBACK", 70, 70),#71
         "PREDICT_DAYS": trial.suggest_int("PREDICT_DAYS", 4, 4),#4
         "WARMUP_FRAC": trial.suggest_float("WARMUP_FRAC", 0.12, 0.12), #.12
-        "DROPOUT": trial.suggest_float("DROPOUT", 1e-3, 0.02),#.024
-        "DECAY": trial.suggest_float("DECAY", 1e-3, 0.02),#.015
+        "DROPOUT": trial.suggest_float("DROPOUT", 0.02, 0.02),#.024
+        "DECAY": trial.suggest_float("DECAY", 0.007, 0.007),#.015
         "FEATURE_ATTENTION_ENABLED": trial.suggest_int("FEATURE_ATTENTION_ENABLED", 1, 1),
         "FEATURE_PERIODS": trial.suggest_categorical("FEATURE_PERIODS",["8,12,24"]),
         "L1_PENALTY": trial.suggest_float("L1_PENALTY", 0.000000001,0.001), #0.00089
