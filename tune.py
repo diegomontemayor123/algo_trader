@@ -14,26 +14,26 @@ def run_experiment(trial):
         "MACRO": trial.suggest_categorical("MACRO",['^N225, HG=F, ZC=F, TLT, ^GSPC, AUDUSD=X, CL=F, SHY, BRL=X, ^VIX, NG=F, ^FVX, UUP, SI=F, TIP, ^IRX, IEF, HYG']),
         "FEATURES": trial.suggest_categorical("FEATURES", ['price,vol,macd']),
         "INITIAL_CAPITAL": trial.suggest_float("INITIAL_CAPITAL", 100.0, 100.0),
-        "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 1.0, 3.0),
-        "BATCH_SIZE": trial.suggest_int("BATCH_SIZE", 50, 80), #68
-        "LOOKBACK": trial.suggest_int("LOOKBACK", 65, 80),#71
-        "PREDICT_DAYS": trial.suggest_int("PREDICT_DAYS", 1, 8),#4
+        "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 2, 2),
+        "BATCH_SIZE": trial.suggest_int("BATCH_SIZE", 52, 52), #68
+        "LOOKBACK": trial.suggest_int("LOOKBACK", 68, 68),#71
+        "PREDICT_DAYS": trial.suggest_int("PREDICT_DAYS", 1,1),#4
         "WARMUP_FRAC": trial.suggest_float("WARMUP_FRAC", 0.14, 0.14), #.12
-        "DROPOUT": trial.suggest_float("DROPOUT", 0.01, 0.09),#.024
-        "DECAY": trial.suggest_float("DECAY", 0.001, 0.009),#.015
+        "DROPOUT": trial.suggest_float("DROPOUT", 0.036, 0.036),#.024
+        "DECAY": trial.suggest_float("DECAY", 0.0041, 0.0041),#.015
         "FEATURE_ATTENTION_ENABLED": trial.suggest_int("FEATURE_ATTENTION_ENABLED", 1, 1),
         "FEATURE_PERIODS": trial.suggest_categorical("FEATURE_PERIODS",["8,12,24"]),
-        "L1_PENALTY": trial.suggest_float("L1_PENALTY", 0.003,0.006), #0.00089
+        "L1_PENALTY": trial.suggest_float("L1_PENALTY", 0.0001,0.0038), #0.00089
         "INIT_LR": trial.suggest_float("INIT_LR",0.45,0.45),        
-        "RETURN_PENALTY": trial.suggest_float("RETURN_PENALTY", 0.01,0.1),
-        "DRAWDOWN_PENALTY": trial.suggest_float("DRAWDOWN_PENALTY", 0.01,0.1),
+        "RETURN_PENALTY": trial.suggest_float("RETURN_PENALTY", 0.04,0.1),
+        "DRAWDOWN_PENALTY": trial.suggest_float("DRAWDOWN_PENALTY", 0.01,0.08),
         "TEST_CHUNK_MONTHS": trial.suggest_int("TEST_CHUNK_MONTHS", 12, 12),
         "RETRAIN_WINDOW": trial.suggest_int("RETRAIN_WINDOW", 0, 0),
         "EPOCHS": trial.suggest_int("EPOCHS", 20, 20),
         "MAX_HEADS": trial.suggest_int("MAX_HEADS", 20, 20),
         "LAYER_COUNT": trial.suggest_int("LAYER_COUNT", 6, 6),
-        "EARLY_STOP_PATIENCE": trial.suggest_int("EARLY_STOP_PATIENCE", 3,7),
-        "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", 0.1, 0.2),
+        "EARLY_STOP_PATIENCE": trial.suggest_int("EARLY_STOP_PATIENCE", 4,4),
+        "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", 0.15, 0.15),
     }
     env = os.environ.copy()
     for k, v in config.items():
@@ -107,7 +107,7 @@ def run_experiment(trial):
 def main():
     sampler = TPESampler(seed=42)
     study = optuna.create_study(direction="maximize", sampler=sampler)
-    study.optimize(run_experiment, n_trials=40, n_jobs=1)
+    study.optimize(run_experiment, n_trials=20, n_jobs=1)
     best = study.best_trial
     best_params = best.params.copy()
     with open("hyparams.json", "w") as f:
