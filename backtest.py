@@ -178,5 +178,4 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage, co
         "combined_equity_curve": portfolio_series,
         "combined_benchmark_equity_curve": benchmark_series,
         "performance_outperformance": avg_outperformance,
-        "cagr": float(comb_port_metrics.get("cagr") or 0.0),
     }
