@@ -21,7 +21,7 @@ def run_experiment(trial):
         "WARMUP_FRAC": trial.suggest_float("WARMUP_FRAC", 0.1, 0.1), #.12
         "DROPOUT": trial.suggest_float("DROPOUT", 1e-5, 0.02),#.024
         "DECAY": trial.suggest_float("DECAY", 1e-5, 0.02),#.015
-        "FEATURE_ATTENTION_ENABLED": trial.suggest_int("FEATURE_ATTENTION_ENABLED", 0, 1),
+        "FEATURE_ATTENTION_ENABLED": trial.suggest_int("FEATURE_ATTENTION_ENABLED", 1, 1),
         "FEATURE_PERIODS": trial.suggest_categorical("FEATURE_PERIODS",["8,12,24"]),
         "L1_PENALTY": trial.suggest_float("L1_PENALTY", 1e-8, 1e-3), #0.00089
         "INIT_LR": trial.suggest_float("INIT_LR",0.1,0.9),        
