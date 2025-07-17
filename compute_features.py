@@ -89,7 +89,10 @@ def compute_features(TICKERS, FEATURES, cached_data, macro_keys):
         df.columns = [f"{col}_{ticker}" for col in df.columns]
         all_features[ticker] = df
     features = pd.concat(all_features.values(), axis=1).dropna()
-    returns = prices.pct_change(fill_method=None).shift(-1).reindex(features.index)
+    returns = prices.pct_change().shift(-1)
+    returns = returns.reindex(features.index)
+    returns = returns.fillna(0)  # Or drop rows with NaNs if preferred
+
     macro_df = process_macro_features(cached_data, features.index, macro_keys)
     features = pd.concat([features, macro_df], axis=1)
     features['day_of_week'] = features.index.dayofweek

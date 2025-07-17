@@ -154,10 +154,12 @@ if __name__ == "__main__":
 
     sharpe_ratio = results["portfolio"].get("sharpe_ratio", float('nan'))
     max_drawdown = results["portfolio"].get("max_drawdown", float('nan'))
+    cagr = results["portfolio"].get("cagr", float('nan'))
+
     benchmark_sharpe = results["benchmark"].get("sharpe_ratio", float('nan'))
     benchmark_drawdown = results["benchmark"].get("max_drawdown", float('nan'))
-    cagr = results["portfolio"].get("cagr", float('nan'))
     benchmark_cagr = results["benchmark"].get("cagr", float('nan'))
+    
     weights_df = pd.read_csv("weights.csv", index_col="Date", parse_dates=True)
     exp_delta = weights_df["total_exposure"].max() - weights_df["total_exposure"].min()
 
