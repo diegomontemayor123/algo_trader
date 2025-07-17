@@ -14,19 +14,19 @@ def run_experiment(trial):
         "MACRO": trial.suggest_categorical("MACRO",['^N225, HG=F, ZC=F, TLT, ^GSPC, AUDUSD=X, CL=F, SHY, BRL=X, ^VIX, NG=F, ^FVX, UUP, SI=F, TIP, ^IRX, IEF, HYG']),
         "FEATURES": trial.suggest_categorical("FEATURES", ['price,vol,macd']),
         "INITIAL_CAPITAL": trial.suggest_float("INITIAL_CAPITAL", 100.0, 100.0),
-        "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 1.4, 1.4),
-        "BATCH_SIZE": trial.suggest_int("BATCH_SIZE", 70, 70), #68
-        "LOOKBACK": trial.suggest_int("LOOKBACK", 70, 70),#71
-        "PREDICT_DAYS": trial.suggest_int("PREDICT_DAYS", 4, 4),#4
-        "WARMUP_FRAC": trial.suggest_float("WARMUP_FRAC", 0.1, 0.1), #.12
+        "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 1, 2),
+        "BATCH_SIZE": trial.suggest_int("BATCH_SIZE", 60, 80), #68
+        "LOOKBACK": trial.suggest_int("LOOKBACK", 60, 80),#71
+        "PREDICT_DAYS": trial.suggest_int("PREDICT_DAYS", 1, 4),#4
+        "WARMUP_FRAC": trial.suggest_float("WARMUP_FRAC", 0.1, 0.25), #.12
         "DROPOUT": trial.suggest_float("DROPOUT", 1e-3, 0.02),#.024
         "DECAY": trial.suggest_float("DECAY", 1e-3, 0.02),#.015
         "FEATURE_ATTENTION_ENABLED": trial.suggest_int("FEATURE_ATTENTION_ENABLED", 1, 1),
         "FEATURE_PERIODS": trial.suggest_categorical("FEATURE_PERIODS",["8,12,24"]),
-        "L1_PENALTY": trial.suggest_float("L1_PENALTY", 0,0), #0.00089
-        "INIT_LR": trial.suggest_float("INIT_LR",0.5,0.5),        
-        "RETURN_PENALTY": trial.suggest_float("RETURN_PENALTY", 0,0),
-        "DRAWDOWN_PENALTY": trial.suggest_float("DRAWDOWN_PENALTY", 0,0),
+        "L1_PENALTY": trial.suggest_float("L1_PENALTY", 0,1e-2), #0.00089
+        "INIT_LR": trial.suggest_float("INIT_LR",0,1),        
+        "RETURN_PENALTY": trial.suggest_float("RETURN_PENALTY", 0,1),
+        "DRAWDOWN_PENALTY": trial.suggest_float("DRAWDOWN_PENALTY", 0,11),
         "TEST_CHUNK_MONTHS": trial.suggest_int("TEST_CHUNK_MONTHS", 12, 12),
         "RETRAIN_WINDOW": trial.suggest_int("RETRAIN_WINDOW", 0, 0),
         "EPOCHS": trial.suggest_int("EPOCHS", 20, 20),
@@ -73,10 +73,10 @@ def run_experiment(trial):
 
 
         score = (1 * sharpe
-                - 0.7 * abs(drawdown)
-                + 0 #* cagr
-                + 1 * avg_benchmark_outperformance)
-        if exp_delta<15:
+                - 1 * abs(drawdown)
+                + 1 * cagr
+                + 0 * avg_benchmark_outperformance)
+        if exp_delta<.2:
             score-= 10
         trial.set_user_attr("sharpe", sharpe)
         trial.set_user_attr("drawdown", drawdown)

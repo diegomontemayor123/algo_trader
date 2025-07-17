@@ -18,6 +18,7 @@ def calculate_performance_metrics(equity_curve):
         return {'cagr': 0.0, 'sharpe_ratio': 0.0, 'max_drawdown': 0.0}
     try:
         cagr = total_return ** (1 / years) - 1
+        print(f"CAGR: {cagr} total return: {total_return} years: {years}")
     except Exception as e:
         logging.error(f"[Performance] Error calculating CAGR: {e}")
         cagr = 0.0
