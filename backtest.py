@@ -244,7 +244,6 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
         plt.tight_layout()
         plt.savefig("img/combined_equity_curve.png", dpi=300)
         plt.close()
-        logging.info("[Backtest] Saved combined equity curve plot.")
         plt.figure(figsize=(14, 8))
         weights_df.drop(columns=["total_exposure"]).plot(lw=1)
         plt.title("Daily Portfolio Weights")
@@ -253,9 +252,8 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
         plt.grid(alpha=0.3)
         plt.legend(ncol=2, fontsize="small")
         plt.tight_layout()
-        plt.savefig("/img/daily_weights_plot.png", dpi=300)
+        plt.savefig("img/weights_plot.png", dpi=300)
         plt.close()
-        logging.info("[Backtest] Saved daily_weights_plot.png")
     return {
         'portfolio': combined_portfolio_metrics,
         'benchmark': combined_benchmark_metrics,
