@@ -59,7 +59,7 @@ class DifferentiableSharpeLoss(nn.Module):
         self.drawdown_penalty = drawdown_penalty
         self.move_penalty = move_penalty
 
-    def forward(self, portfolio_weights, target_returns, model=None, prev_parameters=None, epoch=0):
+    def forward(self, portfolio_weights, target_returns, model=None, epoch=0):
         returns = (portfolio_weights * target_returns).sum(dim=1)
         mean_return = torch.mean(returns)
         if returns.numel() > 1 and not torch.isnan(returns).all():
@@ -75,22 +75,18 @@ class DifferentiableSharpeLoss(nn.Module):
         drawdown_approx = torch.nn.functional.relu(torch.cummax(cum_returns, dim=0).values - cum_returns)
         max_drawdown = torch.mean(drawdown_approx)
         loss = -sharpe_ratio - (self.return_penalty * mean_return) + (self.drawdown_penalty * max_drawdown)
-        decay_factor = 1#/(1+epoch)
-        movement = decay_factor*sum((p-p_prev).abs().sum()for p,p_prev in zip(model.parameters(),prev_parameters))
-        static_penalty = self.move_penalty / (movement + 1)
-        loss += static_penalty
+        movement = 0#1/(1+epoch)*sum(0)
+        loss += self.move_penalty / (movement + 1)
         #loss += self.move_penalty * sum(p.abs().sum() for p in model.parameters())
         #beta = torch.cov(portfolio_returns, benchmark_returns)[0,1] / torch.var(benchmark_returns)
         #loss += self.beta_penalty * torch.abs(beta - target_beta)
+        #print(f"[Returns] {returns.detach().cpu().numpy()}")
         #print(f"[Loss] Mean Return: {mean_return.item():.6f}")
         #print(f"[Loss] Std Return: {std_return.item():.6f}")
         print(f"[Loss] -Sharpe Ratio: {sharpe_ratio.item():.6f}")
         print(f"[Loss] -Return Penalty Term: {self.return_penalty * mean_return.item():.6f}")
         print(f"[Loss] +Max Drawdown Penalty Term: {self.drawdown_penalty * max_drawdown.item():.6f}")
-        print(f"[Debug] Raw movement: {movement.item():.8f}")
-        print(f"[Loss] +Move Penalty Term (decayed): {static_penalty:.6f}")
         print(f"[Loss] Final Loss: {loss.item():.6f}\n")
-        #print(f"[Returns] {returns.detach().cpu().numpy()}")
         return loss
 
 class TransformerLRScheduler(torch.optim.lr_scheduler._LRScheduler):
