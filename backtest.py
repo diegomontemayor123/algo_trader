@@ -83,10 +83,10 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
         weights_df = pd.DataFrame(daily_weights)
         weights_df["total_exposure"] = weights_df.abs().sum(axis=1)
         weights_df.index.name = "Date"
+        print(f"[Backtest]-rawweights{raw_weights}")
+        print(f"[Backtest]-normalizedweights{final_weights}")
         try:
             weights_df.to_csv(weights_csv_path)
-            logging.info(f"[Backtest]-rawweights{raw_weights}")
-            logging.info(f"[Backtest]-normalizedweights{final_weights}")
         except Exception as e:
             logging.error(f"[Backtest] Error saving daily weights to {weights_csv_path}: {e}")
         portfolio_series = pd.Series(portfolio_values[1:], index=weights_df.index)
