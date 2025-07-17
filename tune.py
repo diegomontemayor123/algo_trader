@@ -12,7 +12,8 @@ def run_experiment(trial):
         "SPLIT_DATE": trial.suggest_categorical("SPLIT_DATE", ["2023-01-01"]),
         "TICKERS": trial.suggest_categorical("TICKERS", ['JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE']),
         "MACRO": trial.suggest_categorical("MACRO",['^N225, HG=F, ZC=F, TLT, ^GSPC, AUDUSD=X, CL=F, SHY, BRL=X, ^VIX, NG=F, ^FVX, UUP, SI=F, TIP, ^IRX, IEF, HYG']),
-        "FEATURES": trial.suggest_categorical("FEATURES", ['price,vol,macd']),
+        "FEATURES": trial.suggest_categorical("FEATURES", [#'price,vol,macd',
+                                                           'ret,price,log_ret,vol,volume']),
         "INITIAL_CAPITAL": trial.suggest_float("INITIAL_CAPITAL", 100.0, 100.0),
         "MAX_LEVERAGE": trial.suggest_float("MAX_LEVERAGE", 1, 2),
         "BATCH_SIZE": trial.suggest_int("BATCH_SIZE", 60, 80), #68

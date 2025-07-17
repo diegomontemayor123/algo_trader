@@ -10,7 +10,6 @@ from train import train_model_with_validation
 from copy import deepcopy
 from compute_features import load_price_data
 from calc_perform import calculate_performance_metrics
-import os
 
 def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
                  compute_features, normalize_features, tickers, start_date, end_date,
@@ -182,17 +181,6 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
         weights_df = pd.DataFrame(daily_weights)
         weights_df["total_exposure"] = weights_df.abs().sum(axis=1)
         weights_df.index.name = "Date"
-        plt.figure(figsize=(14, 7))
-        weights_df.drop(columns="total_exposure").plot.area(stacked=True, figsize=(14, 7), alpha=0.8)
-        plt.title("Asset Allocation Over Time")
-        plt.xlabel("Date")
-        plt.ylabel("Portfolio Weight")
-        plt.legend(loc='upper right', bbox_to_anchor=(1.15, 1), ncol=1)
-        plt.tight_layout()
-        plt.savefig("img/weights_plot.png", dpi=300)
-        plt.close()
-        logging.info("[Backtest] Saved weights area plot to img/weights_plot.png.")
-
 
         try:
             weights_df.to_csv(weights_csv_path)
@@ -222,6 +210,16 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
                 bench_vals = [m[key] for m in all_benchmark_metrics]
                 diffs = [p - b for p, b in zip(port_vals, bench_vals)]
                 avg_outperformance[key] = np.mean(diffs)
+    plt.figure(figsize=(14, 7))
+    weights_df.drop(columns="total_exposure").plot.area(stacked=True, figsize=(14, 7), alpha=0.8)
+    plt.title("Asset Allocation Over Time")
+    plt.xlabel("Date")
+    plt.ylabel("Portfolio Weight")
+    plt.legend(loc='upper right', bbox_to_anchor=(1.15, 1), ncol=1)
+    plt.tight_layout()
+    plt.savefig("img/weights_plot.png", dpi=300)
+    plt.close()
+    logging.info("[Backtest] Saved weights area plot to img/weights_plot.png.")
     combined_portfolio_metrics = calculate_performance_metrics(portfolio_series)
     combined_benchmark_metrics = calculate_performance_metrics(benchmark_series)
     report_path = "img/backtest_report.txt"
