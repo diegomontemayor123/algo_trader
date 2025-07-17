@@ -78,7 +78,6 @@ class DifferentiableSharpeLoss(nn.Module):
         exposure = portfolio_weights.abs().sum(dim=1)  # batch size
         excess_exposure = torch.relu(exposure - 1)
         loss += 1 * excess_exposure.mean()
-
         #loss += self.move_penalty * sum(p.abs().sum() for p in model.parameters())
         #beta = torch.cov(portfolio_returns, benchmark_returns)[0,1] / torch.var(benchmark_returns)
         #loss += self.beta_penalty * torch.abs(beta - target_beta)
@@ -88,7 +87,7 @@ class DifferentiableSharpeLoss(nn.Module):
         print(f"[Loss] -Sharpe Ratio: {sharpe_ratio.item():.6f}")
         print(f"[Loss] -Return Penalty Term: {self.return_penalty * mean_return.item():.6f}")
         print(f"[Loss] +Max Drawdown Penalty Term: {self.drawdown_penalty * max_drawdown.item():.6f}")
-        print(f"[Loss] +Overexposure: {excess_exposure.item():.6f}")
+        print(f"[Loss] +Overexposure: {excess_exposure.mean().item():.6f}")
         print(f"[Loss] Final Loss: {loss.item():.6f}\n")
         return loss
 
