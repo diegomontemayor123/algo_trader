@@ -18,15 +18,15 @@ def run_experiment(trial):
         "BATCH_SIZE": trial.suggest_int("BATCH_SIZE", 58, 58), #68
         "LOOKBACK": trial.suggest_int("LOOKBACK", 75, 75),#71
         "PREDICT_DAYS": trial.suggest_int("PREDICT_DAYS", 4, 4),#4
-        "WARMUP_FRAC": trial.suggest_float("WARMUP_FRAC", 0.11, 0.11), #.12
-        "DROPOUT": trial.suggest_float("DROPOUT", 0.03, 0.03),#.024
-        "DECAY": trial.suggest_float("DECAY", 0.007, 0.007),#.015
+        "WARMUP_FRAC": trial.suggest_float("WARMUP_FRAC", 0.1, 0.2), #.12
+        "DROPOUT": trial.suggest_float("DROPOUT", 0.0003, 0.09),#.024
+        "DECAY": trial.suggest_float("DECAY", 0.00007, 0.01),#.015
         "FEATURE_ATTENTION_ENABLED": trial.suggest_int("FEATURE_ATTENTION_ENABLED", 1, 1),
         "FEATURE_PERIODS": trial.suggest_categorical("FEATURE_PERIODS",["8,12,24"]),
-        "L1_PENALTY": trial.suggest_float("L1_PENALTY", 0.00089,0.0089), #0.00089
+        "L1_PENALTY": trial.suggest_float("L1_PENALTY", 0.001,0.009), #0.00089
         "INIT_LR": trial.suggest_float("INIT_LR",0.01,0.5),        
-        "RETURN_PENALTY": trial.suggest_float("RETURN_PENALTY", 0,0),
-        "DRAWDOWN_PENALTY": trial.suggest_float("DRAWDOWN_PENALTY", 0,0),
+        "RETURN_PENALTY": trial.suggest_float("RETURN_PENALTY", 0,0.1),
+        "DRAWDOWN_PENALTY": trial.suggest_float("DRAWDOWN_PENALTY", 0,0.1),
         "TEST_CHUNK_MONTHS": trial.suggest_int("TEST_CHUNK_MONTHS", 12, 12),
         "RETRAIN_WINDOW": trial.suggest_int("RETRAIN_WINDOW", 0, 0),
         "EPOCHS": trial.suggest_int("EPOCHS", 20, 20),
