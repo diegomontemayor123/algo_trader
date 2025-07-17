@@ -74,7 +74,7 @@ class DifferentiableSharpeLoss(nn.Module):
         cum_returns = torch.cumsum(returns, dim=0)
         max_drawdown = torch.mean(torch.nn.functional.relu(torch.cummax(cum_returns, dim=0).values - cum_returns))
         loss = -sharpe_ratio - (self.return_penalty * mean_return) + (self.drawdown_penalty * max_drawdown)
-        excess_exposure = torch.relu(portfolio_weights.abs().sum(dim=1) - 3)
+        excess_exposure = torch.relu(portfolio_weights.abs().sum(dim=1) - 3.3)
         loss += self.move_penalty * excess_exposure.mean()
         #loss += self.move_penalty * sum(p.abs().sum() for p in model.parameters())
         #beta = torch.cov(portfolio_returns, benchmark_returns)[0,1] / torch.var(benchmark_returns)
