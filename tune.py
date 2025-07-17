@@ -77,7 +77,7 @@ def run_experiment(trial):
         score = (
             1 * sharpe
             - 0.7 * abs(drawdown)
-            + 0.01 * cagr
+            + 0 #* cagr
             + 1 * avg_benchmark_outperformance)
         if exp_delta<.15:
             score-= 10
