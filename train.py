@@ -26,7 +26,7 @@ def train_model_with_validation(model, train_loader, val_loader, config):
             raw_weights = model(batch_features)
             abs_sum = torch.sum(torch.abs(raw_weights), dim=1, keepdim=True) + 1e-6
             scaling_factor = torch.clamp(config["MAX_LEVERAGE"] / abs_sum, max=1.0)
-            normalized_weights = raw_weights * scaling_factor
+            normalized_weights = raw_weights #* scaling_factor
             avg_raw_weight = raw_weights.mean().item()
             print(f"[Debug] Avg Raw Weight: {avg_raw_weight:.6f}")
             avg_norm_weight = normalized_weights.mean().item()
@@ -62,7 +62,7 @@ def train_model_with_validation(model, train_loader, val_loader, config):
                 raw_weights = model(batch_features)
                 weight_sum = torch.sum(torch.abs(raw_weights), dim=1, keepdim=True) + 1e-6
                 scaling_factor = torch.clamp(config["MAX_LEVERAGE"] / weight_sum, max=1.0)
-                normalized_weights = raw_weights * scaling_factor
+                normalized_weights = raw_weights #* scaling_factor
                 portfolio_returns = (normalized_weights * batch_returns).sum(dim=1)
                 val_portfolio_returns.extend(portfolio_returns.cpu().numpy())
         val_returns_array = np.array(val_portfolio_returns)

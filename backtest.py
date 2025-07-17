@@ -15,9 +15,6 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
                  compute_features, normalize_features, tickers, start_date, end_date,
                  features, macro_keys, test_chunk_months, retrain_window, model=None, plot=False,
                  weights_csv_path="weights.csv", config=None):
-    if retrain_window > 0 and config is None:
-        raise ValueError("Config needed when retrain_window>0")
-    logging.info(f"[Backtest] Starting w retrain_window={retrain_window}")
     split_date_dt = pd.to_datetime(split_date)
     end_date_dt = pd.to_datetime(end_date)
     cached_data = load_price_data(start_date, end_date, macro_keys)
@@ -48,13 +45,8 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
     avg_outperformance = {}
 
     if retrain_window < 1:
-        logging.info("[Backtest] Running w/o retraining.")
         model.eval()
-        try:
-            start_index = features_df.index.get_indexer([split_date_dt], method='bfill')[0]
-        except Exception as e:
-            logging.error(f"[Backtest] Error finding start index for backtest: {e}")
-            return None
+        start_index = features_df.index.get_indexer([split_date_dt], method='bfill')[0]
         asset_names = returns_df.columns
         for i in range(start_index - lookback, len(features_df) - lookback):
             current_date = returns_df.index[i + lookback]
@@ -65,15 +57,11 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
             feature_window = features_df.iloc[i:i + lookback].values.astype(np.float32)
             normalized_features = normalize_features(feature_window)
             input_tensor = torch.tensor(normalized_features).unsqueeze(0).to(device)
-            #print(f"[{current_date.date()}] Input mean: {input_tensor.mean().item():.4f}, std: {input_tensor.std().item():.4f}")
             with torch.no_grad():
                 raw_weights = model(input_tensor).cpu().numpy().flatten()
-                #print(f"[{current_date.date()}] Raw weights std: {raw_weights.std():.6f}, sum abs: {np.sum(np.abs(raw_weights)):.3f}")
-            print(f"[Backtest] Date {current_date.date()} - Raw weights sample: {raw_weights[:20]}")
-            weight_sum = np.sum(np.abs(raw_weights)) + 1e-6
+            weight_sum = np.sum(np.abs(raw_weights)) + 1e-10
             scaling_factor = min(max_leverage / weight_sum, 1.0)
-            final_weights = raw_weights * scaling_factor
-            print(f"[Backtest] Date {current_date.date()} - Final weights sample: {final_weights[:20]} (sum abs: {np.sum(np.abs(final_weights)):.4f})")
+            final_weights = raw_weights #* scaling_factor
             period_returns = returns_df.loc[current_date].values
             portfolio_return = np.dot(final_weights, period_returns)
             benchmark_return = np.mean(period_returns)
@@ -153,12 +141,10 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
                 normalized_features = normalize_features(feature_window)
                 input_tensor = torch.tensor(normalized_features).unsqueeze(0).to(device)
                 with torch.no_grad():
-                    raw_weights = model(input_tensor).cpu().numpy().flatten()
-                logging.debug(f"[Backtest] Chunk {idx+1} Date {current_date.date()} - Raw weights sample: {raw_weights[:5]}")
+                    raw_weights = model(input_tensor).cpu().numpy().flatten()                
                 weight_sum = np.sum(np.abs(raw_weights)) + 1e-6
                 scaling_factor = min(max_leverage / weight_sum, 1.0)
-                final_weights = raw_weights * scaling_factor
-                logging.debug(f"[Backtest] Chunk {idx+1} Date {current_date.date()} - Final weights sample: {final_weights[:5]} (sum abs: {np.sum(np.abs(final_weights)):.4f})")
+                final_weights = raw_weights #* scaling_factor
                 period_returns = returns_df.loc[current_date].values
                 portfolio_return = np.dot(final_weights, period_returns)
                 benchmark_return = np.mean(period_returns)
