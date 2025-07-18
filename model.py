@@ -143,7 +143,6 @@ if __name__ == "__main__":
         initial_capital=INITIAL_CAPITAL,
         split_date=config["SPLIT_DATE"],
         lookback=config["LOOKBACK"],
-        max_leverage=config["MAX_LEVERAGE"],
         compute_features=compute_features,
         normalize_features=normalize_features,
         tickers=tickers,

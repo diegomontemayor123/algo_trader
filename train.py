@@ -23,9 +23,7 @@ def train_model_with_validation(model, train_loader, val_loader, config):
             batch_features = batch_features.to(DEVICE, non_blocking=True)
             batch_returns = batch_returns.to(DEVICE, non_blocking=True)
             raw_weights = model(batch_features)
-            abs_sum = torch.sum(torch.abs(raw_weights), dim=1, keepdim=True) + 1e-6
-            scaling_factor = torch.clamp(config["MAX_LEVERAGE"] / abs_sum, max=1.0)
-            normalized_weights = raw_weights #* scaling_factor
+            normalized_weights = raw_weights 
             print(f"[Debug] Avg Raw/Norm Weight: {raw_weights.mean():.6f}/{normalized_weights.mean():.6f}")
             loss = loss_function(normalized_weights, batch_returns, model=model)
             if torch.isnan(loss) or torch.isinf(loss):
@@ -56,9 +54,7 @@ def train_model_with_validation(model, train_loader, val_loader, config):
                 batch_features = batch_features.to(DEVICE, non_blocking=True)
                 batch_returns = batch_returns.to(DEVICE, non_blocking=True)
                 raw_weights = model(batch_features)
-                weight_sum = torch.sum(torch.abs(raw_weights), dim=1, keepdim=True) + 1e-6
-                scaling_factor = torch.clamp(config["MAX_LEVERAGE"] / weight_sum, max=1.0)
-                normalized_weights = raw_weights #* scaling_factor
+                normalized_weights = raw_weights
                 portfolio_returns = (normalized_weights * batch_returns).sum(dim=1)
                 val_portfolio_returns.extend(portfolio_returns.cpu().numpy())
         val_returns_array = np.array(val_portfolio_returns)

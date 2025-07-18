@@ -11,7 +11,7 @@ from copy import deepcopy
 from compute_features import load_price_data
 from calc_perform import calculate_performance_metrics
 
-def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
+def run_backtest(device, initial_capital, split_date, lookback,
                  compute_features, normalize_features, tickers, start_date, end_date,
                  features, macro_keys, test_chunk_months, retrain_window, model=None, plot=False,
                  weights_csv_path="weights.csv", config=None):
@@ -59,9 +59,7 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
             input_tensor = torch.tensor(normalized_features).unsqueeze(0).to(device)
             with torch.no_grad():
                 raw_weights = model(input_tensor).cpu().numpy().flatten()
-            weight_sum = np.sum(np.abs(raw_weights)) + 1e-10
-            scaling_factor = min(max_leverage / weight_sum, 1.0)
-            final_weights = raw_weights #* scaling_factor
+            final_weights = raw_weights 
             period_returns = returns_df.loc[current_date].values
             portfolio_return = np.dot(final_weights, period_returns)
             benchmark_return = np.mean(period_returns)
@@ -142,9 +140,7 @@ def run_backtest(device, initial_capital, split_date, lookback, max_leverage,
                 input_tensor = torch.tensor(normalized_features).unsqueeze(0).to(device)
                 with torch.no_grad():
                     raw_weights = model(input_tensor).cpu().numpy().flatten()                
-                weight_sum = np.sum(np.abs(raw_weights)) + 1e-6
-                scaling_factor = min(max_leverage / weight_sum, 1.0)
-                final_weights = raw_weights #* scaling_factor
+                final_weights = raw_weights
                 period_returns = returns_df.loc[current_date].values
                 portfolio_return = np.dot(final_weights, period_returns)
                 benchmark_return = np.mean(period_returns)

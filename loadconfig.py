@@ -5,7 +5,7 @@ import pandas as pd
 def load_config():
     keys = [
         "SPLIT_DATE", "VAL_SPLIT", "PREDICT_DAYS", "LOOKBACK", "EPOCHS",
-        "MAX_HEADS", "BATCH_SIZE", "FEATURES", "MAX_LEVERAGE", "LAYER_COUNT",
+        "MAX_HEADS", "BATCH_SIZE", "FEATURES",  "LAYER_COUNT",
         "DROPOUT", "DECAY", "FEATURE_ATTENTION_ENABLED", "EXPOSURE_PENALTY",
         "RETURN_PENALTY","INIT_LR", "DRAWDOWN_PENALTY",
         "WARMUP_FRAC", "EARLY_STOP_PATIENCE", "DRAWDOWN_CUTOFF", "TICKERS",
@@ -13,7 +13,7 @@ def load_config():
     ]
 
     float_keys = {
-        "VAL_SPLIT", "MAX_LEVERAGE", "DROPOUT", "DECAY", 
+        "VAL_SPLIT", "DROPOUT", "DECAY", 
         "RETURN_PENALTY", "DRAWDOWN_PENALTY", "WARMUP_FRAC", "DRAWDOWN_CUTOFF","EXPOSURE_PENALTY","INIT_LR"
     }
     int_keys = {
