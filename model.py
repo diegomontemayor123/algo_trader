@@ -7,6 +7,7 @@ from data_prep import *
 
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 MODEL_PATH = "trained_model.pth"
+INITIAL_CAPITAL = 100 
 LOAD_MODEL = False
 SEED = 42
 torch.manual_seed(SEED)
@@ -53,11 +54,12 @@ def split_train_validation(sequences, targets, validation_ratio):
     return (sequences[:train_size], targets[:train_size],    sequences[train_size:], targets[train_size:])
 
 class DifferentiableSharpeLoss(nn.Module):
-    def __init__(self, return_penalty, move_penalty, drawdown_penalty):
+    def __init__(self, return_penalty, exposure_penalty, drawdown_penalty, drawdown_cutoff):
         super().__init__()
         self.return_penalty = return_penalty
         self.drawdown_penalty = drawdown_penalty
-        self.move_penalty = move_penalty
+        self.exposure_penalty = exposure_penalty
+        self.drawdown_cutoff = drawdown_cutoff
 
     def forward(self, portfolio_weights, target_returns, model=None, epoch=0):
         returns = (portfolio_weights * target_returns).sum(dim=1)
@@ -71,19 +73,26 @@ class DifferentiableSharpeLoss(nn.Module):
             logging.warning("[Loss] Returns invalid, skipping batch.")
             return None 
         sharpe_ratio = mean_return / (std_return + 1e-6)
+        loss = -sharpe_ratio - (self.return_penalty * mean_return) 
+
+
+
         cum_returns = torch.cumsum(returns, dim=0)
         max_drawdown = torch.mean(torch.nn.functional.relu(torch.cummax(cum_returns, dim=0).values - cum_returns))
-        loss = -sharpe_ratio - (self.return_penalty * mean_return) + (self.drawdown_penalty * max_drawdown)
-        excess_exposure = torch.relu(portfolio_weights.abs().sum(dim=1) - 3.3)
-        loss += self.move_penalty * excess_exposure.mean()
-        #loss += self.move_penalty * sum(p.abs().sum() for p in model.parameters())
+        loss += torch.relu(self.drawdown_penalty * (max_drawdown-self.drawdown_cutoff))
+
+        excess_exposure = torch.relu(portfolio_weights.abs().sum(dim=1) - 0)
+        loss += self.exposure_penalty * excess_exposure.mean()
+        
+        #loss += self.exposure_penalty * sum(p.abs().sum() for p in model.parameters())
         #beta = torch.cov(portfolio_returns, benchmark_returns)[0,1] / torch.var(benchmark_returns)
         #loss += self.beta_penalty * torch.abs(beta - target_beta)
-        print(f"[Loss] -Sharpe Ratio: {sharpe_ratio.item():.6f}")
-        print(f"[Loss] -Return Penalty Term: {self.return_penalty * mean_return.item():.6f}")
-        print(f"[Loss] +Max Drawdown Penalty Term: {self.drawdown_penalty * max_drawdown.item():.6f}")
-        print(f"[Loss] +Overexposure: {self.move_penalty  * excess_exposure.mean().item():.6f}")
-        print(f"[Loss] Final Loss: {loss.item():.6f}\n")
+        print(f"[Loss]-STD: {std_return:.6f}")
+        print(f"[Loss]-Sharpe Ratio: {sharpe_ratio:.6f}")
+        print(f"[Loss]-Return Penalty Term: {(self.return_penalty * mean_return):.6f}")
+        print(f"[Loss]+Max Drawdown Penalty Term: {torch.relu(self.drawdown_penalty * (max_drawdown-self.drawdown_cutoff)):.6f}")
+        print(f"[Loss]+Overexposure: {(self.exposure_penalty  * excess_exposure.mean()):.6f}")
+        print(f"[Loss]Final Loss: {loss:.6f}\n")
         return loss
 
 class TransformerLRScheduler(torch.optim.lr_scheduler._LRScheduler):
@@ -133,7 +142,7 @@ if __name__ == "__main__":
         torch.save(trained_model.state_dict(), MODEL_PATH)
     results = run_backtest(
         device=DEVICE,
-        initial_capital=config["INITIAL_CAPITAL"],
+        initial_capital=INITIAL_CAPITAL,
         split_date=config["SPLIT_DATE"],
         lookback=config["LOOKBACK"],
         max_leverage=config["MAX_LEVERAGE"],
