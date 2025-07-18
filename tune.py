@@ -17,8 +17,8 @@ def run_experiment(trial):
         "LOOKBACK": trial.suggest_int("LOOKBACK", 69, 90),#71
         "PREDICT_DAYS": trial.suggest_int("PREDICT_DAYS", 1,5),#4
         "WARMUP_FRAC": trial.suggest_float("WARMUP_FRAC", 0.15, 0.15), #.12
-        "DROPOUT": trial.suggest_float("DROPOUT", 0.03, 0.04),#.024
-        "DECAY": trial.suggest_float("DECAY", 0.003, 0.004),#.015
+        "DROPOUT": trial.suggest_float("DROPOUT", 0.035, 0.035),#.024
+        "DECAY": trial.suggest_float("DECAY", 0.0035, 0.0035),#.015
         "FEATURE_ATTENTION_ENABLED": trial.suggest_int("FEATURE_ATTENTION_ENABLED", 1, 1),
         "FEATURE_PERIODS": trial.suggest_categorical("FEATURE_PERIODS",["8,12,24"]),
         "INIT_LR": trial.suggest_float("INIT_LR",0.037,0.037,),     
@@ -31,7 +31,7 @@ def run_experiment(trial):
         "EPOCHS": trial.suggest_int("EPOCHS", 20, 20),
         "MAX_HEADS": trial.suggest_int("MAX_HEADS", 20, 20),
         "LAYER_COUNT": trial.suggest_int("LAYER_COUNT", 6, 6),
-        "EARLY_STOP_PATIENCE": trial.suggest_int("EARLY_STOP_PATIENCE", 4,8),
+        "EARLY_STOP_PATIENCE": trial.suggest_int("EARLY_STOP_PATIENCE", 6,6),
         "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", 0.13, 0.13),
     }
     env = os.environ.copy()
