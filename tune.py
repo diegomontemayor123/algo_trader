@@ -13,12 +13,12 @@ def run_experiment(trial):
         "TICKERS": trial.suggest_categorical("TICKERS", ['JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE']),
         "MACRO": trial.suggest_categorical("MACRO",['^N225, HG=F, ZC=F, TLT, ^GSPC, AUDUSD=X, CL=F, SHY, BRL=X, ^VIX, NG=F, ^FVX, UUP, SI=F, TIP, ^IRX, IEF, HYG']),
         "FEATURES": trial.suggest_categorical("FEATURES", ['price,vol,macd']),
-        "BATCH_SIZE": trial.suggest_int("BATCH_SIZE", 40, 70), #68
-        "LOOKBACK": trial.suggest_int("LOOKBACK", 60, 80),#71
+        "BATCH_SIZE": trial.suggest_int("BATCH_SIZE", 35, 58), #68
+        "LOOKBACK": trial.suggest_int("LOOKBACK", 69, 90),#71
         "PREDICT_DAYS": trial.suggest_int("PREDICT_DAYS", 1,5),#4
-        "WARMUP_FRAC": trial.suggest_float("WARMUP_FRAC", 0.1, 0.2), #.12
+        "WARMUP_FRAC": trial.suggest_float("WARMUP_FRAC", 0.15, 0.15), #.12
         "DROPOUT": trial.suggest_float("DROPOUT", 0.03, 0.04),#.024
-        "DECAY": trial.suggest_float("DECAY", 0.003, 0.005),#.015
+        "DECAY": trial.suggest_float("DECAY", 0.003, 0.004),#.015
         "FEATURE_ATTENTION_ENABLED": trial.suggest_int("FEATURE_ATTENTION_ENABLED", 1, 1),
         "FEATURE_PERIODS": trial.suggest_categorical("FEATURE_PERIODS",["8,12,24"]),
         "INIT_LR": trial.suggest_float("INIT_LR",0.037,0.037,),     
@@ -31,8 +31,8 @@ def run_experiment(trial):
         "EPOCHS": trial.suggest_int("EPOCHS", 20, 20),
         "MAX_HEADS": trial.suggest_int("MAX_HEADS", 20, 20),
         "LAYER_COUNT": trial.suggest_int("LAYER_COUNT", 6, 6),
-        "EARLY_STOP_PATIENCE": trial.suggest_int("EARLY_STOP_PATIENCE", 3,10),
-        "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", 0.1, 0.2),
+        "EARLY_STOP_PATIENCE": trial.suggest_int("EARLY_STOP_PATIENCE", 4,8),
+        "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", 0.13, 0.13),
     }
     env = os.environ.copy()
     for k, v in config.items():
