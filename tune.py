@@ -21,11 +21,11 @@ def run_experiment(trial):
         "DECAY": trial.suggest_float("DECAY", 0.0041, 0.0041),#.015
         "FEATURE_ATTENTION_ENABLED": trial.suggest_int("FEATURE_ATTENTION_ENABLED", 1, 1),
         "FEATURE_PERIODS": trial.suggest_categorical("FEATURE_PERIODS",["8,12,24"]),
-        "INIT_LR": trial.suggest_float("INIT_LR",0.05,0.13,),     
-        "EXPOSURE_PENALTY": trial.suggest_float("EXPOSURE_PENALTY", 0.0001,0.005),   
-        "RETURN_PENALTY": trial.suggest_float("RETURN_PENALTY", 0.01,0.2),
-        "DRAWDOWN_PENALTY": trial.suggest_float("DRAWDOWN_PENALTY", 4,6),
-        "DRAWDOWN_CUTOFF": trial.suggest_float("DRAWDOWN_CUTOFF", 0.25,0.4),
+        "INIT_LR": trial.suggest_float("INIT_LR",0.001,0.052,),     
+        "EXPOSURE_PENALTY": trial.suggest_float("EXPOSURE_PENALTY", 0.001,0.009),   
+        "RETURN_PENALTY": trial.suggest_float("RETURN_PENALTY", 0.15,0.2),
+        "DRAWDOWN_PENALTY": trial.suggest_float("DRAWDOWN_PENALTY", 4,5),
+        "DRAWDOWN_CUTOFF": trial.suggest_float("DRAWDOWN_CUTOFF", 0.25,0.3),
         "TEST_CHUNK_MONTHS": trial.suggest_int("TEST_CHUNK_MONTHS", 12, 12),
         "RETRAIN_WINDOW": trial.suggest_int("RETRAIN_WINDOW", 0, 0),
         "EPOCHS": trial.suggest_int("EPOCHS", 20, 20),
@@ -72,7 +72,7 @@ def run_experiment(trial):
 
 
         score = (1 * sharpe
-                - 2 * abs(drawdown)
+                - 3 * abs(drawdown)
                 + 1 * cagr
                 + 0 * avg_benchmark_outperformance)
         if exp_delta<.2:
