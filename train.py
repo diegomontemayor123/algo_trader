@@ -45,7 +45,7 @@ def train_model_with_validation(model, train_loader, val_loader, config):
                     return None
             optimizer.step()
             learning_scheduler.step()
-            print(f"[LR] Current learning rate: {optimizer.param_groups[0]['lr']:.6f}")
+            print(f"[LR] Current learning rate: {optimizer.param_groups[0]['lr']:.6f}\n")
             lrs.append(optimizer.param_groups[0]['lr'])
             train_losses.append(loss.item())
 
