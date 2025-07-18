@@ -68,14 +68,8 @@ def train_model_with_validation(model, train_loader, val_loader, config):
             patience_counter += 1
             if patience_counter >= config["EARLY_STOP_PATIENCE"]:
                 break
-    plt.figure(figsize=(10, 4))
-    plt.plot(lrs)
-    plt.title('Learning Rate Schedule During Training')
-    plt.xlabel('Training Step')
-    plt.ylabel('Learning Rate')
-    plt.grid(True)
-    plt.savefig('img/learning_rate_schedule.png')
-    plt.close()
+    plt.figure(figsize=(10, 4));plt.plot(lrs);plt.title('Learning Rate Schedule During Training');plt.xlabel('Training Step')
+    plt.ylabel('Learning Rate');plt.grid(True);plt.savefig('img/learning_rate_schedule.png');plt.close()
     return model
 
 def train_main_model(config, features, returns):

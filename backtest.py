@@ -1,5 +1,5 @@
 import numpy as np
-import torch, logging, multiprocessing, os
+import torch, logging, multiprocessing
 import matplotlib.pyplot as plt
 import pandas as pd
 from dateutil.relativedelta import relativedelta
@@ -199,32 +199,14 @@ def run_backtest(device, initial_capital, split_date, lookback,
             f.write(f"{key.title()}: {val:.2%}\n")
     logging.info(f"[Backtest] Saved perform report to {report_path}")
     if plot:
-        plt.figure(figsize=(12, 6))
-        plt.plot(portfolio_series.index, portfolio_series.values, label="Combined Strategy Equity Curve", linewidth=2)
+        plt.figure(figsize=(12, 6));plt.plot(portfolio_series.index, portfolio_series.values, label="Combined Strategy Equity Curve", linewidth=2)
         plt.plot(benchmark_series.index, benchmark_series.values, label="Combined Benchmark Equity Curve", linewidth=2)
-        plt.title("Combined Equity Curve Over Full Test Period")
-        plt.xlabel("Date")
-        plt.ylabel("Portfolio Value ($)")
-        plt.legend()
-        plt.grid(True, alpha=0.3)
-        plt.tight_layout()
-        plt.savefig("img/combined_equity_curve.png", dpi=300)
-        plt.close()
-        plt.figure(figsize=(14, 8))
-        weights_df.drop(columns=["total_exposure"]).plot(lw=1)
-        plt.title("Daily Portfolio Weights")
-        plt.xlabel("Date")
-        plt.ylabel("Weight")
-        plt.grid(alpha=0.3)
-        plt.legend(ncol=2, fontsize="small")
-        plt.tight_layout()
-        plt.savefig("img/weights_plot.png", dpi=300)
-        plt.close()
-    return {
-        'portfolio': combined_portfolio_metrics,
-        'benchmark': combined_benchmark_metrics,
-        'combined_equity_curve': portfolio_series,
-        'combined_benchmark_equity_curve': benchmark_series,
-        'performance_outperformance': avg_outperformance,
-        'cagr': combined_portfolio_metrics.get('cagr', float('nan'))
-    }
+        plt.title("Combined Equity Curve Over Full Test Period");plt.xlabel("Date");plt.ylabel("Portfolio Value ($)");plt.legend()
+        plt.grid(True, alpha=0.3);plt.tight_layout();plt.savefig("img/combined_equity_curve.png", dpi=300);plt.close()
+        plt.figure(figsize=(14, 8));weights_df.drop(columns=["total_exposure"]).plot(lw=1)
+        plt.title("Daily Portfolio Weights");plt.xlabel("Date");plt.ylabel("Weight");plt.grid(alpha=0.3)
+        plt.legend(ncol=2, fontsize="small");plt.tight_layout();plt.savefig("img/weights_plot.png", dpi=300);plt.close()
+
+    return {'portfolio': combined_portfolio_metrics,'benchmark': combined_benchmark_metrics,'combined_equity_curve': portfolio_series,
+        'combined_benchmark_equity_curve': benchmark_series,'performance_outperformance': avg_outperformance,
+        'cagr': combined_portfolio_metrics.get('cagr', float('nan'))}

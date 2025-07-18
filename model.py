@@ -60,7 +60,6 @@ class DifferentiableSharpeLoss(nn.Module):
         self.drawdown_penalty = drawdown_penalty
         self.exposure_penalty = exposure_penalty
         self.drawdown_cutoff = drawdown_cutoff
-
     def forward(self, portfolio_weights, target_returns, model=None, epoch=0):
         returns = (portfolio_weights * target_returns).sum(dim=1)
         mean_return = torch.mean(returns)
@@ -73,17 +72,11 @@ class DifferentiableSharpeLoss(nn.Module):
             logging.warning("[Loss] Returns invalid, skipping batch.")
             return None 
         sharpe_ratio = mean_return / (std_return + 1e-6)
-        loss = -sharpe_ratio - (self.return_penalty * mean_return) 
-
-
-
         cum_returns = torch.cumsum(returns, dim=0)
         max_drawdown = torch.mean(torch.nn.functional.relu(torch.cummax(cum_returns, dim=0).values - cum_returns))
-        loss += torch.relu(self.drawdown_penalty * (max_drawdown-self.drawdown_cutoff))
-
         excess_exposure = torch.relu(portfolio_weights.abs().sum(dim=1) - 0)
-        loss += self.exposure_penalty * excess_exposure.mean()
-        
+        loss = -sharpe_ratio - (self.return_penalty * mean_return) 
+        loss += self.exposure_penalty * excess_exposure.mean() + torch.relu(self.drawdown_penalty * (max_drawdown-self.drawdown_cutoff))
         #loss += self.exposure_penalty * sum(p.abs().sum() for p in model.parameters())
         #beta = torch.cov(portfolio_returns, benchmark_returns)[0,1] / torch.var(benchmark_returns)
         #loss += self.beta_penalty * torch.abs(beta - target_beta)
