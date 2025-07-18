@@ -13,12 +13,12 @@ def run_experiment(trial):
         "TICKERS": trial.suggest_categorical("TICKERS", ['JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE']),
         "MACRO": trial.suggest_categorical("MACRO",['^N225, HG=F, ZC=F, TLT, ^GSPC, AUDUSD=X, CL=F, SHY, BRL=X, ^VIX, NG=F, ^FVX, UUP, SI=F, TIP, ^IRX, IEF, HYG']),
         "FEATURES": trial.suggest_categorical("FEATURES", ['price,vol,macd']),
-        "BATCH_SIZE": trial.suggest_int("BATCH_SIZE", 50, 70), #68
+        "BATCH_SIZE": trial.suggest_int("BATCH_SIZE", 55, 55), #68
         "LOOKBACK": trial.suggest_int("LOOKBACK", 84, 84),#71
         "PREDICT_DAYS": trial.suggest_int("PREDICT_DAYS", 2,2),#4
         "WARMUP_FRAC": trial.suggest_float("WARMUP_FRAC", 0.15, 0.15), #.12
-        "DROPOUT": trial.suggest_float("DROPOUT", 0.02, 0.0315),#.024
-        "DECAY": trial.suggest_float("DECAY", 0.0035, 0.004),#.015
+        "DROPOUT": trial.suggest_float("DROPOUT", 0.001, 0.0315),#.024
+        "DECAY": trial.suggest_float("DECAY", 0.00385, 0.00385),#.015
         "FEATURE_ATTENTION_ENABLED": trial.suggest_int("FEATURE_ATTENTION_ENABLED", 1, 1),
         "FEATURE_PERIODS": trial.suggest_categorical("FEATURE_PERIODS",["8,12,24"]),
         "INIT_LR": trial.suggest_float("INIT_LR",0.037,0.037,),     
@@ -106,7 +106,7 @@ def run_experiment(trial):
 def main():
     sampler = TPESampler(seed=42)
     study = optuna.create_study(direction="maximize", sampler=sampler)
-    study.optimize(run_experiment, n_trials=30, n_jobs=1)
+    study.optimize(run_experiment, n_trials=10, n_jobs=1)
     best = study.best_trial
     best_params = best.params.copy()
     with open("hyparams.json", "w") as f:
