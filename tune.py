@@ -1,7 +1,7 @@
 import os, subprocess, re, optuna, json, csv
 from optuna.samplers import TPESampler
 
-TRIALS = 20
+TRIALS = 10
 
 def run_experiment(trial):
     config = {
@@ -22,13 +22,13 @@ def run_experiment(trial):
         "INIT_LR": trial.suggest_float("INIT_LR", 0.01, 0.01),
         "EXP_PEN": trial.suggest_float("EXP_PEN", 0.0038, 0.0038),#0.006 linear
         "EXP_EXP": trial.suggest_float("EXP_EXP", 1.85, 1.85),
-        "RETURN_PEN": trial.suggest_float("RETURN_PEN", 0.10, 0.16),#0.18 linear
-        "RETURN_EXP": trial.suggest_float("RETURN_EXP", 0.3,0.6),
-        "SD_PEN": trial.suggest_float("SD_PEN", 0.11,0.18),
-        "SD_EXP": trial.suggest_float("SD_EXP",0.6,1),
+        "RETURN_PEN": trial.suggest_float("RETURN_PEN", 0.118, 0.118),#0.18 linear
+        "RETURN_EXP": trial.suggest_float("RETURN_EXP", 0.329,0.329),
+        "SD_PEN": trial.suggest_float("SD_PEN", 0.157,0.157),
+        "SD_EXP": trial.suggest_float("SD_EXP",0.776,0.776),
         "TEST_CHUNK": trial.suggest_int("TEST_CHUNK", 12, 12),
         "RETRAIN_WIN": trial.suggest_int("RETRAIN_WIN", 0, 0),
-        "SEED": trial.suggest_int("SEED", 42, 42),
+        "SEED": trial.suggest_int("SEED", 1, 42),
         "MAX_HEADS": trial.suggest_int("MAX_HEADS", 1, 1),
         "LAYERS": trial.suggest_int("LAYERS", 1, 1),
         "EARLY_FAIL": trial.suggest_int("EARLY_FAIL", 2, 2),
