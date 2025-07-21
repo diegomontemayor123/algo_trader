@@ -1,35 +1,35 @@
 import os, subprocess, re, optuna, json, csv
 from optuna.samplers import TPESampler
 
-TRIALS = 5
+TRIALS = 4
 
 def run_experiment(trial):
     config = {
         "START": trial.suggest_categorical("START", ["2019-01-01"]),
         "END": trial.suggest_categorical("END", ["2025-07-01"]),
         "SPLIT": trial.suggest_categorical("SPLIT", ["2023-01-01"]),
-        "TICK": trial.suggest_categorical("TICK", ['NVDA,TSLA']),
-        "MACRO": trial.suggest_categorical("MACRO", ['TLT, ^GSPC, AUDUSD=X, CL=F, ^VIX']),
-        "FEAT": trial.suggest_categorical("FEAT", ['price,vol,macd']),
+        "TICK": trial.suggest_categorical("TICK", ['TSLA']),
+        "MACRO": trial.suggest_categorical("MACRO", ['^VIX']),
+        "FEAT": trial.suggest_categorical("FEAT", ['price,sma']),
         "BATCH": trial.suggest_int("BATCH", 61, 61),
         "LBACK": trial.suggest_int("LBACK", 66, 66),
         "PRED_DAYS": trial.suggest_int("PRED_DAYS", 6, 6),
-        "WARMUP": trial.suggest_float("WARMUP", 0.15, 0.15),
-        "DROPOUT": trial.suggest_float("DROPOUT", 0.03366, 0.03366),
-        "DECAY": trial.suggest_float("DECAY", 0.00345, 0.00345),
-        "ATTENT": trial.suggest_categorical("ATTENT", [1]),
+        "WARMUP": trial.suggest_float("WARMUP", 0.99999, 0.99999),
+        "DROPOUT": trial.suggest_float("DROPOUT", 0.02, 0.02),
+        "DECAY": trial.suggest_float("DECAY", 0.002, 0.002),
+        "ATTENT": trial.suggest_categorical("ATTENT", [0]),
         "FEAT_PER": trial.suggest_categorical("FEAT_PER", ["8,12,24"]),
-        "INIT_LR": trial.suggest_float("INIT_LR", 0.066, 0.066),
-        "EXP_PEN": trial.suggest_float("EXP_PEN", 0.0044, 0.0044),
-        "RETURN_PEN": trial.suggest_float("RETURN_PEN", 0.58, 0.58),
-        "DOWN_PEN": trial.suggest_float("DOWN_PEN", 5, 5),
-        "DOWN_CUTOFF": trial.suggest_float("DOWN_CUTOFF", 0.09, 0.09),
+        "INIT_LR": trial.suggest_float("INIT_LR", 0.04, 0.04),
+        "EXP_PEN": trial.suggest_float("EXP_PEN", 0.0158, 0.0158),
+        "RETURN_PEN": trial.suggest_float("RETURN_PEN", 0, 0),
+        "DOWN_PEN": trial.suggest_float("DOWN_PEN", 0, 0),
+        "DOWN_CUTOFF": trial.suggest_float("DOWN_CUTOFF", 0, 0),
         "TEST_CHUNK": trial.suggest_int("TEST_CHUNK", 12, 12),
         "RETRAIN_WIN": trial.suggest_int("RETRAIN_WIN", 0, 0),
         "SEED": trial.suggest_int("SEED", 42, 42),
         "MAX_HEADS": trial.suggest_int("MAX_HEADS", 20, 20),
-        "LAYERS": trial.suggest_int("LAYERS", 6, 6),
-        "EARLY_FAIL": trial.suggest_int("EARLY_FAIL", 5, 5),
+        "LAYERS": trial.suggest_int("LAYERS", 1, 1),
+        "EARLY_FAIL": trial.suggest_int("EARLY_FAIL", 2, 2),
         "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", 0.15, 0.15),
     }
 
@@ -75,7 +75,7 @@ def run_experiment(trial):
         print(f"  Exp Delta: {exp_delta}")
         print(f"  Avg Outperf: {avg_outperf}")
 
-        score = 0 * sharpe - 2 * abs(down) + 0 * cagr + 1 * avg_outperf
+        score = 2 * sharpe - 2 * abs(down) + 0 * cagr + 1 * avg_outperf
         if exp_delta > 100: score += 10
 
         trial.set_user_attr("sharpe", sharpe)

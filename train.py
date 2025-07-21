@@ -10,9 +10,9 @@ MAX_EPOCHS = 20
 def train_model(model, train_loader, val_loader, config):
     optimizer = torch.optim.Adam(model.parameters(), lr=config["INIT_LR"], weight_decay=config["DECAY"])
     total_steps = MAX_EPOCHS * len(train_loader)
-    warm_steps = int(total_steps * config["WARMUP"])
-    print(f"[Scheduler] Total steps: {total_steps}, warmup: {warm_steps}")
-    learn_scheduler = TransformerLRScheduler(optimizer, d_model=model.mlp_head[0].in_features, warm_steps=warm_steps)
+    #warm_steps = int(total_steps * config["WARMUP"])
+    #print(f"[Scheduler] Total steps: {total_steps}, warmup: {warm_steps}")
+    #learn_scheduler = TransformerLRScheduler(optimizer, d_model=model.mlp_head[0].in_features, warm_steps=warm_steps)
     loss_func = DifferentiableSharpeLoss(return_pen=config["RETURN_PEN"],down_pen=config["DOWN_PEN"],exp_pen=config["EXP_PEN"],down_cutoff=config["DOWN_CUTOFF"])
     best_val_loss = float('inf')
     patience_counter = 0
@@ -38,7 +38,7 @@ def train_model(model, train_loader, val_loader, config):
                 if param.grad is not None and (torch.isnan(param.grad).any() or torch.isinf(param.grad).any()):
                     print(f"[Warning] Skipping retraining chunk due to NaNs in gradients: {name}");return None
             optimizer.step()
-            learn_scheduler.step()
+            #learn_scheduler.step()
             print(f"[LR] Current learning rate: {optimizer.param_groups[0]['lr']:.6f}\n")
             lrs.append(optimizer.param_groups[0]['lr'])
             train_loss.append(loss.item())
@@ -60,8 +60,9 @@ def train_model(model, train_loader, val_loader, config):
         else:
             patience_counter += 1
             if patience_counter >= config["EARLY_FAIL"]: break
-    plt.figure(figsize=(10, 4));plt.plot(lrs);plt.title('Learning Schedule');plt.xlabel('Training Step')
-    plt.ylabel('Learning Rate');plt.grid(True);plt.savefig('img/learn_sched.png');plt.close();return model
+    #plt.figure(figsize=(10, 4));plt.plot(lrs);plt.title('Learning Schedule');plt.xlabel('Training Step')
+    #plt.ylabel('Learning Rate');plt.grid(True);plt.savefig('img/learn_sched.png');plt.close();
+    return model
 
 def train(config, feat, ret):
     from prep import prep_data
