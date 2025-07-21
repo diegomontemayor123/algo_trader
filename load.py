@@ -41,6 +41,5 @@ def load_config():
     config = {}
     for key in keys:
         val = os.environ.get(key, config_raw[key])
-        if val == "": raise ValueError(f"Key '{key}' is empty in environment or JSON.")
         config[key] = parse_value(key, val)
     return config

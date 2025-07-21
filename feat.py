@@ -6,7 +6,6 @@ from validate_data import TICKER_LIST
 
 PRICE_CACHE = "csv/prices.csv"
 TICK = TICKER_LIST
-SYNTHETIC = True
 
 def fetch_macro(name, ticker, start, end):
     try:
@@ -83,25 +82,7 @@ def comp_feat(TICK, FEAT, cached_data, macro_keys):
     ret = prices.pct_change().shift(-1).reindex(feat.index)
     if ret.iloc[-1].isna().all():
         ret = ret.iloc[:-1]
-        feat = feat.loc[ret.index] 
-
-
-    if SYNTHETIC is True:
-        # Inject synthetic features that perfectly predict next-day returns
-        synthetic_feat = {}
-        for ticker in TICK:
-            if ticker not in ret.columns:
-                continue
-            future_return = ret[ticker]
-            # Add perfect predictor: yesterday's perfect_signal = today's return
-            synthetic_feat[f"perfect_signal_{ticker}"] = future_return.shift(1)
-            # Optional: slightly noisy predictor
-            # noise = np.random.normal(0, 0.0005, size=len(future_return))
-            # synthetic_feat[f"noisy_signal_{ticker}"] = future_return.shift(1) + noise
-
-        synthetic_df = pd.DataFrame(synthetic_feat, index=ret.index)
-        feat = pd.concat([feat, synthetic_df], axis=1)
-
+        feat = feat.loc[ret.index]  
     macro_df = process_macro_feat(cached_data, feat.index, macro_keys)
     feat = pd.concat([feat, macro_df], axis=1)
     feat['day_of_week'] = feat.index.dayofweek
