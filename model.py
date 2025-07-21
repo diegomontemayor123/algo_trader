@@ -81,7 +81,6 @@ class DifferentiableSharpeLoss(nn.Module):
                                     "loss": loss,"sharpe": sharpe,"mean_return": mean_ret,"std_return": std_ret
                                 })
         return loss
-
 class TransformerLRScheduler(torch.optim.lr_scheduler._LRScheduler):
     def __init__(self, optimizer, d_model, warm_steps, last_epoch=-1):
         self.d_model = d_model;self.warm_steps = warm_steps;super().__init__(optimizer, last_epoch)
