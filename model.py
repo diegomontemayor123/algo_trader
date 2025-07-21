@@ -7,7 +7,7 @@ from load import load_config
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 MODEL_PATH = "0model.pth"
 INITIAL_CAPITAL = 100 
-LOAD_MODEL = False
+LOAD_MODEL = True
 
 config = load_config()
 SEED = config["SEED"]
@@ -70,15 +70,16 @@ class DifferentiableSharpeLoss(nn.Module):
         print(f"-Return/MaxDown: {(self.return_pen * mean_ret):.6f} / {torch.relu(self.down_pen * (max_down-self.down_cutoff)):.6f}")
         print(f"+Exp: {(self.exp_pen  * excess_exp.mean()):.6f}");print(f"Loss/Sharpe/Mean/SDT: {loss:.6f} /  {sharpe:.6f} / {mean_ret:.6f} / {std_ret:.6f}\n")
         fieldnames = ["epoch","batch_idx","return_term", "maxdown_term", "exposure_penalty", "loss", "sharpe", "mean_return", "std_return"]
-        with open("csv/losses.csv", mode="a", newline="") as f:
-            writer = csv.DictWriter(f, fieldnames=fieldnames)
-            if not os.path.isfile("csv/losses.csv"):
-                writer.writeheader()
-            writer.writerow({   "epoch":epoch,"batch_idx":batch_idx,"return_term": self.return_pen * mean_ret,
-                                "maxdown_term": torch.relu(self.down_pen * (max_down-self.down_cutoff)),
-                                "exposure_penalty": self.exp_pen  * excess_exp.mean(),
-                                "loss": loss,"sharpe": sharpe,"mean_return": mean_ret,"std_return": std_ret
-                            });return loss
+        if False:
+            with open("csv/losses.csv", mode="a", newline="") as f:
+                writer = csv.DictWriter(f, fieldnames=fieldnames)
+                if not os.path.isfile("csv/losses.csv"):
+                    writer.writeheader()
+                writer.writerow({   "epoch":epoch,"batch_idx":batch_idx,"return_term": self.return_pen * mean_ret,
+                                    "maxdown_term": torch.relu(self.down_pen * (max_down-self.down_cutoff)),
+                                    "exposure_penalty": self.exp_pen  * excess_exp.mean(),
+                                    "loss": loss,"sharpe": sharpe,"mean_return": mean_ret,"std_return": std_ret
+                                });return loss
 
 class TransformerLRScheduler(torch.optim.lr_scheduler._LRScheduler):
     def __init__(self, optimizer, d_model, warm_steps, last_epoch=-1):

@@ -53,7 +53,7 @@ def run_btest(  device, initial_capital, split, lback,comp_feat, norm_feat, TICK
     if retrain_win < 1:
         model.eval()
         start_index = feat_df.index.get_indexer([split_dt], method='bfill')[0]
-        asset_names = ret_df.columns
+        assets = ret_df.columns
         for i in range(start_index - lback, len(feat_df) - lback):
             current_date = ret_df.index[i + lback]
             if current_date > end_dt:break
@@ -61,15 +61,13 @@ def run_btest(  device, initial_capital, split, lback,comp_feat, norm_feat, TICK
             feat_win = feat_df.iloc[i:i + lback].values.astype(np.float32)
             normalized_feat = norm_feat(feat_win)
             input_tensor = torch.tensor(normalized_feat).unsqueeze(0).to(device)
-            with torch.no_grad():
-                raw_weight = model(input_tensor).cpu().numpy().flatten()
-            final_weight = raw_weight 
+            with torch.no_grad(): weight = model(input_tensor).cpu().numpy().flatten()
             per_ret = ret_df.loc[current_date].values
-            pfo_ret = np.dot(final_weight, per_ret)
+            pfo_ret = np.dot(weight, per_ret)
             bench_ret = np.mean(per_ret)
             pfo_values.append(pfo_values[-1] * (1 + pfo_ret))
             bench_values.append(bench_values[-1] * (1 + bench_ret))
-            daily_weight.append(pd.Series(final_weight, index=asset_names, name=current_date))
+            daily_weight.append(pd.Series(weight, index=assets, name=current_date))
         save_to_csv(daily_weight,weight_csv_path);weight_df = pd.read_csv(weight_csv_path, index_col="Date", parse_dates=True)
         pfo_series = pd.Series(pfo_values[1:], index=weight_df.index)
         bench_series = pd.Series(bench_values[1:], index=weight_df.index)
@@ -92,7 +90,7 @@ def run_btest(  device, initial_capital, split, lback,comp_feat, norm_feat, TICK
                 avg_outperf[key] = np.mean(diffs)
     else:
         print(f"[BTest] Running w test_chunk {test_chunk} and retrain_win {retrain_win}")
-        previous_model = None
+        prev_model = None
         for idx, (chunk_start, chunk_end) in enumerate(chunks):
             print(f"[BTest] Starting Chunk {idx+1} | Per: {chunk_start.date()} to {chunk_end.date()} ===")
             train_start = chunk_start - relativedelta(months=retrain_win)
@@ -113,32 +111,31 @@ def run_btest(  device, initial_capital, split, lback,comp_feat, norm_feat, TICK
             train_loader = DataLoader(train_data, batch=config["BATCH"], shuffle=True, num_workers=num_workers)
             val_loader = DataLoader(val_data, batch=config["BATCH"], shuffle=False, num_workers=num_workers)
             model_dim = train_data[0][0].shape[1]
-            model = deepcopy(previous_model) if previous_model else create_model(model_dim, config)
+            model = deepcopy(prev_model) if prev_model else create_model(model_dim, config)
             model = train_model(model, train_loader, val_loader, config)
             if model is None:
                 print(f"[BTest] Skipping chunk {idx+1} due to failed training (NaNs or early exit).");continue
             model.eval()
-            previous_model = deepcopy(model)
+            prev_model = deepcopy(model)
             try:
                 start_idx = feat_df.index.get_indexer([chunk_start], method='bfill')[0]
                 end_idx = feat_df.index.get_indexer([chunk_end], method='ffill')[0]
             except Exception as e:
                 print(f"[BTest] Error getting index for chunk {idx+1}: {e}");continue
-            asset_names = ret_df.columns
+            assets = ret_df.columns
             for i in range(start_idx - lback, end_idx - lback + 1):
                 current_date = ret_df.index[i + lback]
                 if current_date < chunk_start or current_date > chunk_end:continue
                 feat_win = feat_df.iloc[i:i + lback].values.astype(np.float32)
                 normalized_feat = norm_feat(feat_win)
                 input_tensor = torch.tensor(normalized_feat).unsqueeze(0).to(device)
-                with torch.no_grad():raw_weight = model(input_tensor).cpu().numpy().flatten()                
-                final_weight = raw_weight
+                with torch.no_grad():weight = model(input_tensor).cpu().numpy().flatten()                
                 per_ret = ret_df.loc[current_date].values
-                pfo_ret = np.dot(final_weight, per_ret)
+                pfo_ret = np.dot(weight, per_ret)
                 bench_ret = np.mean(per_ret)
                 pfo_values.append(pfo_values[-1] * (1 + pfo_ret))
                 bench_values.append(bench_values[-1] * (1 + bench_ret))
-                daily_weight.append(pd.Series(final_weight, index=asset_names, name=current_date))
+                daily_weight.append(pd.Series(weight, index=assets, name=current_date))
             print(f"[BTest] Chunk {idx+1}: Number of daily weight entries so far: {len(daily_weight)}")
             print(f"[BTest] Chunk {idx+1}: Completed inference.")
         save_to_csv(daily_weight,weight_csv_path);weight_df = pd.read_csv(weight_csv_path, index_col="Date", parse_dates=True)

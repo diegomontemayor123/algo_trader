@@ -44,17 +44,35 @@ def train_model(model, train_loader, val_loader, config):
             train_loss.append(loss.item())
         model.eval()
         val_pfo_ret = []
+        logged_batches = []
         with torch.no_grad():
             for batch_feat, batch_ret in val_loader:
                 batch_feat = batch_feat.to(DEVICE, non_blocking=True)
                 batch_ret = batch_ret.to(DEVICE, non_blocking=True)
                 norm_weight = model(batch_feat)
-                print(f"Batch Feat/Ret  {batch_feat} / {batch_ret} ") # NEW TO RUN
                 pfo_ret = (norm_weight * batch_ret).sum(dim=1)
                 val_pfo_ret.extend(pfo_ret.cpu().numpy())
         val_ret_array = np.array(val_pfo_ret)
         mean_ret = val_ret_array.mean();std_ret = val_ret_array.std() + 1e-6
         avg_val_loss = -(mean_ret / std_ret)
+
+        logged_batches.append({
+            'batch': i,
+            'features': batch_feat.cpu().numpy(),     # shape: [batch_size, num_assets, num_features]
+            'weights': norm_weight.cpu().detach().numpy(), # shape: [batch_size, num_assets]
+            'returns': batch_ret.cpu().numpy(),        # shape: [batch_size, num_assets]
+            'pfo_ret': pfo_ret.cpu().numpy()           # shape: [batch_size]
+        })
+
+        print(f"[Validation] Mean Ret: {mean_ret:.6f}, Std Ret: {std_ret:.6f}, Sharpe: {mean_ret/std_ret:.4f}")
+        top_batches = sorted(logged_batches, key=lambda x: x['pfo_ret'].mean(), reverse=True)[:3]
+        for batch in top_batches:
+            print(f"\n=== Batch {batch['batch']} ===")
+            print("Mean PFO Return:", batch['pfo_ret'].mean())
+            print("Feature sample (first asset):", batch['features'][0][0])  # first asset in batch
+            print("Weights sample (first):", batch['weights'][0])
+
+
         if avg_val_loss < best_val_loss: 
             best_val_loss = avg_val_loss
             patience_counter = 0

@@ -1,23 +1,23 @@
 import os, subprocess, re, optuna, json, csv
 from optuna.samplers import TPESampler
 
-TRIALS = 40
+TRIALS = 5
 
 def run_experiment(trial):
     
     config = {
         "START": trial.suggest_categorical("START", ["2019-01-01"]), #"2016-01-01"
         "END": trial.suggest_categorical("END", ["2025-07-01"]),"SPLIT": trial.suggest_categorical("SPLIT", ["2023-01-01"]),
-        "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, LLY, XOM"]),
-        "MACRO": trial.suggest_categorical("MACRO",[' TLT, AUDUSD=X, CL=F, ^VIX']),
-        "FEAT": trial.suggest_categorical("FEAT", ['price,vol,macd','price,vol,log_ret','price_vol_ret']),
-        "BATCH": trial.suggest_int("BATCH", 40, 60),"LBACK": trial.suggest_int("LBACK", 70, 90),
-        "PRED_DAYS": trial.suggest_int("PRED_DAYS", 2,2),"WARMUP": trial.suggest_float("WARMUP", 0.1, 0.2),
-        "DROPOUT": trial.suggest_float("DROPOUT", 0.01, 0.09),"DECAY": trial.suggest_float("DECAY", 0.001, 0.009),
+        "TICK": trial.suggest_categorical("TICK", ['TSLA, NVDA']),
+        "MACRO": trial.suggest_categorical("MACRO",['^N225, HG=F, ZC=F, TLT, ^GSPC, AUDUSD=X, CL=F, SHY, BRL=X, ^VIX, NG=F, ^FVX, UUP, SI=F, TIP, ^IRX, IEF, HYG']),
+        "FEAT": trial.suggest_categorical("FEAT", ['price,vol,macd']),
+        "BATCH": trial.suggest_int("BATCH", 55, 55),"LBACK": trial.suggest_int("LBACK", 84, 84),
+        "PRED_DAYS": trial.suggest_int("PRED_DAYS", 2,2),"WARMUP": trial.suggest_float("WARMUP", 0.15, 0.15),
+        "DROPOUT": trial.suggest_float("DROPOUT", 0.03366, 0.03366),"DECAY": trial.suggest_float("DECAY", 0.00345, 0.00345),
         "ATTENT": trial.suggest_categorical("ATTENT", [1]),"FEAT_PER": trial.suggest_categorical("FEAT_PER",["8,12,24"]),
-        "INIT_LR": trial.suggest_float("INIT_LR",0.01,0.09,),     
-        "EXP_PEN": trial.suggest_float("EXP_PEN", 0.001,0.01),"RETURN_PEN": trial.suggest_float("RETURN_PEN", 0.05,0.9),
-        "DOWN_PEN": trial.suggest_float("DOWN_PEN", 1,9),"DOWN_CUTOFF": trial.suggest_float("DOWN_CUTOFF", 0.1,0.9),
+        "INIT_LR": trial.suggest_float("INIT_LR",0.037,0.037,),     
+        "EXP_PEN": trial.suggest_float("EXP_PEN", 0.007,0.007),"RETURN_PEN": trial.suggest_float("RETURN_PEN", 0.182,0.182),
+        "DOWN_PEN": trial.suggest_float("DOWN_PEN", 4.82,4.82),"DOWN_CUTOFF": trial.suggest_float("DOWN_CUTOFF", 0.279,0.279),
         "TEST_CHUNK": trial.suggest_int("TEST_CHUNK", 12, 12),
         "RETRAIN_WIN": trial.suggest_int("RETRAIN_WIN", 0, 0),"SEED": trial.suggest_int("SEED", 42, 42),
         "MAX_HEADS": trial.suggest_int("MAX_HEADS", 20, 20),"LAYERS": trial.suggest_int("LAYERS", 6, 6),
@@ -53,7 +53,7 @@ def run_experiment(trial):
         exp_delta = extract_exp_delta(output)
         if sharpe is None or down is None or exp_delta is None: return -float("inf")
         score = 1 * sharpe - 3 * abs(down) + 1 * cagr+ 0 * avg_outperf
-        if exp_delta>100: score+= 10
+        if exp_delta>3: score+= 10
         trial.set_user_attr("sharpe", sharpe)
         trial.set_user_attr("down", down)
         trial.set_user_attr("CAGR", cagr)
@@ -61,7 +61,7 @@ def run_experiment(trial):
         trial.set_user_attr("exp_delta", exp_delta)
         fixed_fields = ["trial", "sharpe", "down", "CAGR", "avg_bench_perf", "exp_delta", "score"]
         fieldnames = fixed_fields[:1] + list(trial.params.keys()) + fixed_fields[1:] 
-        row = { "trial": trial.number,"sharpe": sharpe,"down": down,"CAGR": cagr,"avg_bench_perf": avg_benc_perf,
+        row = { "trial": trial.number,"sharpe": sharpe,"down": down,"CAGR": cagr,"avg_bench_perf": avg_outperf,
                "exp_delta": exp_delta,"score": score,**trial.params}
         with open("csv/tune_log.csv", mode="a", newline="") as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
