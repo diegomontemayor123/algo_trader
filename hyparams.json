@@ -3,7 +3,7 @@
     "END": "2025-07-01",
     "SPLIT": "2023-01-01",
     "TICK": "TSLA, NVDA",
-    "MACRO": "^N225, HG=F, ZC=F, TLT, ^GSPC, AUDUSD=X, CL=F, SHY, BRL=X, ^VIX, NG=F, ^FVX, UUP, SI=F, TIP, ^IRX, IEF, HYG",
+    "MACRO": "TLT, ^GSPC, AUDUSD=X, CL=F, ^VIX",
     "FEAT": "price,vol,macd",
     "BATCH": 55,
     "LBACK": 84,

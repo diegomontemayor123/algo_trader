@@ -1,18 +1,20 @@
 import os, subprocess, re, optuna, json, csv
 from optuna.samplers import TPESampler
 
-TRIALS = 5
+TRIALS = 10
 
 def run_experiment(trial):
     
     config = {
         "START": trial.suggest_categorical("START", ["2019-01-01"]), #"2016-01-01"
         "END": trial.suggest_categorical("END", ["2025-07-01"]),"SPLIT": trial.suggest_categorical("SPLIT", ["2023-01-01"]),
-        "TICK": trial.suggest_categorical("TICK", ['JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE']),
-        "MACRO": trial.suggest_categorical("MACRO",['^N225, HG=F, ZC=F, TLT, ^GSPC, AUDUSD=X, CL=F, SHY, BRL=X, ^VIX, NG=F, ^FVX, UUP, SI=F, TIP, ^IRX, IEF, HYG']),
-        "FEAT": trial.suggest_categorical("FEAT", ['price,vol,macd']),
-        "BATCH": trial.suggest_int("BATCH", 55, 55),"LBACK": trial.suggest_int("LBACK", 84, 84),
-        "PRED_DAYS": trial.suggest_int("PRED_DAYS", 2,2),"WARMUP": trial.suggest_float("WARMUP", 0.15, 0.15),
+        "TICK": trial.suggest_categorical("TICK", ['NVDA,TSLA']),
+        "MACRO": trial.suggest_categorical("MACRO",['TLT, ^GSPC, AUDUSD=X, CL=F, ^VIX']),
+        "FEAT": trial.suggest_categorical("FEAT", ['price,vol,macd',
+                                                   'price,vol,log_ret',
+                                                   'price,vol,ret']),
+        "BATCH": trial.suggest_int("BATCH", 40, 70),"LBACK": trial.suggest_int("LBACK", 60, 90),
+        "PRED_DAYS": trial.suggest_int("PRED_DAYS", 1,9),"WARMUP": trial.suggest_float("WARMUP", 0.15, 0.15),
         "DROPOUT": trial.suggest_float("DROPOUT", 0.03366, 0.03366),"DECAY": trial.suggest_float("DECAY", 0.00345, 0.00345),
         "ATTENT": trial.suggest_categorical("ATTENT", [1]),"FEAT_PER": trial.suggest_categorical("FEAT_PER",["8,12,24"]),
         "INIT_LR": trial.suggest_float("INIT_LR",0.037,0.037,),     
