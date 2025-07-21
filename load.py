@@ -3,11 +3,11 @@ import json
 import pandas as pd
 
 keys = ["SPLIT", "VAL_SPLIT", "PRED_DAYS", "LBACK", "SEED","MAX_HEADS", "BATCH", "FEAT","LAYERS",
-        "DROPOUT", "DECAY", "ATTENT", "EXP_PEN","RETURN_PEN","INIT_LR", "DOWN_PEN","WARMUP", "EARLY_FAIL",
-        "DOWN_CUTOFF", "TICK","START", "END", "TEST_CHUNK", "RETRAIN_WIN","MACRO", "FEAT_PER"]
+        "DROPOUT", "DECAY", "ATTENT", "EXP_PEN","RETURN_PEN","RETURN_EXP","INIT_LR", "EXP_EXP","WARMUP", "EARLY_FAIL",
+        "SD_PEN","SD_EXP", "TICK","START", "END", "TEST_CHUNK", "RETRAIN_WIN","MACRO", "FEAT_PER"]
 
 def load_config():
-    float_keys = {"VAL_SPLIT", "DROPOUT", "DECAY", "RETURN_PEN", "DOWN_PEN", "WARMUP", "DOWN_CUTOFF","EXP_PEN","INIT_LR"}
+    float_keys = {"VAL_SPLIT", "DROPOUT", "DECAY", "RETURN_PEN","RETURN_EXP", "EXP_EXP", "WARMUP", "SD_PEN","SD_EXP","EXP_PEN","INIT_LR"}
     int_keys = {"PRED_DAYS", "LBACK", "SEED", "MAX_HEADS", "BATCH","LAYERS", "EARLY_FAIL", "TEST_CHUNK", "RETRAIN_WIN","ATTENT"}
     list_keys = {"FEAT", "TICK", "FEAT_PER"} 
     date_keys = {"SPLIT", "START", "END"}

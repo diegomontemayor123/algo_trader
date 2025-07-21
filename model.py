@@ -50,38 +50,23 @@ def split_train_val(sequences, targets, valid_ratio):
     return (sequences[:train_size], targets[:train_size],    sequences[train_size:], targets[train_size:])
 
 class DifferentiableSharpeLoss(nn.Module):
-    def __init__(self, return_pen, exp_pen, down_pen, down_cutoff):
+    def __init__(self, return_pen,return_exp, exp_pen, exp_exp, sd_pen,sd_exp):
         super().__init__()
-        self.return_pen = return_pen;self.down_pen = down_pen;self.exp_pen = exp_pen;self.down_cutoff = down_cutoff
+        self.return_pen = return_pen;self.return_exp = return_exp;self.exp_exp = exp_exp;self.exp_pen = exp_pen;self.sd_pen = sd_pen;self.sd_exp=sd_exp
     def forward(self, pfo_weight, target_ret, model=None, epoch = 0,batch_idx=0):
         ret = (pfo_weight * target_ret).sum(dim=1);mean_ret = torch.mean(ret)
         if ret.numel() > 1 and not torch.isnan(ret).all():
-            std_ret = torch.std(ret, unbiased=False)
-            if std_ret < 1e-4:print("SD - ret too low (<1e-4), skip batch.");return None  
+            sd_ret = torch.std(ret, unbiased=False) + 1e-10
+            if sd_ret < 1e-4:print("SD - ret too low (<1e-4), skip batch.");return None  
         else:print("ret invalid, skip batch.");return None 
-        sharpe = mean_ret / (std_ret + 1e-6)
-        cum_ret = torch.cumsum(ret, dim=0)
-        max_down = torch.mean(torch.nn.functional.relu(torch.cummax(cum_ret, dim=0).values - cum_ret))
         excess_exp = torch.relu(pfo_weight.sum(dim=1).abs() - 0)
-        loss = -sharpe - (self.return_pen * mean_ret) +self.exp_pen * excess_exp.pow(self.down_pen).mean() #+ self.down_pen * torch.square(torch.relu(max_down - self.down_cutoff))
-
-        #loss += self.exp_pen * sum(p.abs().sum() for p in model.parameters())
-        #beta = torch.cov(pfo_ret, bench_ret)[0,1] / torch.var(bench_ret);loss += self.beta_pen * torch.abs(beta - target_beta)
-        print(f"-Epoch/Batch: {epoch} / {batch_idx}")
-        print(f"-Return/MaxDown: {(self.return_pen * mean_ret):.6f} / {self.down_pen * torch.square(torch.relu(max_down - self.down_cutoff)):.6f}")
-        print(f"+Exp: {(self.exp_pen  * excess_exp.mean()):.6f}");print(f"Loss/Sharpe/Mean/SDT: {loss:.6f} /  {sharpe:.6f} / {mean_ret:.6f} / {std_ret:.6f}\n")
-        fieldnames = ["epoch","batch_idx","return_term", "maxdown_term", "exposure_penalty", "loss", "sharpe", "mean_return", "std_return"]
-        if False:
-            with open("csv/losses.csv", mode="a", newline="") as f:
-                writer = csv.DictWriter(f, fieldnames=fieldnames)
-                if not os.path.isfile("csv/losses.csv"):
-                    writer.writeheader()
-                writer.writerow({   "epoch":epoch,"batch_idx":batch_idx,"return_term": self.return_pen * mean_ret,
-                                    "maxdown_term": torch.relu(self.down_pen * (max_down-self.down_cutoff)),
-                                    "exposure_penalty": self.exp_pen  * excess_exp.mean(),
-                                    "loss": loss,"sharpe": sharpe,"mean_return": mean_ret,"std_return": std_ret
-                                })
+        loss = -self.return_pen * mean_ret.pow(self.return_exp) 
+        loss += self.sd_pen * sd_ret.pow(self.sd_exp) 
+        loss += self.exp_pen*excess_exp.pow(self.exp_exp).mean() 
+        #loss = -mean_ret * (1 / sd_ret + self.return_pen) + self.exp_pen*excess_exp.pow(self.exp_exp).mean() 
+        print(f"Loss/Sharpe/Mean/SDT: {loss:.6f} /   / {mean_ret:.6f} / {sd_ret:.6f}\n")
         return loss
+    
 class TransformerLRScheduler(torch.optim.lr_scheduler._LRScheduler):
     def __init__(self, optimizer, d_model, warm_steps, last_epoch=-1):
         self.d_model = d_model;self.warm_steps = warm_steps;super().__init__(optimizer, last_epoch)

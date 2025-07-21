@@ -13,7 +13,7 @@ def train_model(model, train_loader, val_loader, config):
     #warm_steps = int(total_steps * config["WARMUP"])
     #print(f"[Scheduler] Total steps: {total_steps}, warmup: {warm_steps}")
     #learn_scheduler = TransformerLRScheduler(optimizer, d_model=model.mlp_head[0].in_features, warm_steps=warm_steps)
-    loss_func = DifferentiableSharpeLoss(return_pen=config["RETURN_PEN"],down_pen=config["DOWN_PEN"],exp_pen=config["EXP_PEN"],down_cutoff=config["DOWN_CUTOFF"])
+    loss_func = DifferentiableSharpeLoss(return_pen=config["RETURN_PEN"],return_exp=config["RETURN_EXP"],exp_exp=config["EXP_EXP"],exp_pen=config["EXP_PEN"],sd_pen=config["sd_pen"],sd_exp=config["sd_exp"],)
     best_val_loss = float('inf')
     patience_counter = 0
     lrs = []
