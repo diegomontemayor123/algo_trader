@@ -20,9 +20,9 @@ def run_experiment(trial):
         "ATTENT": trial.suggest_categorical("ATTENT", [0]),
         "FEAT_PER": trial.suggest_categorical("FEAT_PER", ["8,12,24"]),
         "INIT_LR": trial.suggest_float("INIT_LR", 0.01, 0.01),
-        "EXP_PEN": trial.suggest_float("EXP_PEN", 0, 0.006),#0.006 linear
+        "EXP_PEN": trial.suggest_float("EXP_PEN", 0.002, 0.005),#0.006 linear
         "RETURN_PEN": trial.suggest_float("RETURN_PEN", 0.18, 0.18),
-        "DOWN_PEN": trial.suggest_float("DOWN_PEN", 0.7, 1.8),#using as exponent term for exp
+        "DOWN_PEN": trial.suggest_float("DOWN_PEN", 1.5, 2),#using as exponent term for exp
         "DOWN_CUTOFF": trial.suggest_float("DOWN_CUTOFF", 0, 0),
         "TEST_CHUNK": trial.suggest_int("TEST_CHUNK", 12, 12),
         "RETRAIN_WIN": trial.suggest_int("RETRAIN_WIN", 0, 0),
