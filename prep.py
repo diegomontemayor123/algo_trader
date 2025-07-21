@@ -2,7 +2,6 @@ import torch
 import numpy as np
 import pandas as pd
 from feat import norm_feat
-from rolling_corr import *
 
 class MarketDataset(torch.utils.data.Dataset):
     def __init__(self, feat, ret):
@@ -14,7 +13,6 @@ class MarketDataset(torch.utils.data.Dataset):
         return self.feat[index], self.ret[index]
 
 def create_sequences(feat, ret, lback, pred_days, TICK):
-    compute_best_features_by_rolling_corr(feat, ret, windows=[30, 60, 90], top_n=10, plot=True)
 
 
     sequences = []
