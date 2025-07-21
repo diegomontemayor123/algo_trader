@@ -1,7 +1,10 @@
 import os, subprocess, re, optuna, json, csv
 from optuna.samplers import TPESampler
 
+TRIALS = 5
+
 def run_experiment(trial):
+    
     config = {
         "START": trial.suggest_categorical("START", ["2019-01-01"]), #"2016-01-01"
         "END": trial.suggest_categorical("END", ["2025-07-01"]),"SPLIT": trial.suggest_categorical("SPLIT", ["2023-01-01"]),
@@ -77,7 +80,7 @@ def main():
     from load import load_config
     config = load_config()
     sampler = TPESampler(seed=config["SEED"]);study = optuna.create_study(direction="maximize", sampler=sampler)
-    study.optimize(run_experiment, n_trials=5, n_jobs=1)
+    study.optimize(run_experiment, n_trials=TRIALS, n_jobs=1)
     best = study.best_trial;best_params = best.params.copy()
     with open("hyparams.json", "w") as f: json.dump(best_params, f, indent=4)
     print("\n=== Best trial parameters ===")
