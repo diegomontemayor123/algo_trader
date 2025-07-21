@@ -79,7 +79,8 @@ class DifferentiableSharpeLoss(nn.Module):
                                     "maxdown_term": torch.relu(self.down_pen * (max_down-self.down_cutoff)),
                                     "exposure_penalty": self.exp_pen  * excess_exp.mean(),
                                     "loss": loss,"sharpe": sharpe,"mean_return": mean_ret,"std_return": std_ret
-                                });return loss
+                                })
+        return loss
 
 class TransformerLRScheduler(torch.optim.lr_scheduler._LRScheduler):
     def __init__(self, optimizer, d_model, warm_steps, last_epoch=-1):
