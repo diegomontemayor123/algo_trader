@@ -1,34 +1,31 @@
-import torch, multiprocessing, logging
+import torch, multiprocessing
 import numpy as np
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 from model import DifferentiableSharpeLoss, TransformerLRScheduler, create_model
 
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
+MAX_EPOCHS = 20
 
-def train_model_with_validation(model, train_loader, val_loader, config):
+def train_model(model, train_loader, val_loader, config):
     optimizer = torch.optim.Adam(model.parameters(), lr=config["INIT_LR"], weight_decay=config["DECAY"])
-    total_steps = config["EPOCHS"] * len(train_loader)
-    learning_warmup_steps = int(total_steps * config["WARMUP_FRAC"])
-    print(f"[Scheduler] Total steps: {total_steps}, warmup: {learning_warmup_steps}")
-    learning_scheduler = TransformerLRScheduler(optimizer, d_model=model.mlp_head[0].in_features, warmup_steps=learning_warmup_steps)
-    loss_function = DifferentiableSharpeLoss(return_penalty=config["RETURN_PENALTY"],drawdown_penalty=config["DRAWDOWN_PENALTY"],exposure_penalty=config["EXPOSURE_PENALTY"],drawdown_cutoff=config["DRAWDOWN_CUTOFF"])
+    total_steps = MAX_EPOCHS * len(train_loader)
+    warm_steps = int(total_steps * config["WARMUP"])
+    print(f"[Scheduler] Total steps: {total_steps}, warmup: {warm_steps}")
+    learn_scheduler = TransformerLRScheduler(optimizer, d_model=model.mlp_head[0].in_features, warm_steps=warm_steps)
+    loss_func = DifferentiableSharpeLoss(return_pen=config["RETURN_PEN"],down_pen=config["DOWN_PEN"],exp_pen=config["EXP_PEN"],down_cutoff=config["DOWN_CUTOFF"])
     best_val_loss = float('inf')
     patience_counter = 0
     lrs = []
-    for epoch in range(config["EPOCHS"]):
+    for epoch in range(MAX_EPOCHS):
         model.train()
-        train_losses = []
-        for batch_idx, (batch_features, batch_returns) in enumerate(train_loader):
-            batch_features = batch_features.to(DEVICE, non_blocking=True)
-            batch_returns = batch_returns.to(DEVICE, non_blocking=True)
-            raw_weights = model(batch_features)
-            normalized_weights = raw_weights 
-            print(f"[Debug] Avg Raw/Norm Weight: {raw_weights.mean():.6f}/{normalized_weights.mean():.6f}")
-            loss = loss_function(normalized_weights, batch_returns, model=model)
-            if torch.isnan(loss) or torch.isinf(loss):
-                logging.warning("[Train] NaN or Inf loss detected — skipping model.")
-                return None
+        train_loss = []
+        for batch_idx, (batch_feat, batch_ret) in enumerate(train_loader):
+            batch_feat = batch_feat.to(DEVICE, non_blocking=True)
+            batch_ret = batch_ret.to(DEVICE, non_blocking=True)
+            norm_weight = model(batch_feat)
+            loss = loss_func(norm_weight, batch_ret, model=model,epoch=epoch,batch_idx=batch_idx)
+            if torch.isnan(loss) or torch.isinf(loss): print("[Train] NaN or Inf loss detected — skipping model.");return None
             optimizer.zero_grad()
             loss.backward()
             total_grad_norm = 0.0
@@ -39,45 +36,40 @@ def train_model_with_validation(model, train_loader, val_loader, config):
             print(f"[Grad] Total grad norm: {total_grad_norm:.6f}")
             for name, param in model.named_parameters():
                 if param.grad is not None and (torch.isnan(param.grad).any() or torch.isinf(param.grad).any()):
-                    print(f"[Warning] Skipping retraining chunk due to NaNs in gradients: {name}")
-                    return None
+                    print(f"[Warning] Skipping retraining chunk due to NaNs in gradients: {name}");return None
             optimizer.step()
-            learning_scheduler.step()
+            learn_scheduler.step()
             print(f"[LR] Current learning rate: {optimizer.param_groups[0]['lr']:.6f}\n")
             lrs.append(optimizer.param_groups[0]['lr'])
-            train_losses.append(loss.item())
-
+            train_loss.append(loss.item())
         model.eval()
-        val_portfolio_returns = []
+        val_pfo_ret = []
         with torch.no_grad():
-            for batch_features, batch_returns in val_loader:
-                batch_features = batch_features.to(DEVICE, non_blocking=True)
-                batch_returns = batch_returns.to(DEVICE, non_blocking=True)
-                raw_weights = model(batch_features)
-                normalized_weights = raw_weights
-                portfolio_returns = (normalized_weights * batch_returns).sum(dim=1)
-                val_portfolio_returns.extend(portfolio_returns.cpu().numpy())
-        val_returns_array = np.array(val_portfolio_returns)
-        mean_ret = val_returns_array.mean()
-        std_ret = val_returns_array.std() + 1e-6
+            for batch_feat, batch_ret in val_loader:
+                batch_feat = batch_feat.to(DEVICE, non_blocking=True)
+                batch_ret = batch_ret.to(DEVICE, non_blocking=True)
+                norm_weight = model(batch_feat)
+                print(f"Batch Feat/Ret  {batch_feat} / {batch_ret} ") # NEW TO RUN
+                pfo_ret = (norm_weight * batch_ret).sum(dim=1)
+                val_pfo_ret.extend(pfo_ret.cpu().numpy())
+        val_ret_array = np.array(val_pfo_ret)
+        mean_ret = val_ret_array.mean();std_ret = val_ret_array.std() + 1e-6
         avg_val_loss = -(mean_ret / std_ret)
-        if avg_val_loss < best_val_loss:
+        if avg_val_loss < best_val_loss: 
             best_val_loss = avg_val_loss
             patience_counter = 0
         else:
             patience_counter += 1
-            if patience_counter >= config["EARLY_STOP_PATIENCE"]:
-                break
-    plt.figure(figsize=(10, 4));plt.plot(lrs);plt.title('Learning Rate Schedule During Training');plt.xlabel('Training Step')
-    plt.ylabel('Learning Rate');plt.grid(True);plt.savefig('img/learning_rate_schedule.png');plt.close()
-    return model
+            if patience_counter >= config["EARLY_FAIL"]: break
+    plt.figure(figsize=(10, 4));plt.plot(lrs);plt.title('Learning Schedule');plt.xlabel('Training Step')
+    plt.ylabel('Learning Rate');plt.grid(True);plt.savefig('img/learn_sched.png');plt.close();return model
 
-def train_main_model(config, features, returns):
-    from data_prep import prepare_main_datasets
-    train_dataset, val_dataset, _ = prepare_main_datasets(features, returns, config)
+def train(config, feat, ret):
+    from prep import prep_data
+    train_data, val_data, _ = prep_data(feat, ret, config)
     num_workers = min(2, multiprocessing.cpu_count())
-    train_loader = DataLoader(train_dataset, batch_size=config["BATCH_SIZE"], shuffle=True, num_workers=num_workers)
-    val_loader = DataLoader(val_dataset, batch_size=config["BATCH_SIZE"], shuffle=False, num_workers=num_workers)
-    model = create_model(train_dataset[0][0].shape[1], config)
-    trained_model = train_model_with_validation(model, train_loader, val_loader, config)
-    return trained_model
+    train_loader = DataLoader(train_data, batch_size=config["BATCH"], shuffle=True, num_workers=num_workers)
+    val_loader = DataLoader(val_data, batch_size=config["BATCH"], shuffle=False, num_workers=num_workers)
+    model = create_model(train_data[0][0].shape[1], config)
+    model0 = train_model(model, train_loader, val_loader, config)
+    return model0
