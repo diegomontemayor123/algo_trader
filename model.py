@@ -63,11 +63,12 @@ class DifferentiableSharpeLoss(nn.Module):
         cum_ret = torch.cumsum(ret, dim=0)
         max_down = torch.mean(torch.nn.functional.relu(torch.cummax(cum_ret, dim=0).values - cum_ret))
         excess_exp = torch.relu(pfo_weight.sum(dim=1).abs() - 0)
-        loss = -sharpe - (self.return_pen * mean_ret) +self.exp_pen * excess_exp.mean() + torch.relu(self.down_pen * (max_down-self.down_cutoff))
+        loss = -sharpe - (self.return_pen * mean_ret) +self.exp_pen * excess_exp.pow(self.down_pen).mean() + #self.down_pen * torch.square(torch.relu(max_down - self.down_cutoff))
+
         #loss += self.exp_pen * sum(p.abs().sum() for p in model.parameters())
         #beta = torch.cov(pfo_ret, bench_ret)[0,1] / torch.var(bench_ret);loss += self.beta_pen * torch.abs(beta - target_beta)
         print(f"-Epoch/Batch: {epoch} / {batch_idx}")
-        print(f"-Return/MaxDown: {(self.return_pen * mean_ret):.6f} / {torch.relu(self.down_pen * (max_down-self.down_cutoff)):.6f}")
+        print(f"-Return/MaxDown: {(self.return_pen * mean_ret):.6f} / {self.down_pen * torch.square(torch.relu(max_down - self.down_cutoff)):.6f}")
         print(f"+Exp: {(self.exp_pen  * excess_exp.mean()):.6f}");print(f"Loss/Sharpe/Mean/SDT: {loss:.6f} /  {sharpe:.6f} / {mean_ret:.6f} / {std_ret:.6f}\n")
         fieldnames = ["epoch","batch_idx","return_term", "maxdown_term", "exposure_penalty", "loss", "sharpe", "mean_return", "std_return"]
         if False:

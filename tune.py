@@ -1,29 +1,29 @@
 import os, subprocess, re, optuna, json, csv
 from optuna.samplers import TPESampler
 
-TRIALS = 15
+TRIALS = 60
 
 def run_experiment(trial):
     config = {
         "START": trial.suggest_categorical("START", ["2019-01-01"]),
         "END": trial.suggest_categorical("END", ["2025-07-01"]),
         "SPLIT": trial.suggest_categorical("SPLIT", ["2023-01-01"]),
-        "TICK": trial.suggest_categorical("TICK", ['NVDA,TSLA']),
-        "MACRO": trial.suggest_categorical("MACRO", ['TLT, ^GSPC, AUDUSD=X, CL=F, ^VIX']),
-        "FEAT": trial.suggest_categorical("FEAT", ['price,vol,macd']),
+        "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
+        "MACRO": trial.suggest_categorical("MACRO", ['^VIX']),
+        "FEAT": trial.suggest_categorical("FEAT", ['price,ema']),
         "BATCH": trial.suggest_int("BATCH", 55, 55),
         "LBACK": trial.suggest_int("LBACK", 84, 84),
         "PRED_DAYS": trial.suggest_int("PRED_DAYS", 6, 6),
         "WARMUP": trial.suggest_float("WARMUP", 0.999, 0.999),
-        "DROPOUT": trial.suggest_float("DROPOUT", 0.03366, 0.03366),
-        "DECAY": trial.suggest_float("DECAY", 0.00345, 0.00345),
+        "DROPOUT": trial.suggest_float("DROPOUT", 0.028, 0.028),
+        "DECAY": trial.suggest_float("DECAY", 0.003, 0.003),
         "ATTENT": trial.suggest_categorical("ATTENT", [0]),
         "FEAT_PER": trial.suggest_categorical("FEAT_PER", ["8,12,24"]),
-        "INIT_LR": trial.suggest_float("INIT_LR", 0.037, 0.037),
-        "EXP_PEN": trial.suggest_float("EXP_PEN", 0.007, 0.007),
-        "RETURN_PEN": trial.suggest_float("RETURN_PEN", 0, 0),
-        "DOWN_PEN": trial.suggest_float("DOWN_PEN", 0, 0),
-        "DOWN_CUTOFF": trial.suggest_float("DOWN_CUTOFF", 0.09, 0.09),
+        "INIT_LR": trial.suggest_float("INIT_LR", 0.01, 0.01),
+        "EXP_PEN": trial.suggest_float("EXP_PEN", 0, 0.006),#0.006 linear
+        "RETURN_PEN": trial.suggest_float("RETURN_PEN", 0.18, 0.18),
+        "DOWN_PEN": trial.suggest_float("DOWN_PEN", 0.7, 1.8),#using as exponent term for exp
+        "DOWN_CUTOFF": trial.suggest_float("DOWN_CUTOFF", 0, 0),
         "TEST_CHUNK": trial.suggest_int("TEST_CHUNK", 12, 12),
         "RETRAIN_WIN": trial.suggest_int("RETRAIN_WIN", 0, 0),
         "SEED": trial.suggest_int("SEED", 42, 42),
@@ -75,7 +75,7 @@ def run_experiment(trial):
         print(f"  Exp Delta: {exp_delta}")
         print(f"  Avg Outperf: {avg_outperf}")
 
-        score = 0 * sharpe - 2 * abs(down) + 0 * cagr + 1 * avg_outperf
+        score = 1* sharpe - 2 * abs(down) + 0 * cagr + 0 * avg_outperf
         if exp_delta > 100: score += 10
 
         trial.set_user_attr("sharpe", sharpe)
