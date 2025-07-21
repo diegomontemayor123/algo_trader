@@ -89,6 +89,9 @@ def comp_feat(TICK, FEAT, cached_data, macro_keys):
     feat['month'] = feat.index.month - 1 
     feat = norm_feat(feat)
     feat.to_csv("csv/feat_all.csv")
+
+
+
     return feat, ret
 
 
