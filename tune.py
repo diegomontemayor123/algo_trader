@@ -1,7 +1,7 @@
 import os, subprocess, re, optuna, json, csv
 from optuna.samplers import TPESampler
 
-TRIALS = 60
+TRIALS = 40
 
 def run_experiment(trial):
     config = {
@@ -22,10 +22,10 @@ def run_experiment(trial):
         "INIT_LR": trial.suggest_float("INIT_LR", 0.01, 0.01),
         "EXP_PEN": trial.suggest_float("EXP_PEN", 0.0038, 0.0038),#0.006 linear
         "EXP_EXP": trial.suggest_float("EXP_EXP", 1.85, 1.85),
-        "RETURN_PEN": trial.suggest_float("RETURN_PEN", 0.001, 0.2),#0.18 linear
-        "RETURN_EXP": trial.suggest_float("RETURN_EXP", 0,2),
-        "SD_PEN": trial.suggest_float("SD_PEN", 0,0.2),
-        "SD_EXP": trial.suggest_float("SD_EXP",0,2),
+        "RETURN_PEN": trial.suggest_float("RETURN_PEN", 0.05, 0.2),#0.18 linear
+        "RETURN_EXP": trial.suggest_float("RETURN_EXP", 0.1,0.5),
+        "SD_PEN": trial.suggest_float("SD_PEN", 0.1,0.2),
+        "SD_EXP": trial.suggest_float("SD_EXP",0.5,1.5),
         "TEST_CHUNK": trial.suggest_int("TEST_CHUNK", 12, 12),
         "RETRAIN_WIN": trial.suggest_int("RETRAIN_WIN", 0, 0),
         "SEED": trial.suggest_int("SEED", 42, 42),
@@ -77,7 +77,8 @@ def run_experiment(trial):
         print(f"  Exp Delta: {exp_delta}")
         print(f"  Avg Outperf: {avg_outperf}")
 
-        score = 1* sharpe - 2 * abs(down) + 0 * cagr + 0 * avg_outperf
+        score = 1* sharpe - 2 * abs(down) + 0 * cagr 
+        if avg_outperf>0: score += 90 
         if exp_delta > 100: score += 10
 
         trial.set_user_attr("sharpe", sharpe)
