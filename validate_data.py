@@ -2,7 +2,7 @@ import os, subprocess, re, json, optuna
 from optuna.samplers import TPESampler
 from collections import Counter
 
-TICKER_LIST = ['JPM', 'MSFT', 'NVDA', 'AVGO', ' LLY', ' COST', ' MA', ' XOM', ' UNH', ' AMZN', ' CAT', ' ADBE']
+TICKER_LIST = ['JPM', 'MSFT', 'NVDA', 'AVGO', ' LLY', ' COST', ' MA', ' XOM', ' UNH', ' AMZN', ' CAT', ' ADBE','TSLA']
 FEAT_LIST = ["ret", "price", "log_ret", "roll_ret", "volume", "vol", "macd", "momentum", "ema", "cmo"]
 MACRO_LIST = [
     "^GSPC",        # S&P 500

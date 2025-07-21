@@ -8,7 +8,7 @@ def run_experiment(trial):
     config = {
         "START": trial.suggest_categorical("START", ["2019-01-01"]), #"2016-01-01"
         "END": trial.suggest_categorical("END", ["2025-07-01"]),"SPLIT": trial.suggest_categorical("SPLIT", ["2023-01-01"]),
-        "TICK": trial.suggest_categorical("TICK", ['TSLA, NVDA']),
+        "TICK": trial.suggest_categorical("TICK", ['JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE']),
         "MACRO": trial.suggest_categorical("MACRO",['^N225, HG=F, ZC=F, TLT, ^GSPC, AUDUSD=X, CL=F, SHY, BRL=X, ^VIX, NG=F, ^FVX, UUP, SI=F, TIP, ^IRX, IEF, HYG']),
         "FEAT": trial.suggest_categorical("FEAT", ['price,vol,macd']),
         "BATCH": trial.suggest_int("BATCH", 55, 55),"LBACK": trial.suggest_int("LBACK", 84, 84),
