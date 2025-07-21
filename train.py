@@ -9,7 +9,7 @@ MAX_EPOCHS = 20
 
 def train_model(model, train_loader, val_loader, config):
     optimizer = torch.optim.Adam(model.parameters(), lr=config["INIT_LR"], weight_decay=config["DECAY"])
-    total_steps = MAX_EPOCHS * len(train_loader)
+    #total_steps = MAX_EPOCHS * len(train_loader)
     #warm_steps = int(total_steps * config["WARMUP"])
     #print(f"[Scheduler] Total steps: {total_steps}, warmup: {warm_steps}")
     #learn_scheduler = TransformerLRScheduler(optimizer, d_model=model.mlp_head[0].in_features, warm_steps=warm_steps)
