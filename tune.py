@@ -4,9 +4,9 @@ from optuna.samplers import TPESampler
 TRIALS = 1
 
 def run_experiment(trial):
-    config = {"START": trial.suggest_categorical("START", ["2018-01-01"]),#2019 Jan
+    config = {"START": trial.suggest_categorical("START", ["2019-01-01"]),#2019 Jan
         "END": trial.suggest_categorical("END", ["2025-07-01"]),#2025 Jul
-        "SPLIT": trial.suggest_categorical("SPLIT", ["2022-01-01"]),#2023 Jan
+        "SPLIT": trial.suggest_categorical("SPLIT", ["2023-01-01"]),#2023 Jan
         "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
         "MACRO": trial.suggest_categorical("MACRO", ['^VIX']),
         "FEAT": trial.suggest_categorical("FEAT", ['price,ema']),
@@ -24,7 +24,7 @@ def run_experiment(trial):
         "SD_PEN": trial.suggest_float("SD_PEN",.17,.17),#.17
         "SD_EXP": trial.suggest_float("SD_EXP",.74,.74),#.74
         "TEST_CHUNK": trial.suggest_int("TEST_CHUNK",12,12),
-        "RETRAIN_WIN": trial.suggest_categorical("RETRAIN_WIN", [18]),
+        "RETRAIN_WIN": trial.suggest_categorical("RETRAIN_WIN", [0]),
         "SEED": trial.suggest_int("SEED",42,42),
         "MAX_HEADS": trial.suggest_int("MAX_HEADS",1,1),
         "LAYERS": trial.suggest_int("LAYERS", 1, 1),

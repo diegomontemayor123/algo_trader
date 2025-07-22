@@ -84,7 +84,7 @@ def load_model(dimen, config, path=MODEL_PATH):
 if __name__ == "__main__":
     from test import run_btest
     from train import train
-    from validate_data import MACRO_LIST
+    from validate import MACRO_LIST
     from prep import prep_data
     print(f"Configured TICK: {config['TICK']} (count: {len(config['TICK'])})")
     TICK = config["TICK"].split(",") if isinstance(config["TICK"], str) else config["TICK"]

@@ -43,12 +43,7 @@ def run_btest(  device, initial_capital, split, lback,comp_feat, norm_feat, TICK
             prev_start, _ = chunks[-2]
             chunks[-2] = (prev_start, final_end)
             chunks.pop()
-    pfo_values = [initial_capital]
-    bench_values = [initial_capital]
-    daily_weight = []
-    all_pfo_metrics = []
-    all_bench_metrics = []
-    avg_outperf = {}
+    pfo_values = [initial_capital];bench_values = [initial_capital];daily_weight = [];all_pfo_metrics = [];all_bench_metrics = [];avg_outperf = {}
 
     if retrain_win < 1:
         model.eval()
@@ -115,15 +110,13 @@ def run_btest(  device, initial_capital, split, lback,comp_feat, norm_feat, TICK
             model = deepcopy(prev_model) if prev_model else create_model(model_dim, config)
             asset_sd = torch.tensor(ret_train.std(axis=0).values.astype(np.float32), device=device)
             model = train_model(model, train_loader, val_loader, config, asset_sd=asset_sd)
-            if model is None:
-                print(f"[BTest] Skipping chunk {idx+1} due to failed training (NaNs or early exit).");continue
+            if model is None: print(f"[BTest] Skipping chunk {idx+1} due to failed training (NaNs or early exit).");continue
             model.eval()
             prev_model = deepcopy(model)
             try:
                 start_idx = feat_df.index.get_indexer([chunk_start], method='bfill')[0]
                 end_idx = feat_df.index.get_indexer([chunk_end], method='ffill')[0]
-            except Exception as e:
-                print(f"[BTest] Error getting index for chunk {idx+1}: {e}");continue
+            except Exception as e: print(f"[Test] Error getting index for chunk {idx+1}: {e}");continue
             assets = ret_df.columns
             for i in range(start_idx - lback, end_idx - lback + 1):
                 current_date = ret_df.index[i + lback]
@@ -138,8 +131,8 @@ def run_btest(  device, initial_capital, split, lback,comp_feat, norm_feat, TICK
                 pfo_values.append(pfo_values[-1] * (1 + pfo_ret))
                 bench_values.append(bench_values[-1] * (1 + bench_ret))
                 daily_weight.append(pd.Series(weight, index=assets, name=current_date))
-            print(f"[BTest] Chunk {idx+1}: Number of daily weight entries so far: {len(daily_weight)}")
-            print(f"[BTest] Chunk {idx+1}: Completed inference.")
+            print(f"[Test] Chunk {idx+1}: Number of daily weights so far: {len(daily_weight)}")
+            print(f"[Test] Chunk {idx+1}: Completed.")
         save_to_csv(daily_weight,weight_csv_path);weight_df = pd.read_csv(weight_csv_path, index_col="Date", parse_dates=True)
         pfo_series = pd.Series(pfo_values[1:], index=weight_df.index)
         bench_series = pd.Series(bench_values[1:], index=weight_df.index)
