@@ -10,13 +10,13 @@ def run_experiment(trial):
         "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
         "MACRO": trial.suggest_categorical("MACRO", ['^VIX']),
         "FEAT": trial.suggest_categorical("FEAT", ['price,ema']),
-        "BATCH": trial.suggest_int("BATCH", 50, 60),#55
+        "BATCH": trial.suggest_int("BATCH", 40, 60),#55
         "LBACK": trial.suggest_int("LBACK", 80, 90),#84
         "PRED_DAYS": trial.suggest_int("PRED_DAYS", 6, 6),#6
-        "DROPOUT": trial.suggest_float("DROPOUT", 0.02, 0.04),#0.028
-        "DECAY": trial.suggest_float("DECAY", 0.001, 0.005),#0.003
+        "DROPOUT": trial.suggest_float("DROPOUT", 0.028, 0.028),#0.028
+        "DECAY": trial.suggest_float("DECAY", 0.003, 0.003),#0.003
         "FEAT_PER": trial.suggest_categorical("FEAT_PER", ["8,12,24"]),
-        "INIT_LR": trial.suggest_float("INIT_LR", 0.005, 0.015),#0.01
+        "INIT_LR": trial.suggest_float("INIT_LR", 0.001, 0.015),#0.01
         "EXP_PEN": trial.suggest_float("EXP_PEN", 0.235, 0.235),#0.235
         "EXP_EXP": trial.suggest_float("EXP_EXP", 1.82, 1.82),#1.82
         "RETURN_PEN": trial.suggest_float("RETURN_PEN", 0.105,0.105),#0.105
@@ -45,7 +45,6 @@ def run_experiment(trial):
             pattern = rf"{re.escape(label)}:\s*Strat:\s*([-+]?\d+(?:\.\d+)?)%"
             match = re.search(pattern, out, re.IGNORECASE)
             return float(match.group(1)) / 100 if match else None
-
         def extract_avgoutperf(output):
             match = re.search(r"Avg Bench Outperf(?: thru Chunks)?:\s*\ncagr:\s*([-+]?\d+(?:\.\d+)?)%", output, re.MULTILINE)
             if match:return float(match.group(1)) / 100.0
@@ -54,29 +53,22 @@ def run_experiment(trial):
                 try:return float(val) / 100.0
                 except:pass
             return 0.0
-
         def extract_exp_delta(output):
             match = re.search(r"Total Exp Delta:\s*([-+]?\d+(?:\.\d+)?)", output)
             return float(match.group(1)) if match else None
-
         sharpe = extract_metric("Sharpe Ratio", output)
         down = extract_metric("Max Down", output)
         cagr = extract_metric("CAGR", output)
         avg_outperf = extract_avgoutperf(output)
         exp_delta = extract_exp_delta(output)
-
         if sharpe is None or down is None or exp_delta is None:
             print("[error] Missing metric(s) — skipping trial.")
             return -float("inf")
-
         print("[debug] Metrics extracted:")
-        print(f"  Sharpe: {sharpe}")
-        print(f"  Down: {down}")
-        print(f"  CAGR: {cagr}")
-        print(f"  Exp Delta: {exp_delta}")
-        print(f"  Avg Outperf: {avg_outperf}")
+        print(f"  Sharpe: {sharpe}");print(f"  Down: {down}");print(f"  CAGR: {cagr}")
+        print(f"  Exp Delta: {exp_delta}");print(f"  Avg Outperf: {avg_outperf}")
 
-        score = 1* sharpe - 2 * abs(down) + 0 * cagr 
+        score = 0* sharpe - 4 * abs(down) + 1 * cagr 
         if avg_outperf>0: score += 90
         if exp_delta > 100: score += 10
 
@@ -85,10 +77,8 @@ def run_experiment(trial):
         trial.set_user_attr("CAGR", cagr)
         trial.set_user_attr("avg_outperf", avg_outperf)
         trial.set_user_attr("exp_delta", exp_delta)
-
         fieldnames = ["trial"] + list(trial.params.keys()) + ["sharpe", "down", "CAGR", "avg_bench_perf", "exp_delta", "score"]
         row = {"trial": trial.number,"sharpe": sharpe,"down": down,"CAGR": cagr,"avg_bench_perf": avg_outperf,"exp_delta": exp_delta,"score": score,**trial.params}
-
         log_path = "csv/tune_log.csv"
         write_header = not os.path.exists(log_path)
         with open(log_path, mode="a", newline="") as csvfile:
@@ -96,7 +86,6 @@ def run_experiment(trial):
             if write_header: writer.writeheader()
             writer.writerow(row)
         return score
-
     except subprocess.TimeoutExpired:
         print(f"[Timeout] Trial failed for config: {config}")
         return -float("inf")
@@ -110,17 +99,12 @@ def main():
     sampler = TPESampler(seed=config["SEED"])
     study = optuna.create_study(direction="maximize", sampler=sampler)
     study.optimize(run_experiment, n_trials=TRIALS, n_jobs=1)
-
     best = study.best_trial
     best_params = best.params.copy()
-
     with open("hyparams.json", "w") as f: json.dump(best_params, f, indent=4)
-
     print("\n=== Best trial parameters ===")
     for k, v in best_params.items(): print(f"{k}: {v}")
-
     for m in ["sharpe", "down", "CAGR", "avg_outperf", "exp_delta"]:
         print(f"{m}: {best.user_attrs.get(m, float('nan')):.4f}")
-
 
 if __name__ == "__main__": main()
