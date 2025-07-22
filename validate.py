@@ -7,7 +7,7 @@ TRIALS = 100
 FEAT_LIST = [
   'rsi',               # RSI
   'macd',              # MACD
-  'momentum',          # Momentum
+  'ema',               # ema
   'atr',               # ATR
   'boll',              # Bollinger Bands
   'zscore',            # Z-Score of Price
