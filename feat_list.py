@@ -73,6 +73,26 @@ def add_cmo(data):
         down = -delta.clip(upper=0).rolling(p).sum()
         data[f'cmo{p}'] = 100 * (up - down) / (up + down + 1e-10)
 
+
+CROSS_FEAT = {} 
+def set_all__cross_feat(cross_feat_dict):
+    global CROSS_FEAT
+    CROSS_FEAT = cross_feat_dict
+
+def add_ret_cross_z(data, ticker):
+    global CROSS_FEAT
+    if not CROSS_FEAT:
+        print(f"[Cross-Z] Skipping: ALL_FEAT not set.")
+        return
+    try:
+        ret_df = pd.DataFrame({k: df[f"ret"] for k, df in CROSS_FEAT.items() if 'ret' in df})
+        ret_df = ret_df.dropna()
+        zscores = (ret_df.sub(ret_df.mean(axis=1), axis=0).div(ret_df.std(axis=1) + 1e-10, axis=0))
+        if ticker in zscores:data["ret_cross_z"] = zscores[ticker]
+    except Exception as e:print(f"[Cross-Z] Failed for {ticker}: {e}")
+
+
+
 FTR_FUNC = {"ret": add_ret,"price": add_price,
             "log_ret": add_log_ret,"roll_ret": add_roll_ret,
              "volume": add_volume,"vol": add_vol,
@@ -80,4 +100,5 @@ FTR_FUNC = {"ret": add_ret,"price": add_price,
              "macd": add_macd,"momentum": add_momentum,
              "ema": add_ema,"boll": add_boll,
              "williams": add_williams_r,"cmo": add_cmo,
+             "ret_cross_z": add_ret_cross_z, 
             }

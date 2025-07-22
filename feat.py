@@ -3,6 +3,7 @@ import pandas as pd
 import yfinance as yf
 from feat_list import FTR_FUNC, add_volume
 from validate_data import TICKER_LIST
+from feat_list import set_all_cross_feat
 
 PRICE_CACHE = "csv/prices.csv"
 TICK = TICKER_LIST
@@ -65,9 +66,11 @@ def comp_feat(TICK, FEAT, cached_data, macro_keys):
         df = pd.DataFrame(index=prices.index)
         df['close'] = prices[ticker].ffill().dropna()
         for feat_name in FEAT:
-            if feat_name.startswith('volume'):continue
+            if feat_name.startswith('volume'): continue
             feat_func = FTR_FUNC.get(feat_name)
-            if feat_func:feat_func(df)
+            if feat_func:
+                if "cross" in feat_name:feat_func(df, ticker)
+                else:feat_func(df) 
         if volume is not None and any(ftr.startswith('volume') for ftr in FEAT):
             vol_col = f"{ticker}_volume"
             if vol_col in volume.columns:
@@ -78,6 +81,7 @@ def comp_feat(TICK, FEAT, cached_data, macro_keys):
         df = df.drop(columns=['close'], errors='ignore')
         df.columns = [f"{col}_{ticker}" for col in df.columns]
         all_feat[ticker] = df
+    set_all_cross_feat(all_feat)
     feat = pd.concat(all_feat.values(), axis=1).dropna()
     ret = prices.pct_change().shift(-1).reindex(feat.index)
     if ret.iloc[-1].isna().all():
