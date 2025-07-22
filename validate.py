@@ -3,8 +3,8 @@ from optuna.samplers import TPESampler
 from collections import Counter
 from feat_list import FTR_FUNC
 
-TRIALS = 100
-FEAT_LIST = [
+TRIALS = 20
+FEAT_SHORT = [
   'rsi',               # RSI
   'macd',              # MACD
   'ema',               # ema
@@ -17,17 +17,30 @@ FEAT_LIST = [
   'entropy'            # Entropy of Returns
 ]
 
-#FEAT_LIST = list(FTR_FUNC.keys())
+MACRO_LIST = [
+'HG=F',      # Copper – strong industrial signal
+'UUP',       # USD Index – macro regime signal
+'HYG',       # Risk-on/risk-off signal
+'VEA',  # Developed Intl Equities
+'PPIACO',    # Inflation producer-side
+'USDJPY=X',  # Currency regime
+'EURUSD=X',  # Euro regime
+'GC=F'       # Gold – safe haven and inflation hedge
+
+'^RUT',      # Russell 2000 – small cap US
+'ZC=F',      # Corn – appears in low trials, but still strong in top
+'^FTSE',     # UK Index – decent global signal
+
+"^TNX", "^TYX",    # 10Y, 30Y
+"LQD", 'EEM',      # Investment Grade Credit / EM
+]
+
+
+FEAT_LIST = list(FTR_FUNC.keys())
 TICKER_LIST = ['JPM', 'MSFT', 'NVDA', 'AVGO', 'LLY', 'COST', 'MA', 'XOM', 'UNH', 'AMZN', 'CAT', 'ADBE', 'TSLA']
 
-MACRO_TIGHT = [ "^TNX", "^TYX",                         # 10Y, 30Y
-                "^IXIC", "^DJI", "^RUT",                # Nasdaq, Dow, Russell
-                "EEM", "VEA",                           # EM + Developed ex-US
-                "GC=F", "ZW=F",                         # Gold + Wheat
-                "EURUSD=X", "USDJPY=X", "GBPUSD=X",     # FX majors
-                "LQD",      ]                           # Investment Grade Credit
 
-MACRO_LIST = [  "^GSPC",        # S&P 500
+MACRO_LONG = [  "^GSPC",        # S&P 500
                 "^N225",        # Nikkei 225 (Japan)
                 "CL=F",         # Crude Oil (WTI)
                 "SI=F",         # Silver
@@ -73,9 +86,10 @@ def binary_select(trial, items, prefix):
     return [item for item in items if trial.suggest_categorical(f"{prefix}_{item}", [False, True])]
 
 def run_experiment(trial):
-    select_macros = binary_select(trial, MACRO_LIST, "macro")
-    select_feat =  FEAT_LIST.copy()
-    #select_feat = binary_select(trial, FEAT_LIST, "feat")
+    select_macros = MACRO_LIST.copy()
+    #select_macros = binary_select(trial, MACRO_LIST, "macro")
+    #select_feat =  FEAT_LIST.copy()
+    select_feat = binary_select(trial, FEAT_LIST, "feat")
     select_TICK = TICKER_LIST.copy()  # Use fixed tickers for all trials
     #select_TICK = [t.strip() for t in binary_select(trial, TICKER_LIST, "ticker")]
 
@@ -161,17 +175,17 @@ def main():
     ticker_counter = Counter()
     for trial in study.trials:
         if trial.value is None or trial.value == -float("inf"): continue
-        for macro in MACRO_LIST:
-            if trial.params.get(f"macro_{macro}"): macro_counter[macro] += 1
-        #for feat in FEAT_LIST:
-           # if trial.params.get(f"feat_{feat}"): feat_counter[feat] += 1
+       # for macro in MACRO_LIST:
+        #    if trial.params.get(f"macro_{macro}"): macro_counter[macro] += 1
+        for feat in FEAT_LIST:
+            if trial.params.get(f"feat_{feat}"): feat_counter[feat] += 1
         #for ticker in TICKER_LIST:
          #   if trial.params.get(f"ticker_{ticker}"): ticker_counter[ticker] += 1
 
-    print("\nMacro inclusion frequency:")
-    for macro, count in macro_counter.most_common(): print(f"{macro}: {count}")
-    #print("\nFeature inclusion frequency:")
-    #for feat, count in feat_counter.most_common(): print(f"{feat}: {count}")
+    #print("\nMacro inclusion frequency:")
+    #for macro, count in macro_counter.most_common(): print(f"{macro}: {count}")
+    print("\nFeature inclusion frequency:")
+    for feat, count in feat_counter.most_common(): print(f"{feat}: {count}")
     #print("\nTicker inclusion frequency:")
     #for ticker, count in ticker_counter.most_common(): print(f"{ticker}: {count}")
     print("\nParam importances:")

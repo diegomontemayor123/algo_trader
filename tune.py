@@ -8,7 +8,7 @@ def run_experiment(trial):
         "END": trial.suggest_categorical("END", ["2025-07-01"]),#2025 Jul
         "SPLIT": trial.suggest_categorical("SPLIT", ["2023-01-01"]),#2023 Jan
         "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
-        "MACRO": trial.suggest_categorical("MACRO", ['^VIX']),
+        "MACRO": trial.suggest_categorical("MACRO", ['^VIX']),#HG=F,UUP,HYG,VEA,PPIACO,USDJPY=X,EURUSD=X,GC=F,^RUT,ZC=F,^FTSE,^TNX,^TYX,LQD,EEM
         "FEAT": trial.suggest_categorical("FEAT", ['price,ema']),
         "BATCH": trial.suggest_int("BATCH",53,53),#53
         "LBACK": trial.suggest_int("LBACK",84,84),#84
