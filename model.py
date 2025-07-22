@@ -60,13 +60,13 @@ class DifferentiableSharpeLoss(nn.Module):
             if sd_ret < 1e-4:print("SD - ret too low (<1e-4), skip batch.");return None  
         else:print("ret invalid, skip batch.");return None 
         excess_exp = torch.relu(pfo_weight.sum(dim=1).abs() - 0)
-        loss = -self.return_pen * mean_ret.pow(self.return_exp) 
-        #loss=-(self.return_pen+1/sd_ret)*mean_ret <-THIS WAS MY OLD OLD LOSS FUNCTION (SHARPE WITH MEAN RET PENALT)
-        loss += self.sd_pen * sd_ret.pow(self.sd_exp) 
+        #loss = -self.return_pen * mean_ret.pow(self.return_exp) 
+        loss=-(0.18+1/sd_ret)*mean_ret# <-THIS WAS MY OLD OLD LOSS FUNCTION (SHARPE WITH MEAN RET PENALT)
+        #loss += self.sd_pen*sd_ret.pow(self.sd_exp) 
         loss += self.exp_pen*excess_exp.pow(self.exp_exp).mean() 
         print(f"-Epoch/Batch: {epoch} / {batch_idx}")
         print(f"-Mean/SD Pen: {-self.return_pen * mean_ret.pow(self.return_exp) :.6f} / {(self.sd_pen * sd_ret.pow(self.sd_exp) ):.6f}")
-        print(f"Loss//Mean/SD: {loss:.6f} / {mean_ret:.6f} / {sd_ret:.6f}\n")
+        print(f"Loss/Mean/SD: {loss:.6f} / {mean_ret:.6f} / {sd_ret:.6f}")
         return loss
     
 class TransformerLRScheduler(torch.optim.lr_scheduler._LRScheduler):
