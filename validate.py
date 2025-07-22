@@ -3,57 +3,53 @@ from optuna.samplers import TPESampler
 from collections import Counter
 from feat_list import FTR_FUNC
 
-TRIALS = 60
+TRIALS = 80
+FEAT_LIST = list(FTR_FUNC.keys())
 TICKER_LIST = ['JPM', 'MSFT', 'NVDA', 'AVGO', 'LLY', 'COST', 'MA', 'XOM', 'UNH', 'AMZN', 'CAT', 'ADBE', 'TSLA']
 
-FEAT_LIST = list(FTR_FUNC.keys())
+MACRO_TIGHT = [ "^TNX", "^TYX",                         # 10Y, 30Y
+                "^IXIC", "^DJI", "^RUT",                # Nasdaq, Dow, Russell
+                "EEM", "VEA",                           # EM + Developed ex-US
+                "GC=F", "ZW=F",                         # Gold + Wheat
+                "EURUSD=X", "USDJPY=X", "GBPUSD=X",     # FX majors
+                "LQD",      ]                           # Investment Grade Credit
 
-MACRO_TIGHT = [
-    "^TNX", "^TYX",   # 10Y, 30Y
-    "^IXIC", "^DJI", "^RUT",    # Nasdaq, Dow, Russell
-    "EEM", "VEA",               # EM + Developed ex-US
-    "GC=F", "ZW=F",             # Gold + Wheat
-    "EURUSD=X", "USDJPY=X", "GBPUSD=X",  # FX majors
-    "LQD",                      # Investment Grade Credit
-]
-
-MACRO_LIST = [
-    "^GSPC",        # S&P 500
-    "^N225",        # Nikkei 225 (Japan)
-    "CL=F",         # Crude Oil (WTI)
-    "SI=F",         # Silver
-    "NG=F",         # Natural Gas
-    "HG=F",         # Copper Futures
-    "ZC=F",         # Corn Futures
-    "^FVX",         # 5-Year Treasury Yield
-    "^IRX",         # 13-Week T-Bill Rate
-    "TLT",          # iShares 20+ Year Treasury Bond ETF
-    "IEF",          # iShares 7-10 Year Treasury Bond ETF
-    "SHY",          # iShares 1-3 Year Treasury Bond ETF
-    "TIP",          # iShares TIPS Bond ETF (Inflation-Protected)
-    "UUP",          # Invesco DB US Dollar Index Bullish Fund
-    "^VIX",         # CBOE Volatility Index
-    "HYG",          # High Yield Corporate Bond ETF
-    "BRL=X",        # USD/BRL exchange rate
-    "AUDUSD=X",      # AUD/USD (commodity-linked FX pair)
-    "EEM",          # Emerging Markets ETF
-    "VEA",          # Developed ex-US Markets ETF
-    "FXI",          # China Large-Cap ETF
-    "^IXIC",        # Nasdaq Composite
-    "^DJI",         # Dow Jones Industrial Average
-    "^RUT",         # Russell 2000
-    "^FTSE",        # FTSE 100
-    "PPIACO",      # Producer Price Index (FRED)
-    "CPIAUCSL",    # Consumer Price Index (FRED, monthly)
-    "LQD",          # Investment Grade Corporate Bond ETF
-    "^TYX",         # 30-Year Treasury Yield
-    "^UST2Y",      # 2-Year Treasury Yield (FRED)
-    "USDJPY=X",     # USD/JPY
-    "EURUSD=X",     # EUR/USD
-    "GBPUSD=X",     # GBP/USD
-    "^TNX",         # 10-Year Treasury Yield
-    "ZW=F",         # Wheat Futures
-    "GC=F",         # Gold
+MACRO_LIST = [  "^GSPC",        # S&P 500
+                "^N225",        # Nikkei 225 (Japan)
+                "CL=F",         # Crude Oil (WTI)
+                "SI=F",         # Silver
+                "NG=F",         # Natural Gas
+                "HG=F",         # Copper Futures
+                "ZC=F",         # Corn Futures
+                "^FVX",         # 5-Year Treasury Yield
+                "^IRX",         # 13-Week T-Bill Rate
+                "TLT",          # iShares 20+ Year Treasury Bond ETF
+                "IEF",          # iShares 7-10 Year Treasury Bond ETF
+                "SHY",          # iShares 1-3 Year Treasury Bond ETF
+                "TIP",          # iShares TIPS Bond ETF (Inflation-Protected)
+                "UUP",          # Invesco DB US Dollar Index Bullish Fund
+                "^VIX",         # CBOE Volatility Index
+                "HYG",          # High Yield Corporate Bond ETF
+                "BRL=X",        # USD/BRL exchange rate
+                "EEM",          # Emerging Markets ETF
+                "VEA",          # Developed ex-US Markets ETF
+                "FXI",          # China Large-Cap ETF
+                "^IXIC",        # Nasdaq Composite
+                "^DJI",         # Dow Jones Industrial Average
+                "^RUT",         # Russell 2000
+                "^FTSE",        # FTSE 100
+                "PPIACO",      # Producer Price Index (FRED)
+                "CPIAUCSL",    # Consumer Price Index (FRED, monthly)
+                "LQD",          # Investment Grade Corporate Bond ETF
+                "^TYX",         # 30-Year Treasury Yield
+                "^UST2Y",       # 2-Year Treasury Yield (FRED)
+                "AUDUSD=X",      # AUD/USD (commodity-linked FX pair)
+                "USDJPY=X",     # USD/JPY
+                "EURUSD=X",     # EUR/USD
+                "GBPUSD=X",     # GBP/USD
+                "^TNX",         # 10-Year Treasury Yield
+                "ZW=F",         # Wheat Futures
+                "GC=F",         # Gold
 ]
 
 def load_fixed_params(filepath="hyparams.json"):
@@ -66,7 +62,8 @@ def binary_select(trial, items, prefix):
 def run_experiment(trial):
     select_macros = binary_select(trial, MACRO_LIST, "macro")
     select_feat = binary_select(trial, FEAT_LIST, "feat")
-    select_TICK = [t.strip() for t in binary_select(trial, TICKER_LIST, "ticker")]
+    select_TICK = TICKER_LIST.copy()  # Use fixed tickers for all trials
+    #select_TICK = [t.strip() for t in binary_select(trial, TICKER_LIST, "ticker")]
 
     if not select_feat or not select_macros or not select_TICK:
         print("[skip] Empty selection for tickers/features/macros")
@@ -154,15 +151,15 @@ def main():
             if trial.params.get(f"macro_{macro}"): macro_counter[macro] += 1
         for feat in FEAT_LIST:
             if trial.params.get(f"feat_{feat}"): feat_counter[feat] += 1
-        for ticker in TICKER_LIST:
-            if trial.params.get(f"ticker_{ticker}"): ticker_counter[ticker] += 1
+        #for ticker in TICKER_LIST:
+         #   if trial.params.get(f"ticker_{ticker}"): ticker_counter[ticker] += 1
 
     print("\nMacro inclusion frequency:")
     for macro, count in macro_counter.most_common(): print(f"{macro}: {count}")
     print("\nFeature inclusion frequency:")
     for feat, count in feat_counter.most_common(): print(f"{feat}: {count}")
-    print("\nTicker inclusion frequency:")
-    for ticker, count in ticker_counter.most_common(): print(f"{ticker}: {count}")
+    #print("\nTicker inclusion frequency:")
+    #for ticker, count in ticker_counter.most_common(): print(f"{ticker}: {count}")
     print("\nParam importances:")
     importance = optuna.importance.get_param_importances(study)
     for k, v in importance.items(): print(f"{k}: {v:.4f}")
