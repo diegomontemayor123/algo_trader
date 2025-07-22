@@ -7,7 +7,7 @@ from model import DifferentiableSharpeLoss, TransformerLRScheduler, create_model
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 MAX_EPOCHS = 20
 
-def train_model(model, train_loader, val_loader, config):
+def train_model(model, train_loader, val_loader, config, asset_sd):
     optimizer = torch.optim.Adam(model.parameters(), lr=config["INIT_LR"], weight_decay=config["DECAY"])
     #total_steps = MAX_EPOCHS * len(train_loader)
     #warm_steps = int(total_steps * config["WARMUP"])
@@ -24,7 +24,7 @@ def train_model(model, train_loader, val_loader, config):
             batch_feat = batch_feat.to(DEVICE, non_blocking=True)
             batch_ret = batch_ret.to(DEVICE, non_blocking=True)
             norm_weight = model(batch_feat)
-            loss = loss_func(norm_weight, batch_ret, model=model,epoch=epoch,batch_idx=batch_idx)
+            loss = loss_func(norm_weight, batch_ret, asset_sd=asset_sd, model=model,epoch=epoch,batch_idx=batch_idx)
             if torch.isnan(loss) or torch.isinf(loss): print("[Train] NaN or Inf loss detected — skipping model.");return None
             optimizer.zero_grad()
             loss.backward()
@@ -71,5 +71,6 @@ def train(config, feat, ret):
     train_loader = DataLoader(train_data, batch_size=config["BATCH"], shuffle=True, num_workers=num_workers)
     val_loader = DataLoader(val_data, batch_size=config["BATCH"], shuffle=False, num_workers=num_workers)
     model = create_model(train_data[0][0].shape[1], config)
-    model0 = train_model(model, train_loader, val_loader, config)
+    asset_sd = torch.tensor(ret.std(axis=0).values.astype(np.float32), device=DEVICE)
+    model0 = train_model(model, train_loader, val_loader, config, asset_sd=asset_sd)
     return model0

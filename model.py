@@ -53,17 +53,17 @@ class DifferentiableSharpeLoss(nn.Module):
     def __init__(self, return_pen,return_exp, exp_pen, exp_exp, sd_pen,sd_exp):
         super().__init__()
         self.return_pen = return_pen;self.return_exp = return_exp;self.exp_exp = exp_exp;self.exp_pen = exp_pen;self.sd_pen = sd_pen;self.sd_exp=sd_exp
-    def forward(self, pfo_weight, target_ret, model=None, epoch = 0,batch_idx=0):
+    def forward(self, pfo_weight, target_ret, asset_sd=None, model=None, epoch = 0,batch_idx=0):
         ret = (pfo_weight * target_ret).sum(dim=1);mean_ret = torch.mean(ret)
         if ret.numel() > 1 and not torch.isnan(ret).all():
             sd_ret = torch.std(ret, unbiased=False) + 1e-10
             if sd_ret < 1e-4:print("SD - ret too low (<1e-4), skip batch.");return None  
         else:print("ret invalid, skip batch.");return None 
-        excess_exp = torch.relu(pfo_weight.sum(dim=1).abs() - 0)
+        #excess_exp = pfo_weight.sum(dim=1).abs()
         loss = -(self.return_pen * torch.sign(mean_ret) * mean_ret.abs().pow(self.return_exp)) / (self.sd_pen*sd_ret.pow(self.sd_exp))
         #loss += self.sd_pen*sd_ret.pow(self.sd_exp) 
+        excess_exp = (pfo_weight * asset_sd).sum(dim=1).abs()
         loss += self.exp_pen*excess_exp.pow(self.exp_exp).mean() 
-        #loss=-(0.18+1/sd_ret)*mean_ret# <-THIS WAS MY OLD OLD LOSS FUNCTION (SHARPE WITH MEAN RET PENALT)
         print(f"-Epoch/Batch: {epoch} / {batch_idx}")
         print(f"-Mean/SD Pen: {-self.return_pen * mean_ret.pow(self.return_exp) :.6f} / {(self.sd_pen * sd_ret.pow(self.sd_exp) ):.6f}")
         print(f"Loss/Mean/SD: {loss:.6f} / {mean_ret:.6f} / {sd_ret:.6f}")
