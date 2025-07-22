@@ -8,10 +8,8 @@
     "BATCH": 55,
     "LBACK": 84,
     "PRED_DAYS": 6,
-    "WARMUP": 0.999,
     "DROPOUT": 0.028,
     "DECAY": 0.003,
-    "ATTENT": 0,
     "FEAT_PER": "8,12,24",
     "INIT_LR": 0.01,
     "EXP_PEN": 0.26,
@@ -26,5 +24,7 @@
     "MAX_HEADS": 1,
     "LAYERS": 1,
     "EARLY_FAIL": 2,
-    "VAL_SPLIT": 0.15
+    "VAL_SPLIT": 0.15,
+    "WARMUP": 0,
+    "ATTENT": 0
 }
