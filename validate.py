@@ -3,8 +3,21 @@ from optuna.samplers import TPESampler
 from collections import Counter
 from feat_list import FTR_FUNC
 
-TRIALS = 80
-FEAT_LIST = list(FTR_FUNC.keys())
+TRIALS = 100
+FEAT_LIST = [
+  'rsi',               # RSI
+  'macd',              # MACD
+  'momentum',          # Momentum
+  'atr',               # ATR
+  'boll',              # Bollinger Bands
+  'zscore',            # Z-Score of Price
+  'adx',               # ADX
+  'cross_momentum_z',  # Cross-Sectional Momentum Z-Score
+  'volatility_percentile', # Volatility Percentile
+  'entropy'            # Entropy of Returns
+]
+
+#FEAT_LIST = list(FTR_FUNC.keys())
 TICKER_LIST = ['JPM', 'MSFT', 'NVDA', 'AVGO', 'LLY', 'COST', 'MA', 'XOM', 'UNH', 'AMZN', 'CAT', 'ADBE', 'TSLA']
 
 MACRO_TIGHT = [ "^TNX", "^TYX",                         # 10Y, 30Y
@@ -61,7 +74,8 @@ def binary_select(trial, items, prefix):
 
 def run_experiment(trial):
     select_macros = binary_select(trial, MACRO_LIST, "macro")
-    select_feat = binary_select(trial, FEAT_LIST, "feat")
+    select_feat =  FEAT_LIST.copy()
+    #select_feat = binary_select(trial, FEAT_LIST, "feat")
     select_TICK = TICKER_LIST.copy()  # Use fixed tickers for all trials
     #select_TICK = [t.strip() for t in binary_select(trial, TICKER_LIST, "ticker")]
 
@@ -149,15 +163,15 @@ def main():
         if trial.value is None or trial.value == -float("inf"): continue
         for macro in MACRO_LIST:
             if trial.params.get(f"macro_{macro}"): macro_counter[macro] += 1
-        for feat in FEAT_LIST:
-            if trial.params.get(f"feat_{feat}"): feat_counter[feat] += 1
+        #for feat in FEAT_LIST:
+           # if trial.params.get(f"feat_{feat}"): feat_counter[feat] += 1
         #for ticker in TICKER_LIST:
          #   if trial.params.get(f"ticker_{ticker}"): ticker_counter[ticker] += 1
 
     print("\nMacro inclusion frequency:")
     for macro, count in macro_counter.most_common(): print(f"{macro}: {count}")
-    print("\nFeature inclusion frequency:")
-    for feat, count in feat_counter.most_common(): print(f"{feat}: {count}")
+    #print("\nFeature inclusion frequency:")
+    #for feat, count in feat_counter.most_common(): print(f"{feat}: {count}")
     #print("\nTicker inclusion frequency:")
     #for ticker, count in ticker_counter.most_common(): print(f"{ticker}: {count}")
     print("\nParam importances:")

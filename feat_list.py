@@ -47,16 +47,10 @@ def add_macd(data):
 
 def add_acceleration(data):
     for p in per:
-        data[f'acceleration{p}'] = data[f'momentum{p}'].diff()
-
-def add_acceleration(data):
-    for p in per:
         momentum_col = f'momentum{p}'
         if momentum_col not in data.columns:
             data[momentum_col] = data['close'] / data['close'].shift(p) - 1
         data[f'acceleration{p}'] = data[momentum_col].diff()
-
-
 
 def add_price_vs_high(data):
     for p in per:
@@ -91,11 +85,16 @@ def add_range(data):
     data['range'] = (data['high'] - data['low']) / (data['close'] + 1e-10)
 
 def add_volatility_change(data):
+    if 'ret' not in data.columns:
+        data['ret'] = data['close'].pct_change()
     for p in per:
         vol = data['ret'].rolling(p).std()
         data[f'vol_change{p}'] = vol.pct_change()
 
+
 def add_volatility_percentile(data):
+    if 'ret' not in data.columns:
+        data['ret'] = data['close'].pct_change()
     for p in per:
         vol = data['ret'].rolling(p).std()
         data[f'vol_percentile{p}'] = vol.rolling(p).apply(lambda x: pd.Series(x).rank(pct=True).iloc[-1])
@@ -148,6 +147,8 @@ def add_adx(data):
             pass
             
 def add_entropy(data):
+    if 'ret' not in data.columns:
+        data['ret'] = data['close'].pct_change()
     for p in per:
         ret = data['ret'].fillna(0)
         def shannon_entropy(x):
@@ -157,6 +158,8 @@ def add_entropy(data):
         data[f'entropy{p}'] = ret.rolling(p).apply(shannon_entropy, raw=True)
 
 def add_mean_abs_return(data):
+    if 'ret' not in data.columns:
+        data['ret'] = data['close'].pct_change()
     for p in per:
         data[f'mean_abs_ret{p}'] = data['ret'].abs().rolling(p).mean()
 
