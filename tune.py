@@ -22,9 +22,9 @@ def run_experiment(trial):
         "EXP_PEN": trial.suggest_float("EXP_PEN", 0.006, 0.006),#0.006/0.0038 linear/exp
         "EXP_EXP": trial.suggest_float("EXP_EXP", 1, 1),#1.85
         "RETURN_PEN": trial.suggest_float("RETURN_PEN", 0.2,0.6),#0.18/0.118 linear/exp
-        "RETURN_EXP": trial.suggest_float("RETURN_EXP", 0.9,1.1),#0.329
+        "RETURN_EXP": trial.suggest_float("RETURN_EXP", 1,1),#0.329
         "SD_PEN": trial.suggest_float("SD_PEN", 0,0),#0.157
-        "SD_EXP": trial.suggest_float("SD_EXP",1,1),#0.776
+        "SD_EXP": trial.suggest_float("SD_EXP",0.9,1.1),#0.776
         "TEST_CHUNK": trial.suggest_int("TEST_CHUNK", 12, 12),
         "RETRAIN_WIN": trial.suggest_int("RETRAIN_WIN", 0, 0),
         "SEED": trial.suggest_int("SEED", 42, 42),
