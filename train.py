@@ -71,6 +71,6 @@ def train(config, feat, ret):
     train_loader = DataLoader(train_data, batch_size=config["BATCH"], shuffle=True, num_workers=num_workers)
     val_loader = DataLoader(val_data, batch_size=config["BATCH"], shuffle=False, num_workers=num_workers)
     model = create_model(train_data[0][0].shape[1], config)
-    asset_sd = torch.tensor(ret.std(axis=0).values.astype(np.float32), device=DEVICE)
+    asset_sd = torch.tensor(train_data.ret.std(dim=0).cpu().numpy().astype(np.float32), device=DEVICE)
     model0 = train_model(model, train_loader, val_loader, config, asset_sd=asset_sd)
     return model0

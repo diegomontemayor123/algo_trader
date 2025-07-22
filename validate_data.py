@@ -1,9 +1,20 @@
 import os, subprocess, re, json, optuna
 from optuna.samplers import TPESampler
 from collections import Counter
+from feat_list import FTR_FUNC
 
 TICKER_LIST = ['JPM', 'MSFT', 'NVDA', 'AVGO', ' LLY', ' COST', ' MA', ' XOM', ' UNH', ' AMZN', ' CAT', ' ADBE','TSLA']
-FEAT_LIST = ["ret", "price", "log_ret", "roll_ret", "volume", "vol", "macd", "momentum", "ema", "cmo"]
+FEAT_LIST = list(FTR_FUNC.keys())#["ret", "price", "log_ret", "roll_ret", "volume", "vol", "macd", "momentum", "ema", "cmo"]
+MACRO_TIGHT = [
+    "^TNX", "^TYX",   # 10Y, 30Y
+    "^IXIC", "^DJI", "^RUT",    # Nasdaq, Dow, Russell
+    "EEM", "VEA",               # EM + Developed ex-US
+    "GC=F", "ZW=F",             # Gold + Wheat
+    "EURUSD=X", "USDJPY=X", "GBPUSD=X",  # FX majors
+    "LQD",                      # Investment Grade Credit
+    # "PPIACO", "CPIAUCSL"      # (Optional, monthly FRED data)
+]
+
 MACRO_LIST = [
     "^GSPC",        # S&P 500
     "^N225",        # Nikkei 225 (Japan)
@@ -23,24 +34,24 @@ MACRO_LIST = [
     "HYG",          # High Yield Corporate Bond ETF
     "BRL=X",        # USD/BRL exchange rate
     "AUDUSD=X"      # AUD/USD (commodity-linked FX pair)
-    #"EEM",          # Emerging Markets ETF
-    #"VEA",          # Developed ex-US Markets ETF
-    #"FXI",          # China Large-Cap ETF
-    #"^IXIC",        # Nasdaq Composite
-    #"^DJI",         # Dow Jones Industrial Average
-    #"^RUT",         # Russell 2000
-    #"^FTSE",        # FTSE 100
-    #"PPIACO",      # Producer Price Index (FRED)
-    #"CPIAUCSL",    # Consumer Price Index (FRED, monthly)
-    #"LQD",          # Investment Grade Corporate Bond ETF
-    #"^TYX",         # 30-Year Treasury Yield
-    #"^UST2Y",      # 2-Year Treasury Yield (FRED)
-    #"USDJPY=X",     # USD/JPY
-    #"EURUSD=X",     # EUR/USD
-    #"GBPUSD=X",     # GBP/USD
-    #"^TNX",         # 10-Year Treasury Yield
-    #"ZW=F",         # Wheat Futures
-    #"GC=F",         # Gold
+    "EEM",          # Emerging Markets ETF
+    "VEA",          # Developed ex-US Markets ETF
+    "FXI",          # China Large-Cap ETF
+    "^IXIC",        # Nasdaq Composite
+    "^DJI",         # Dow Jones Industrial Average
+    "^RUT",         # Russell 2000
+    "^FTSE",        # FTSE 100
+    "PPIACO",      # Producer Price Index (FRED)
+    "CPIAUCSL",    # Consumer Price Index (FRED, monthly)
+    "LQD",          # Investment Grade Corporate Bond ETF
+    "^TYX",         # 30-Year Treasury Yield
+    "^UST2Y",      # 2-Year Treasury Yield (FRED)
+    "USDJPY=X",     # USD/JPY
+    "EURUSD=X",     # EUR/USD
+    "GBPUSD=X",     # GBP/USD
+    "^TNX",         # 10-Year Treasury Yield
+    "ZW=F",         # Wheat Futures
+    "GC=F",         # Gold
 ]
 
 def load_fixed_params(filepath="hyparams.json"):

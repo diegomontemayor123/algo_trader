@@ -89,7 +89,7 @@ def run_btest(  device, initial_capital, split, lback,comp_feat, norm_feat, TICK
                 diffs = [p - b for p, b in zip(port_vals, bench_vals)]
                 avg_outperf[key] = np.mean(diffs)
     else:
-        print(f"[BTest] Running w test_chunk {test_chunk} and retrain_win {retrain_win}")
+        print(f"[BTest] Running test_chunk: {test_chunk} and retrain_wi: {retrain_win}")
         prev_model = None
         for idx, (chunk_start, chunk_end) in enumerate(chunks):
             print(f"[BTest] Starting Chunk {idx+1} | Per: {chunk_start.date()} to {chunk_end.date()} ===")
@@ -105,14 +105,16 @@ def run_btest(  device, initial_capital, split, lback,comp_feat, norm_feat, TICK
             chunk_config["START"] = str(train_start.date())
             chunk_config["END"] = str(train_end.date())
             chunk_config["SPLIT"] = str(chunk_start.date())
-            feat_train, ret_train = comp_feat(TICK, chunk_config["START"], chunk_config["END"], feat)
+            cached_chunk_data = load_prices(chunk_config["START"], chunk_config["END"], macro_keys)
+            feat_train, ret_train = comp_feat(TICK, feat, cached_chunk_data, macro_keys)
             train_data, val_data, _ = prep_data(feat_train, ret_train, chunk_config)
             num_workers = min(2, multiprocessing.cpu_count())
-            train_loader = DataLoader(train_data, batch=config["BATCH"], shuffle=True, num_workers=num_workers)
-            val_loader = DataLoader(val_data, batch=config["BATCH"], shuffle=False, num_workers=num_workers)
+            train_loader = DataLoader(train_data, batch_size=config["BATCH"], shuffle=True, num_workers=num_workers)
+            val_loader = DataLoader(val_data, batch_size=config["BATCH"], shuffle=False, num_workers=num_workers)
             model_dim = train_data[0][0].shape[1]
             model = deepcopy(prev_model) if prev_model else create_model(model_dim, config)
-            model = train_model(model, train_loader, val_loader, config)
+            asset_sd = torch.tensor(ret_train.std(axis=0).values.astype(np.float32), device=device)
+            model = train_model(model, train_loader, val_loader, config, asset_sd=asset_sd)
             if model is None:
                 print(f"[BTest] Skipping chunk {idx+1} due to failed training (NaNs or early exit).");continue
             model.eval()
@@ -146,7 +148,7 @@ def run_btest(  device, initial_capital, split, lback,comp_feat, norm_feat, TICK
             chunk_bench = bench_series.loc[chunk_start:chunk_end]
             if len(chunk_pfo) < 2:continue
             pfo_metrics = calc_perf_metrics(chunk_pfo)
-            bench_metrics = calc_perfcs(chunk_bench)
+            bench_metrics = calc_perf_metrics(chunk_bench)
             all_pfo_metrics.append(pfo_metrics)
             all_bench_metrics.append(bench_metrics)
             print(f"[BTest] Chunk {idx+1}: Pfo Metrics: {pfo_metrics}")
