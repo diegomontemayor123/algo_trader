@@ -1,7 +1,7 @@
 import os, subprocess, re, optuna, json, csv
 from optuna.samplers import TPESampler
 
-TRIALS = 25
+TRIALS = 100
 
 def run_experiment(trial):
     config = {
@@ -20,8 +20,8 @@ def run_experiment(trial):
         "ATTENT": trial.suggest_categorical("ATTENT", [0]),
         "FEAT_PER": trial.suggest_categorical("FEAT_PER", ["8,12,24"]),
         "INIT_LR": trial.suggest_float("INIT_LR", 0.01, 0.01),
-        "EXP_PEN": trial.suggest_float("EXP_PEN", 0.0038, 0.0038),#0.006 linear
-        "EXP_EXP": trial.suggest_float("EXP_EXP", 1.85, 1.85),
+        "EXP_PEN": trial.suggest_float("EXP_PEN", 0.001, 0.009),#0.006/0.0038 linear/exp
+        "EXP_EXP": trial.suggest_float("EXP_EXP", 1, 2),#1.85
         "RETURN_PEN": trial.suggest_float("RETURN_PEN", 0.05, 0.2),#0.18/0.118 linear/exp
         "RETURN_EXP": trial.suggest_float("RETURN_EXP", 0.1,0.5),#0.329
         "SD_PEN": trial.suggest_float("SD_PEN", 0,0),#0.157
