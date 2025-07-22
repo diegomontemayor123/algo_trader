@@ -75,7 +75,7 @@ def add_cmo(data):
 
 
 CROSS_FEAT = {} 
-def set_all__cross_feat(cross_feat_dict):
+def set_all_cross_feat(cross_feat_dict):
     global CROSS_FEAT
     CROSS_FEAT = cross_feat_dict
 
