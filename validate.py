@@ -3,7 +3,7 @@ from optuna.samplers import TPESampler
 from collections import Counter
 from feat_list import FTR_FUNC
 
-TRIALS = 20
+TRIALS = 60
 FEAT_SHORT = [
   'rsi',               # RSI
   'macd',              # MACD
