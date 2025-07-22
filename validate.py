@@ -41,22 +41,22 @@ TICKER_LIST = ['JPM', 'MSFT', 'NVDA', 'AVGO', 'LLY', 'COST', 'MA', 'XOM', 'UNH',
 
 
 MACRO_LONG = [  "^GSPC",        # S&P 500
-                "^N225",        # Nikkei 225 (Japan)
+                #"^N225",        # Nikkei 225 (Japan)
                 "CL=F",         # Crude Oil (WTI)
                 "SI=F",         # Silver
                 "NG=F",         # Natural Gas
                 "HG=F",         # Copper Futures
                 "ZC=F",         # Corn Futures
-                "^FVX",         # 5-Year Treasury Yield
+                #"^FVX",         # 5-Year Treasury Yield
                 "^IRX",         # 13-Week T-Bill Rate
                 "TLT",          # iShares 20+ Year Treasury Bond ETF
                 "IEF",          # iShares 7-10 Year Treasury Bond ETF
                 "SHY",          # iShares 1-3 Year Treasury Bond ETF
-                "TIP",          # iShares TIPS Bond ETF (Inflation-Protected)
+                #"TIP",          # iShares TIPS Bond ETF (Inflation-Protected)
                 "UUP",          # Invesco DB US Dollar Index Bullish Fund
-                "^VIX",         # CBOE Volatility Index
+                #"^VIX",         # CBOE Volatility Index
                 "HYG",          # High Yield Corporate Bond ETF
-                "BRL=X",        # USD/BRL exchange rate
+               #"BRL=X",        # USD/BRL exchange rate
                 "EEM",          # Emerging Markets ETF
                 "VEA",          # Developed ex-US Markets ETF
                 "FXI",          # China Large-Cap ETF
@@ -65,18 +65,19 @@ MACRO_LONG = [  "^GSPC",        # S&P 500
                 "^RUT",         # Russell 2000
                 "^FTSE",        # FTSE 100
                 "PPIACO",      # Producer Price Index (FRED)
-                "CPIAUCSL",    # Consumer Price Index (FRED, monthly)
-                "LQD",          # Investment Grade Corporate Bond ETF
+                #"CPIAUCSL",    # Consumer Price Index (FRED, monthly)
+                #"LQD",          # Investment Grade Corporate Bond ETF
                 "^TYX",         # 30-Year Treasury Yield
                 "^UST2Y",       # 2-Year Treasury Yield (FRED)
                 "AUDUSD=X",      # AUD/USD (commodity-linked FX pair)
                 "USDJPY=X",     # USD/JPY
                 "EURUSD=X",     # EUR/USD
                 "GBPUSD=X",     # GBP/USD
-                "^TNX",         # 10-Year Treasury Yield
+                #"^TNX",         # 10-Year Treasury Yield
                 "ZW=F",         # Wheat Futures
                 "GC=F",         # Gold
 ]
+
 
 def load_fixed_params(filepath="hyparams.json"):
     with open(filepath, "r") as f:params = json.load(f)
