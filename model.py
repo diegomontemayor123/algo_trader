@@ -59,9 +59,8 @@ class DifferentiableSharpeLoss(nn.Module):
             sd_ret = torch.std(ret, unbiased=False) + 1e-10
             if sd_ret < 1e-4:print("SD - ret too low (<1e-4), skip batch.");return None  
         else:print("ret invalid, skip batch.");return None 
-        #excess_exp = pfo_weight.sum(dim=1).abs()
-        loss = -(self.return_pen * torch.sign(mean_ret) * mean_ret.abs().pow(self.return_exp)) #/ (self.sd_pen*sd_ret.pow(self.sd_exp))
-        loss += self.sd_pen*sd_ret.pow(self.sd_exp) 
+        loss = -(self.return_pen * torch.sign(mean_ret) * mean_ret.abs().pow(self.return_exp)) / (self.sd_pen*sd_ret.pow(self.sd_exp))
+        #loss += self.sd_pen*sd_ret.pow(self.sd_exp) 
         excess_exp = (pfo_weight * asset_sd).sum(dim=1).abs()
         loss += self.exp_pen*excess_exp.pow(self.exp_exp).mean() 
         print(f"-Epoch/Batch: {epoch} / {batch_idx}")
