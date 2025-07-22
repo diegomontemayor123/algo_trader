@@ -202,7 +202,7 @@ def add_trend_combo(data):
 CROSS_FEAT = {}
 def set_all_cross_feat(cross_feat_dict):
     global CROSS_FEAT
-    CROSS_FEAT = cross_feat_dict
+    CROSS_FEAT = {k: df for k, df in cross_feat_dict.items() if 'close' in df.columns}
 
 def add_ret_cross_z(data, ticker):
     global CROSS_FEAT
@@ -289,11 +289,13 @@ FTR_FUNC = {
     # Basic
     "ret": add_ret, "price": add_price, "log_ret": add_log_ret, "roll_ret": add_roll_ret,
     # Trend / Momentum
-    "sma": add_sma, "ema": add_ema, "momentum": add_momentum, "macd": add_macd,
-    "acceleration":add_acceleration,"price_vs_high":add_price_vs_high,
+    "sma": add_sma, "ema": add_ema,# "momentum": add_momentum, 
+    "macd": add_macd,
+    #"acceleration":add_acceleration,
+    "price_vs_high":add_price_vs_high,
     "up_down_ratio":add_up_down_ratio,
     # Volatility
-    "vol": add_vol, "atr": add_atr,
+    "vol": add_vol, #"atr": add_atr,
     "range":add_range,"volatility_change":add_volatility_change,
     "volatility_percentile":add_volatility_percentile,
     # Oscillators/Mean ReversionRegime
@@ -301,14 +303,15 @@ FTR_FUNC = {
      "stochastic":add_stochastic,
     # Structure / Regime
      "percentile": add_price_percentiles,
-     "adx":add_adx, "entropy":add_entropy, "mean_abs_return":add_mean_abs_return,
+     "adx":add_adx, #"entropy":add_entropy, 
+     "mean_abs_return":add_mean_abs_return,
     # Bands
     "boll": add_boll, "donchian": add_donchian_width,
     # Volume
-    "volume": add_volume,
+    #"volume": add_volume,
     # Lag/Time
     "lag": add_lags,
-    "trend_combo":add_trend_combo,
+    #"trend_combo":add_trend_combo,
     # Cross-sectional
     "ret_cross_z": add_ret_cross_z, "cross_momentum_z": add_cross_momentum,
     "cross_vol_z": add_cross_vol_z, "cross_ret_rank": add_cross_ret_rank,

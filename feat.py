@@ -114,6 +114,7 @@ def comp_feat(TICK, FEAT, cached_data, macro_keys):
     if ret.iloc[-1].isna().all():
         ret = ret.iloc[:-1]
         feat = feat.loc[ret.index]
+        
 
     # Add macro and time features
     macro_df = process_macro_feat(cached_data, feat.index, macro_keys)

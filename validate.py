@@ -3,42 +3,26 @@ from optuna.samplers import TPESampler
 from collections import Counter
 from feat_list import FTR_FUNC
 
-TRIALS = 60
-FEAT_SHORT = [
-  'rsi',               # RSI
-  'macd',              # MACD
-  'ema',               # ema
-  'atr',               # ATR
-  'boll',              # Bollinger Bands
-  'zscore',            # Z-Score of Price
-  'adx',               # ADX
-  'cross_momentum_z',  # Cross-Sectional Momentum Z-Score
-  'volatility_percentile', # Volatility Percentile
-  'entropy'            # Entropy of Returns
-]
+TRIALS = 30
+TICKER_LIST = ['JPM', 'MSFT', 'NVDA', 'AVGO', 'LLY', 'COST', 'MA', 'XOM', 'UNH', 'AMZN', 'CAT', 'ADBE', 'TSLA']
+
+FEAT_LIST = ['sma','volatility_percentile','volatility_change','cross_rel_strength','ema','boll','percentile','cross_beta','ret_cross_z','adx']
+FEAT_LONG = list(FTR_FUNC.keys()) 
 
 MACRO_LIST = [
 'HG=F',      # Copper – strong industrial signal
 'UUP',       # USD Index – macro regime signal
 'HYG',       # Risk-on/risk-off signal
-'VEA',  # Developed Intl Equities
-'PPIACO',    # Inflation producer-side
+'VEA',       # Developed Intl Equities
 'USDJPY=X',  # Currency regime
 'EURUSD=X',  # Euro regime
 'GC=F'       # Gold – safe haven and inflation hedge
-
 '^RUT',      # Russell 2000 – small cap US
 'ZC=F',      # Corn – appears in low trials, but still strong in top
 '^FTSE',     # UK Index – decent global signal
-
-"^TNX", "^TYX",    # 10Y, 30Y
-"LQD", 'EEM',      # Investment Grade Credit / EM
+"^TYX",      #30Y
+"EEM",       #EM
 ]
-
-
-FEAT_LIST = list(FTR_FUNC.keys())
-TICKER_LIST = ['JPM', 'MSFT', 'NVDA', 'AVGO', 'LLY', 'COST', 'MA', 'XOM', 'UNH', 'AMZN', 'CAT', 'ADBE', 'TSLA']
-
 
 MACRO_LONG = [  "^GSPC",        # S&P 500
                 #"^N225",        # Nikkei 225 (Japan)
@@ -64,11 +48,11 @@ MACRO_LONG = [  "^GSPC",        # S&P 500
                 "^DJI",         # Dow Jones Industrial Average
                 "^RUT",         # Russell 2000
                 "^FTSE",        # FTSE 100
-                "PPIACO",      # Producer Price Index (FRED)
+                #"PPIACO",      # Producer Price Index (FRED)
                 #"CPIAUCSL",    # Consumer Price Index (FRED, monthly)
                 #"LQD",          # Investment Grade Corporate Bond ETF
                 "^TYX",         # 30-Year Treasury Yield
-                "^UST2Y",       # 2-Year Treasury Yield (FRED)
+                #"^UST2Y",       # 2-Year Treasury Yield (FRED)
                 "AUDUSD=X",      # AUD/USD (commodity-linked FX pair)
                 "USDJPY=X",     # USD/JPY
                 "EURUSD=X",     # EUR/USD

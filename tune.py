@@ -1,25 +1,21 @@
 import os, subprocess, re, optuna, json, csv
 from optuna.samplers import TPESampler
 
-TRIALS = 10
+TRIALS = 7
 
 def run_experiment(trial):
     config = {"START": trial.suggest_categorical("START", ["2019-01-01"]),#2019 Jan
         "END": trial.suggest_categorical("END", ["2025-07-01"]),#2025 Jul
         "SPLIT": trial.suggest_categorical("SPLIT", ["2023-01-01"]),#2023 Jan
         "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
-        "MACRO": trial.suggest_categorical("MACRO", [   'HG=F,UUP,HYG,VEA,PPIACO,USDJPY=X,EURUSD=X,GC=F,^RUT,ZC=F,^FTSE,^TNX,^TYX,LQD',
-                                                        'HG=F,UUP,HYG,VEA,PPIACO,USDJPY=X,EURUSD=X,GC=F,^RUT,ZC=F,^FTSE,^TNX,^TYX',
-                                                        'HG=F,UUP,HYG,VEA,PPIACO,USDJPY=X,EURUSD=X,GC=F,^RUT,ZC=F,^FTSE,^TNX',        
-                                                        'HG=F,UUP,HYG,VEA,PPIACO,USDJPY=X,EURUSD=X,GC=F,^RUT,ZC=F,^FTSE',        
-                                                        'HG=F,UUP,HYG,VEA,PPIACO,USDJPY=X,EURUSD=X,GC=F,^RUT,ZC=F',
-                                                        'HG=F,UUP,HYG,VEA,PPIACO,USDJPY=X,EURUSD=X,GC=F,^RUT,ZC=F,^FTSE,^TYX,EEM',
-                                                        'HG=F,UUP,HYG,VEA,PPIACO,USDJPY=X,EURUSD=X,GC=F,^RUT,ZC=F,^TYX,,EEM',
-                                                        'HG=F,UUP,HYG,VEA,PPIACO,USDJPY=X,EURUSD=X,GC=F,^RUT',
-                                                        'UUP,HYG,VEA,USDJPY=X,EURUSD=X,GC=F,^RUT',
-                                                                
-        ]),#'^VIX'
-        "FEAT": trial.suggest_categorical("FEAT", ['rsi,ema,atr,adx,cross_momentum_z,volatility_percentile']),#'price,ema'
+        "MACRO": trial.suggest_categorical("MACRO", ['HG=F,UUP,HYG,VEA,USDJPY=X,EURUSD=X,GC=F,^RUT,ZC=F,^FTSE,^TYX,EEM',]),#'^VIX'
+        "FEAT": trial.suggest_categorical("FEAT", ["sma,volatility_percentile,volatility_change,cross_rel_strength,ema,boll,percentile,cross_beta,ret_cross_z,adx",
+                                                   "sma,volatility_percentile,volatility_change,cross_rel_strength,ema,boll,percentile,cross_beta",
+                                                   "sma,volatility_percentile,volatility_change,cross_rel_strength,ema,boll",
+                                                   "sma,volatility_percentile,volatility_change,cross_rel_strength,ema",
+                                                   "sma,volatility_percentile,volatility_change,cross_rel_strength",
+                                                   "sma,volatility_percentile,volatility_change",
+                                                   "sma,volatility_percentile",]),#'price,ema'
         "BATCH": trial.suggest_int("BATCH",53,53),#53
         "LBACK": trial.suggest_int("LBACK",84,84),#84
         "PRED_DAYS": trial.suggest_int("PRED_DAYS",6,6),#6
