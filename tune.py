@@ -1,7 +1,7 @@
 import os, subprocess, re, optuna, json, csv
 from optuna.samplers import TPESampler
 
-TRIALS = 5
+TRIALS = 60
 
 def run_experiment(trial):
     config = {"START": trial.suggest_categorical("START", ["2019-01-01"]),
@@ -19,15 +19,15 @@ def run_experiment(trial):
         "ATTENT": trial.suggest_categorical("ATTENT", [0]),
         "FEAT_PER": trial.suggest_categorical("FEAT_PER", ["8,12,24"]),
         "INIT_LR": trial.suggest_float("INIT_LR", 0.01, 0.01),
-        "EXP_PEN": trial.suggest_float("EXP_PEN", 0.028, 0.028),#0.028/0.26 riskadjexp w sddenom/riskadj exp
-        "EXP_EXP": trial.suggest_float("EXP_EXP", 1.8, 1.8),
-        "RETURN_PEN": trial.suggest_float("RETURN_PEN", 0.38,0.38),#0.118/0.38 exp/sddenom
-        "RETURN_EXP": trial.suggest_float("RETURN_EXP", 0.32,0.32),
-        "SD_PEN": trial.suggest_float("SD_PEN", 0.14,0.14),#0.157/0.12 exp/sddenom
+        "EXP_PEN": trial.suggest_float("EXP_PEN", 0.2, 0.3),#0.26/0.028 sdminus/sddenom
+        "EXP_EXP": trial.suggest_float("EXP_EXP", 1.6, 2),
+        "RETURN_PEN": trial.suggest_float("RETURN_PEN", 0.05,0.2),#0.118/0.38 sdminus/sddenom
+        "RETURN_EXP": trial.suggest_float("RETURN_EXP", 0.25,0.4),
+        "SD_PEN": trial.suggest_float("SD_PEN", 0.1,0.2),#0.157/0.12 sdminus/sddenom
         "SD_EXP": trial.suggest_float("SD_EXP",0.76,0.76),
         "TEST_CHUNK": trial.suggest_int("TEST_CHUNK", 12, 12),
         "RETRAIN_WIN": trial.suggest_int("RETRAIN_WIN", 0, 0),
-        "SEED": trial.suggest_int("SEED", 1, 42),
+        "SEED": trial.suggest_int("SEED", 42, 42),
         "MAX_HEADS": trial.suggest_int("MAX_HEADS", 1, 1),
         "LAYERS": trial.suggest_int("LAYERS", 1, 1),
         "EARLY_FAIL": trial.suggest_int("EARLY_FAIL", 2, 2),
@@ -77,7 +77,7 @@ def run_experiment(trial):
         print(f"  Avg Outperf: {avg_outperf}")
 
         score = 1* sharpe - 2 * abs(down) + 0 * cagr 
-        if avg_outperf>0: score += 90 
+        if avg_outperf>0: score += 90+avg_outperf
         if exp_delta > 100: score += 10
 
         trial.set_user_attr("sharpe", sharpe)
