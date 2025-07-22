@@ -49,6 +49,14 @@ def add_acceleration(data):
     for p in per:
         data[f'acceleration{p}'] = data[f'momentum{p}'].diff()
 
+def add_acceleration(data):
+    for p in per:
+        momentum_col = f'momentum{p}'
+        if momentum_col not in data.columns:
+            data[momentum_col] = data['close'] / data['close'].shift(p) - 1
+        data[f'acceleration{p}'] = data[momentum_col].diff()
+
+
 
 def add_price_vs_high(data):
     for p in per:
@@ -282,20 +290,17 @@ FTR_FUNC = {
     "acceleration":add_acceleration,"price_vs_high":add_price_vs_high,
     "up_down_ratio":add_up_down_ratio,
     # Volatility
-    "vol": add_vol, #"atr": add_atr, <- DONT HAVE HIGH
-    #"range":add_range,
-    "volatility_change":add_volatility_change,
+    "vol": add_vol, "atr": add_atr,
+    "range":add_range,"volatility_change":add_volatility_change,
     "volatility_percentile":add_volatility_percentile,
     # Oscillators/Mean ReversionRegime
      "zscore": add_zscore,"rsi": add_rsi, "cmo": add_cmo, "williams": add_williams_r,
-     #"stochastic":add_stochastic,
+     "stochastic":add_stochastic,
     # Structure / Regime
      "percentile": add_price_percentiles,
-     #"adx":add_adx, 
-     "entropy":add_entropy, "mean_abs_return":add_mean_abs_return,
+     "adx":add_adx, "entropy":add_entropy, "mean_abs_return":add_mean_abs_return,
     # Bands
-    "boll": add_boll, 
-    #"donchian": add_donchian_width,
+    "boll": add_boll, "donchian": add_donchian_width,
     # Volume
     "volume": add_volume,
     # Lag/Time
