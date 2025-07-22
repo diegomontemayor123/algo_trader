@@ -19,12 +19,12 @@ def run_experiment(trial):
         "ATTENT": trial.suggest_categorical("ATTENT", [0]),
         "FEAT_PER": trial.suggest_categorical("FEAT_PER", ["8,12,24"]),
         "INIT_LR": trial.suggest_float("INIT_LR", 0.01, 0.01),
-        "EXP_PEN": trial.suggest_float("EXP_PEN", 0.001, 0.008),#0.006/0.0038 linear/exp
-        "EXP_EXP": trial.suggest_float("EXP_EXP", 1.6, 2),#1.85
-        "RETURN_PEN": trial.suggest_float("RETURN_PEN", 0.1,0.4),#0.18/0.118 linear/exp
-        "RETURN_EXP": trial.suggest_float("RETURN_EXP", 0.2,0.4),#0.329
-        "SD_PEN": trial.suggest_float("SD_PEN", .1,.13),#0.157
-        "SD_EXP": trial.suggest_float("SD_EXP",0.6,0.9),#0.776
+        "EXP_PEN": trial.suggest_float("EXP_PEN", 0.004, 0.008),#0.006/0.0038 linear/exp
+        "EXP_EXP": trial.suggest_float("EXP_EXP", 1.6, 1.9),#1.85
+        "RETURN_PEN": trial.suggest_float("RETURN_PEN", 0.2,0.6),#0.18/0.118 linear/exp
+        "RETURN_EXP": trial.suggest_float("RETURN_EXP", 0.3,0.6),#0.329
+        "SD_PEN": trial.suggest_float("SD_PEN", .05,.2),#0.157
+        "SD_EXP": trial.suggest_float("SD_EXP",0.6,1),#0.776
         "TEST_CHUNK": trial.suggest_int("TEST_CHUNK", 12, 12),
         "RETRAIN_WIN": trial.suggest_int("RETRAIN_WIN", 0, 0),
         "SEED": trial.suggest_int("SEED", 42, 42),
