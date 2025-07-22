@@ -60,7 +60,7 @@ class DifferentiableSharpeLoss(nn.Module):
             if sd_ret < 1e-4:print("SD - ret too low (<1e-4), skip batch.");return None  
         else:print("ret invalid, skip batch.");return None 
         excess_exp = torch.relu(pfo_weight.sum(dim=1).abs() - 0)
-        loss = -self.return_pen * mean_ret.pow(self.return_exp) / (sd_ret.pow(self.sd_exp))
+        loss = -(self.return_pen * mean_ret.pow(self.return_exp)) / (sd_ret.pow(self.sd_exp))
         #loss=-(0.18+1/sd_ret)*mean_ret# <-THIS WAS MY OLD OLD LOSS FUNCTION (SHARPE WITH MEAN RET PENALT)
         #loss += self.sd_pen*sd_ret.pow(self.sd_exp) 
         loss += self.exp_pen*excess_exp.pow(self.exp_exp).mean() 
