@@ -1,4 +1,4 @@
-import os, torch, sys, csv
+import os, torch, sys, random
 import numpy as np
 import torch.nn as nn
 from feat import *
@@ -13,7 +13,12 @@ config = load_config()
 SEED = config["SEED"]
 torch.manual_seed(SEED)
 np.random.seed(SEED)
-if torch.cuda.is_available(): torch.cuda.manual_seed_all(SEED)
+random.seed(SEED)
+torch.cuda.manual_seed(SEED)
+torch.cuda.manual_seed_all(SEED)
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
+torch.use_deterministic_algorithms(True) 
 
 class TransformerTrader(nn.Module):
     def __init__(self, dimen, num_heads, num_layers, dropout, seq_len, TICK, feat_attent):
