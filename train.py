@@ -33,7 +33,7 @@ def train_model(model, train_loader, val_loader, config):
                 if param.grad is not None:
                     grad_norm = param.grad.data.norm(2).item()
                     total_grad_norm += grad_norm
-            print(f"[Grad] Total grad norm: {total_grad_norm:.6f}\n")
+            #print(f"[Grad] Total grad norm: {total_grad_norm:.6f}\n")
             for name, param in model.named_parameters():
                 if param.grad is not None and (torch.isnan(param.grad).any() or torch.isinf(param.grad).any()):
                     print(f"[Warning] Skipping retraining chunk due to NaNs in gradients: {name}");return None
