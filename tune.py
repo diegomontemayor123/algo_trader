@@ -19,7 +19,7 @@ def run_experiment(trial):
         "ATTENT": trial.suggest_categorical("ATTENT", [0]),
         "FEAT_PER": trial.suggest_categorical("FEAT_PER", ["8,12,24"]),
         "INIT_LR": trial.suggest_float("INIT_LR", 0.01, 0.01),
-        "EXP_PEN": trial.suggest_float("EXP_PEN", 0.02, 0.024),#0.006/0.0038/0.0058/0.028 linear/exp/sddenom/riskadjexp with sddenom/riskadj exp
+        "EXP_PEN": trial.suggest_float("EXP_PEN", 0.02, 0.024),#0.006/0.0038/0.0058/0.028 linear/exp/sddenom/riskadjexp w sddenom/riskadj exp
         "EXP_EXP": trial.suggest_float("EXP_EXP", 1.8, 1.8),
         "RETURN_PEN": trial.suggest_float("RETURN_PEN", 0.38,0.38),#0.18/0.118/0.38 linear/exp/sddenom
         "RETURN_EXP": trial.suggest_float("RETURN_EXP", 0.32,0.32),
