@@ -16,7 +16,7 @@ def add_price(data): data['price'] = data['close']
 def add_log_ret(data):
     days = 5
     data['log_ret'] = np.log(data['close'] / data['close'].shift(1))
-    data['log_ret_norm5'] = (data['log_ret'] - data['log_ret'].rolling(days).mean()) / (data['log_ret'].rolling(days).std() + 1e-6)
+    data['log_ret_norm5'] = (data['log_ret'] - data['log_ret'].rolling(days).mean()) / (data['log_ret'].rolling(days).std() + 1e-10)
 
 def add_roll_ret(data):
     for p in per: data[f'roll_ret{p}'] = data['close'].pct_change(p)
@@ -25,7 +25,7 @@ def add_volume(volume_df):
     col = volume_df.columns[0]
     series = volume_df[col]
     volume_feat = pd.DataFrame(index=series.index)
-    for p in per: volume_feat[f'volume_zscore{p}'] = (series - series.rolling(p).mean()) / (series.rolling(p).std() + 1e-6)
+    for p in per: volume_feat[f'volume_zscore{p}'] = (series - series.rolling(p).mean()) / (series.rolling(p).std() + 1e-10)
     return volume_feat
 
 def add_vol(data):
@@ -40,7 +40,7 @@ def add_rsi(data):
         delta = data['close'].diff()
         gain = delta.clip(lower=0).rolling(p).mean()
         loss = -delta.clip(upper=0).rolling(p).mean()
-        data[f'rsi{p}'] = 100 - 100 / (1 + gain / (loss + 1e-6))
+        data[f'rsi{p}'] = 100 - 100 / (1 + gain / (loss + 1e-10))
 
 def add_macd(data):
     exp12 = data['close'].ewm(span=12).mean()
@@ -64,14 +64,14 @@ def add_williams_r(data):
     for p in per:
         high = data['close'].rolling(p).max()
         low = data['close'].rolling(p).min()
-        data[f'williams_r{p}'] = (high - data['close']) / (high - low + 1e-6)
+        data[f'williams_r{p}'] = (high - data['close']) / (high - low + 1e-10)
 
 def add_cmo(data):
     for p in per:
         delta = data['close'].diff()
         up = delta.clip(lower=0).rolling(p).sum()
         down = -delta.clip(upper=0).rolling(p).sum()
-        data[f'cmo{p}'] = 100 * (up - down) / (up + down + 1e-6)
+        data[f'cmo{p}'] = 100 * (up - down) / (up + down + 1e-10)
 
 FTR_FUNC = {"ret": add_ret,"price": add_price,
             "log_ret": add_log_ret,"roll_ret": add_roll_ret,
