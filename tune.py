@@ -4,8 +4,7 @@ from optuna.samplers import TPESampler
 TRIALS = 20
 
 def run_experiment(trial):
-    config = {
-        "START": trial.suggest_categorical("START", ["2019-01-01"]),
+    config = {"START": trial.suggest_categorical("START", ["2019-01-01"]),
         "END": trial.suggest_categorical("END", ["2025-07-01"]),
         "SPLIT": trial.suggest_categorical("SPLIT", ["2023-01-01"]),
         "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
@@ -23,9 +22,9 @@ def run_experiment(trial):
         "EXP_PEN": trial.suggest_float("EXP_PEN", 0.006, 0.006),#0.006/0.0038 linear/exp
         "EXP_EXP": trial.suggest_float("EXP_EXP", 1, 1),#1.85
         "RETURN_PEN": trial.suggest_float("RETURN_PEN", 0.2,0.6),#0.18/0.118 linear/exp
-        "RETURN_EXP": trial.suggest_float("RETURN_EXP", 0.8,1.2),#0.329
+        "RETURN_EXP": trial.suggest_float("RETURN_EXP", 0.9,1.1),#0.329
         "SD_PEN": trial.suggest_float("SD_PEN", 0,0),#0.157
-        "SD_EXP": trial.suggest_float("SD_EXP",0.8,1.2),#0.776
+        "SD_EXP": trial.suggest_float("SD_EXP",1,1),#0.776
         "TEST_CHUNK": trial.suggest_int("TEST_CHUNK", 12, 12),
         "RETRAIN_WIN": trial.suggest_int("RETRAIN_WIN", 0, 0),
         "SEED": trial.suggest_int("SEED", 42, 42),
