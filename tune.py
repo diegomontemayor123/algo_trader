@@ -28,7 +28,7 @@ def run_experiment(trial):
         "SD_EXP": trial.suggest_float("SD_EXP",0.5,1.1),#0.776
         "TEST_CHUNK": trial.suggest_int("TEST_CHUNK", 12, 12),
         "RETRAIN_WIN": trial.suggest_int("RETRAIN_WIN", 0, 0),
-        "SEED": trial.suggest_int("SEED", 1, 42),
+        "SEED": trial.suggest_int("SEED", 42, 42),
         "MAX_HEADS": trial.suggest_int("MAX_HEADS", 1, 1),
         "LAYERS": trial.suggest_int("LAYERS", 1, 1),
         "EARLY_FAIL": trial.suggest_int("EARLY_FAIL", 2, 2),
