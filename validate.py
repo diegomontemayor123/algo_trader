@@ -3,13 +3,13 @@ from optuna.samplers import TPESampler
 from collections import Counter
 from feat_list import FTR_FUNC
 
-TRIALS = 40
+TRIALS = 100
 TICKER_LIST = ['JPM', 'MSFT', 'NVDA', 'AVGO', 'LLY', 'COST', 'MA', 'XOM', 'UNH', 'AMZN', 'CAT', 'ADBE', 'TSLA']
 
 FEAT_LIST = ['sma','volatility_percentile','volatility_change','cross_rel_strength','ema','boll','percentile','cross_beta','ret_cross_z','adx']
 FEAT_LONG = list(FTR_FUNC.keys()) 
 
-MACRO_LIST = [
+MACRO_SMALL = [
 'HG=F',      # Copper – strong industrial signal
 'UUP',       # USD Index – macro regime signal
 'HYG',       # Risk-on/risk-off signal
@@ -24,7 +24,7 @@ MACRO_LIST = [
 "EEM",       #EM
 ]
 
-MACRO_LONG = [  "^GSPC",        # S&P 500
+MACRO_LIST = [  "^GSPC",        # S&P 500
                 #"^N225",        # Nikkei 225 (Japan)
                 "CL=F",         # Crude Oil (WTI)
                 "SI=F",         # Silver
