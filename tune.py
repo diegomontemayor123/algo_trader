@@ -1,33 +1,15 @@
 import os, subprocess, re, optuna, json, csv
 from optuna.samplers import TPESampler
 
-TRIALS = 60
+TRIALS = 10
 
 def run_experiment(trial):
     config = {"START": trial.suggest_categorical("START", ["2019-01-01"]),#2019 Jan
         "END": trial.suggest_categorical("END", ["2025-07-01"]),#2025 Jul
         "SPLIT": trial.suggest_categorical("SPLIT", ["2023-01-01"]),#2023 Jan
         "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
-        "MACRO": trial.suggest_categorical("MACRO", ['HG=F,UUP,HYG,VEA,USDJPY=X,EURUSD=X,GC=F,^RUT,ZC=F,^FTSE,^TYX,EEM',
-                                                    "GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM",
-                                                    "GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,EEM",
-                                                    "GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F",
-                                                    "GC=F,^IRX,^FTSE,HYG,EURUSD=X",
-                                                    "GC=F,^IRX,^FTSE,HYG",
-]),#'^VIX'
-        "FEAT": trial.suggest_categorical("FEAT", [ "sma,ema,boll,macd,volatility_change,donchain",
-                                                    "sma,ema,boll,macd,volatility_change",
-                                                    "ema,boll,macd,donchain",
-                                                    "sma,volatility_change,donchain",
-
-                                                    "sma,ema,boll,macd,donchain",
-                                                    "sma,ema,boll,volatility_change,donchain",
-                                                    "sma,boll,volatility_change,donchain",
-                                                    "ema,volatility_change,donchain",
-                                                    "sma,boll,macd,donchain",
-                                                    "sma,boll,donchain",
-                                                    "sma,boll,volatility_change",
-                                                   ]),#"price,ema"
+        "MACRO": trial.suggest_categorical("MACRO", ["GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM"]),#'^VIX'
+        "FEAT": trial.suggest_categorical("FEAT", [ "sma,ema,boll,macd,volatility_change,donchain",]),#"price,ema"
         "BATCH": trial.suggest_int("BATCH",53,53),#53
         "LBACK": trial.suggest_int("LBACK",84,84),#84
         "PRED_DAYS": trial.suggest_int("PRED_DAYS",6,6),#6
@@ -44,10 +26,10 @@ def run_experiment(trial):
         "TEST_CHUNK": trial.suggest_int("TEST_CHUNK",12,12),
         "RETRAIN_WIN": trial.suggest_categorical("RETRAIN_WIN", [0]),
         "SEED": trial.suggest_int("SEED",42,42),
-        "MAX_HEADS": trial.suggest_int("MAX_HEADS",1,1),
-        "LAYERS": trial.suggest_int("LAYERS", 1, 1),
-        "EARLY_FAIL": trial.suggest_int("EARLY_FAIL", 2, 2),
-        "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", .15, .15),
+        "MAX_HEADS": trial.suggest_int("MAX_HEADS",1,20),#1
+        "LAYERS": trial.suggest_int("LAYERS", 1, 6),#1
+        "EARLY_FAIL": trial.suggest_int("EARLY_FAIL", 2, 2),#2
+        "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", .15, .15),#.15
         "WARMUP": trial.suggest_float("WARMUP", 0, 0),
         "ATTENT": trial.suggest_categorical("ATTENT", [0]),
     }
