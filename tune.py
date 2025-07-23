@@ -1,7 +1,7 @@
 import os, subprocess, re, optuna, json, csv
 from optuna.samplers import TPESampler
 
-TRIALS = 10
+TRIALS = 30
 
 def run_experiment(trial):
     config = {"START": trial.suggest_categorical("START", ["2019-01-01"]),#2019 Jan
@@ -15,18 +15,18 @@ def run_experiment(trial):
         "PRED_DAYS": trial.suggest_int("PRED_DAYS",6,6),#6
         "DROPOUT": trial.suggest_float("DROPOUT",.028,.028),#.028
         "DECAY": trial.suggest_float("DECAY",.003,.003),#.003
-        "FEAT_PER": trial.suggest_categorical("FEAT_PER", ["8,12,24","8,12","12,24","8,16,30","16,30","8,16"]),
-        "INIT_LR": trial.suggest_float("INIT_LR",.006,.006),#.006
-        "EXP_PEN": trial.suggest_float("EXP_PEN",.235,.235),#.235
-        "EXP_EXP": trial.suggest_float("EXP_EXP",1.82,1.82),#1.82
-        "RETURN_PEN": trial.suggest_float("RETURN_PEN",.105,.105),#.105
-        "RETURN_EXP": trial.suggest_float("RETURN_EXP",.28,.28),#.28
-        "SD_PEN": trial.suggest_float("SD_PEN",.17,.17),#.17
-        "SD_EXP": trial.suggest_float("SD_EXP",.74,.74),#.74
+        "FEAT_PER": trial.suggest_categorical("FEAT_PER", ["8,12,24"]),
+        "INIT_LR": trial.suggest_float("INIT_LR",.002,.01),#.006
+        "EXP_PEN": trial.suggest_float("EXP_PEN",.135,.335),#.235
+        "EXP_EXP": trial.suggest_float("EXP_EXP",1.72,1.92),#1.82
+        "RETURN_PEN": trial.suggest_float("RETURN_PEN",.008,.12),#.105
+        "RETURN_EXP": trial.suggest_float("RETURN_EXP",.20,.4),#.28
+        "SD_PEN": trial.suggest_float("SD_PEN",.12,.22),#.17
+        "SD_EXP": trial.suggest_float("SD_EXP",.7,.8),#.74
         "TEST_CHUNK": trial.suggest_int("TEST_CHUNK",12,12),
         "RETRAIN_WIN": trial.suggest_categorical("RETRAIN_WIN", [0]),
         "SEED": trial.suggest_int("SEED",42,42),
-        "MAX_HEADS": trial.suggest_int("MAX_HEADS", 1, 4),#1
+        "MAX_HEADS": trial.suggest_int("MAX_HEADS", 1, 1),#1
         "LAYERS": trial.suggest_int("LAYERS", 1, 1),#1
         "EARLY_FAIL": trial.suggest_int("EARLY_FAIL", 2, 2),#2
         "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", .15, .15),#.15
