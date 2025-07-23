@@ -3,7 +3,7 @@ from optuna.samplers import TPESampler
 from collections import Counter
 from feat_list import FTR_FUNC
 
-TRIALS = 100
+TRIALS = 120
 TICKER_LIST = ['JPM', 'MSFT', 'NVDA', 'AVGO', 'LLY', 'COST', 'MA', 'XOM', 'UNH', 'AMZN', 'CAT', 'ADBE', 'TSLA']
 
 FEAT_LIST = ['sma','volatility_percentile','volatility_change','cross_rel_strength','ema','boll','percentile','cross_beta','ret_cross_z','adx']
