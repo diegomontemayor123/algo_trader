@@ -2,7 +2,7 @@ import os, subprocess, re, csv
 from optuna.trial import FixedTrial
 import itertools
 
-TRIALS = 12
+TRIALS = 70
 
 def run_experiment(trial):
     config = {
@@ -262,7 +262,6 @@ def main():
         params["MACRO"] = macro
         params["FEAT"] = feat
         trial = FixedTrial(params)
-        trial.number = trial_id  # Assign a trial number for logging
         print(f"\n=== Running trial {trial_id} ===")
         score = run_experiment(trial)
         print(f"Trial {trial_id} score: {score:.4f}")
