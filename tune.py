@@ -15,7 +15,7 @@ def run_experiment(trial):
         "PRED_DAYS": trial.suggest_int("PRED_DAYS",6,6),#6
         "DROPOUT": trial.suggest_float("DROPOUT",.028,.028),#.028
         "DECAY": trial.suggest_float("DECAY",.003,.003),#.003
-        "FEAT_PER": trial.suggest_categorical("FEAT_PER", ["8,12,24"]),
+        "FEAT_PER": trial.suggest_categorical("FEAT_PER", ["8,12,24","8,12","12,24","8,16,30","16,30","8,16"]),
         "INIT_LR": trial.suggest_float("INIT_LR",.006,.006),#.006
         "EXP_PEN": trial.suggest_float("EXP_PEN",.235,.235),#.235
         "EXP_EXP": trial.suggest_float("EXP_EXP",1.82,1.82),#1.82
@@ -26,8 +26,8 @@ def run_experiment(trial):
         "TEST_CHUNK": trial.suggest_int("TEST_CHUNK",12,12),
         "RETRAIN_WIN": trial.suggest_categorical("RETRAIN_WIN", [0]),
         "SEED": trial.suggest_int("SEED",42,42),
-        "MAX_HEADS": trial.suggest_int("MAX_HEADS",1,20),#1
-        "LAYERS": trial.suggest_int("LAYERS", 1, 6),#1
+        "MAX_HEADS": trial.suggest_int("MAX_HEADS", 1, 4),#1
+        "LAYERS": trial.suggest_int("LAYERS", 1, 1),#1
         "EARLY_FAIL": trial.suggest_int("EARLY_FAIL", 2, 2),#2
         "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", .15, .15),#.15
         "WARMUP": trial.suggest_float("WARMUP", 0, 0),
