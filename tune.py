@@ -15,8 +15,9 @@ def run_experiment(trial):
 ]),#'^VIX'
         "FEAT": trial.suggest_categorical("FEAT", ["sma,volatility_percentile",
                                                    "price,ema",
-                                                   "sma,ema,boll,macd,volatility_change,donchain,stochastic,williams,rsi",
-                                                   "sma,ema,boll,macd,volatility_change,donchain",
+
+
+
                                                    ]),#"price,ema"
         "BATCH": trial.suggest_int("BATCH",53,53),#53
         "LBACK": trial.suggest_int("LBACK",84,84),#84
@@ -101,7 +102,7 @@ def run_experiment(trial):
         print(f"[error] Trial failed with exception: {e}")
         return -float("inf")
 
-def mainORIG():
+def main():
     from load import load_config
     config = load_config()
     sampler = TPESampler(seed=config["SEED"])
@@ -115,32 +116,14 @@ def mainORIG():
     for m in ["sharpe", "down", "CAGR", "avg_outperf", "exp_delta"]:
         print(f"{m}: {best.user_attrs.get(m, float('nan')):.4f}")
 
-import itertools
-from optuna.trial import FixedTrial
 
-def main():
-    macros = [
-"GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM",
-"GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP",
-"GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X",
-"GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC",
-"GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F",
-"GC=F,^IRX,^FTSE,HYG,EURUSD=X",
-"GC=F,^IRX,^FTSE,HYG",
-"GC=F,^IRX,^FTSE",
-"GC=F,^IRX",
-"GC=F",
-    ]
-
-    feats = [
-        #"sma,volatility_percentile",
-        #"price,ema",
+    feats2 = [
+        "sma,volatility_percentile",
+        "price,ema",
         "sma,ema,boll,macd,volatility_change,donchain",
-        #"sma,ema,boll,macd,volatility_change,donchain,stochastic,williams,rsi",
-        #"sma,ema,boll,macd,volatility_change,donchain,stochastic,williams",
-        #"sma,ema,boll,macd,volatility_change,donchain,stochastic",
-        ]
-    feat_bottom=[
+        "sma,ema,boll,macd,volatility_change,donchain,stochastic,williams,rsi",
+        "sma,ema,boll,macd,volatility_change,donchain,stochastic,williams",
+        "sma,ema,boll,macd,volatility_change,donchain,stochastic",
     "sma",
     "ema",
     "boll",
@@ -206,46 +189,4 @@ def main():
     
 ]
 
-        
-    
-
-    trial_id = 0
-    for macro_str, feat_str in itertools.product(macros, feats):
-        params = {
-            "START": "2019-01-01",
-            "END": "2025-07-01",
-            "SPLIT": "2023-01-01",
-            "TICK": "JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE",
-            "MACRO": macro_str,
-            "FEAT": feat_str,
-            "BATCH": 53,
-            "LBACK": 84,
-            "PRED_DAYS": 6,
-            "DROPOUT": .028,
-            "DECAY": .003,
-            "FEAT_PER": "8,12,24",
-            "INIT_LR": .006,
-            "EXP_PEN": .235,
-            "EXP_EXP": 1.82,
-            "RETURN_PEN": .105,
-            "RETURN_EXP": .28,
-            "SD_PEN": .17,
-            "SD_EXP": .74,
-            "TEST_CHUNK": 12,
-            "RETRAIN_WIN": 0,
-            "SEED": 42,
-            "MAX_HEADS": 1,
-            "LAYERS": 1,
-            "EARLY_FAIL": 2,
-            "VAL_SPLIT": .15,
-            "WARMUP": 0,
-            "ATTENT": 0,
-        }
-
-        trial = FixedTrial(params)
-        print(f"\n=== Running trial {trial_id} ===")
-        score = run_experiment(trial)
-        print(f"Score: {score:.4f}")
-        trial_id += 1
-
-if __name__ == "__main__": main()
+    if __name__ == "__main__": main()
