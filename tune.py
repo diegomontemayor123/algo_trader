@@ -1,7 +1,7 @@
 import os, subprocess, re, optuna, json, csv
 from optuna.samplers import TPESampler
 
-TRIALS = 50
+TRIALS = 10
 
 def run_experiment(trial):
     config = {"START": trial.suggest_categorical("START", ["2019-01-01"]),#2019 Jan
@@ -16,13 +16,13 @@ def run_experiment(trial):
         "DROPOUT": trial.suggest_float("DROPOUT",.028,.028),#.028
         "DECAY": trial.suggest_float("DECAY",.003,.003),#.003
         "FEAT_PER": trial.suggest_categorical("FEAT_PER", ["8,12,24"]),
-        "INIT_LR": trial.suggest_float("INIT_LR",.002,.01),#.006
-        "EXP_PEN": trial.suggest_float("EXP_PEN",.135,.335),#.235
-        "EXP_EXP": trial.suggest_float("EXP_EXP",1.72,1.92),#1.82
-        "RETURN_PEN": trial.suggest_float("RETURN_PEN",.008,.12),#.105
-        "RETURN_EXP": trial.suggest_float("RETURN_EXP",.20,.4),#.28
-        "SD_PEN": trial.suggest_float("SD_PEN",.12,.22),#.17
-        "SD_EXP": trial.suggest_float("SD_EXP",.7,.8),#.74
+        "INIT_LR": trial.suggest_float("INIT_LR",.006,.006),#.006
+        "EXP_PEN": trial.suggest_float("EXP_PEN",.226,.226),#.235 / .226
+        "EXP_EXP": trial.suggest_float("EXP_EXP",1.8,1.8),#1.8
+        "RETURN_PEN": trial.suggest_float("RETURN_PEN",.06,.06),#.105 / .062
+        "RETURN_EXP": trial.suggest_float("RETURN_EXP",.344,.344),#.28 / .344
+        "SD_PEN": trial.suggest_float("SD_PEN",.05,.17),#.17 / .12 <-
+        "SD_EXP": trial.suggest_float("SD_EXP",.65,.74),#.74 / .71 <-
         "TEST_CHUNK": trial.suggest_int("TEST_CHUNK",12,12),
         "RETRAIN_WIN": trial.suggest_categorical("RETRAIN_WIN", [0]),
         "SEED": trial.suggest_int("SEED",42,42),
