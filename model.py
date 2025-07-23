@@ -1,8 +1,9 @@
-import os, torch, sys, random
+import os, torch, sys
 import numpy as np
 import torch.nn as nn
 from feat import *
 from load import load_config
+
 
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 MODEL_PATH = "0model.pth"

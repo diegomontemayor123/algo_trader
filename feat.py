@@ -1,9 +1,8 @@
 import os
 import pandas as pd
 import yfinance as yf
-from feat_list import FTR_FUNC, add_volume
+from feat_list import FTR_FUNC, add_volume, set_all_cross_feat
 from validate import TICKER_LIST
-from feat_list import set_all_cross_feat
 
 PRICE_CACHE = "csv/prices.csv"
 TICK = TICKER_LIST
