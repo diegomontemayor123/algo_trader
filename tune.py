@@ -8,19 +8,15 @@ def run_experiment(trial):
         "END": trial.suggest_categorical("END", ["2025-07-01"]),#2025 Jul
         "SPLIT": trial.suggest_categorical("SPLIT", ["2023-01-01"]),#2023 Jan
         "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
-        "MACRO": trial.suggest_categorical("MACRO", ['HG=F,UUP,HYG,VEA,USDJPY=X,EURUSD=X,GC=F,^RUT,ZC=F,^FTSE,^TYX,EEM',
+        "MACRO": trial.suggest_categorical("MACRO", [#'HG=F,UUP,HYG,VEA,USDJPY=X,EURUSD=X,GC=F,^RUT,ZC=F,^FTSE,^TYX,EEM',
                                                      'HG=F,UUP,HYG,USDJPY=X,EURUSD=X,GC=F,^FTSE,EEM',
                                                     "GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM",
-                                                    "GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP",
-                                                    "GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X",
                                                     "GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC",
                                                     "GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F",
                                                     "GC=F,^IRX,^FTSE,HYG,EURUSD=X",
-                                                    "GC=F,^IRX,^FTSE,HYG",
+                                                    #"GC=F,^IRX,^FTSE,HYG",
                                                     "GC=F,^IRX,^FTSE",
-                                                    "GC=F,^IRX",
-                                                    "GC=F",
-                                                    '^VIX'
+                                                    #"GC=F",
 ]),#'^VIX'
         "FEAT": trial.suggest_categorical("FEAT", [#"sma,volatility_percentile",
                                                    #"price,ema",
