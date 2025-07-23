@@ -119,7 +119,7 @@ def run_experiment(trial):
             print("[error] Missing metric(s) — skipping trial.")
             return -float("inf")
     
-        score = 1.0 * sharpe - 4.0 * abs(down) + 0.5 * (cagr or 0)
+        score = 1.0 * sharpe - 6.0 * abs(down) + 0.5 * (cagr or 0)
         if avg_outperf and avg_outperf > 0: score += 90
         if exp_delta and exp_delta > 100: score += 10
 
