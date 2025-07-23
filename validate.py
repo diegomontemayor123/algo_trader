@@ -6,67 +6,65 @@ from feat_list import FTR_FUNC
 TRIALS = 70
 TICKER_LIST = ['JPM', 'MSFT', 'NVDA', 'AVGO', 'LLY', 'COST', 'MA', 'XOM', 'UNH', 'AMZN', 'CAT', 'ADBE', 'TSLA']
 
-FEAT_LIST = ['sma','volatility_percentile','volatility_change','cross_rel_strength','ema','boll','adx','stochastic','williams','donchain','rsi','macd',]
+FEAT_LIST = ['sma','ema','boll','macd','volatility_change','stochastic','williams','donchain','rsi','cross_rel_strength','volatility_percentile',]
 FEAT_LONG = list(FTR_FUNC.keys()) 
 
-MACRO_LIST = [
-'HG=F',      # Copper – strong industrial signal
-'UUP',       # USD Index – macro regime signal
-'HYG',       # Risk-on/risk-off signal
-'VEA',       # Developed Intl Equities
-'USDJPY=X',  # Currency regime
-'EURUSD=X',  # Euro regime
-'GC=F'   ,    # Gold – safe haven and inflation hedge
-'^FTSE',     # UK Index – decent global signal
-"NG=F",         # Natural Gas
-"GBPUSD=X",     # GBP/USD
-"^IRX",         # 13-Week T-Bill Rate
-"^GSPC",        # S&P 500
-"ZW=F",         # Wheat Futures
-'^RUT',      # Russell 2000 – small cap US
-'ZC=F',      # Corn – appears in low trials, but still strong in top
-"^TYX",      #30Y
-"EEM",       #EM
+MACRO_LIST = [  'GC=F',       # Gold – safe haven and inflation hedge
+                "^IRX",       # 13-Week T-Bill Rate
+                '^FTSE',      # UK Index – decent global signal
+                'HYG',        # Risk-on/risk-off signal
+                'EURUSD=X',   # Euro regime
+                'HG=F',       # Copper – strong industrial signal
+                "^GSPC",      # S&P 500
+                "GBPUSD=X",   # GBP/USD
+                'UUP',        # USD Index – macro regime signal
+                "EEM",        # EM    
+                "ZW=F",       # Wheat Futures
+                'USDJPY=X',   # Currency regime
+                #"NG=F",      # Natural Gas
+                #'VEA',       # Developed Intl Equities
+                #'^RUT',      # Russell 2000 – small cap US
+                #'ZC=F',      # Corn – appears in low trials, but still strong in top
+                #"^TYX",      #30Y
 ]
 
 MACRO_LONG = [  "^GSPC",        # S&P 500
-                #"^N225",        # Nikkei 225 (Japan)
                 "CL=F",         # Crude Oil (WTI)
                 "SI=F",         # Silver
                 "NG=F",         # Natural Gas
                 "HG=F",         # Copper Futures
                 "ZC=F",         # Corn Futures
-                #"^FVX",         # 5-Year Treasury Yield
                 "^IRX",         # 13-Week T-Bill Rate
                 "TLT",          # iShares 20+ Year Treasury Bond ETF
                 "IEF",          # iShares 7-10 Year Treasury Bond ETF
-                #"SHY",          # iShares 1-3 Year Treasury Bond ETF
-                #"TIP",          # iShares TIPS Bond ETF (Inflation-Protected)
                 "UUP",          # Invesco DB US Dollar Index Bullish Fund
-                #"^VIX",         # CBOE Volatility Index
                 "HYG",          # High Yield Corporate Bond ETF
-               #"BRL=X",        # USD/BRL exchange rate
                 "EEM",          # Emerging Markets ETF
                 "VEA",          # Developed ex-US Markets ETF
                 "FXI",          # China Large-Cap ETF
-                #"^IXIC",        # Nasdaq Composite
-                #"^DJI",         # Dow Jones Industrial Average
                 "^RUT",         # Russell 2000
                 "^FTSE",        # FTSE 100
-                #"PPIACO",      # Producer Price Index (FRED)
-                #"CPIAUCSL",    # Consumer Price Index (FRED, monthly)
-                #"LQD",          # Investment Grade Corporate Bond ETF
                 "^TYX",         # 30-Year Treasury Yield
-                #"^UST2Y",       # 2-Year Treasury Yield (FRED)
-                "AUDUSD=X",      # AUD/USD (commodity-linked FX pair)
+                "AUDUSD=X",     # AUD/USD (commodity-linked FX pair)
                 "USDJPY=X",     # USD/JPY
                 "EURUSD=X",     # EUR/USD
                 "GBPUSD=X",     # GBP/USD
-                #"^TNX",         # 10-Year Treasury Yield
                 "ZW=F",         # Wheat Futures
                 "GC=F",         # Gold
+                #"^TNX",        # 10-Year Treasury Yield
+                #"^UST2Y",      # 2-Year Treasury Yield (FRED)
+                #"PPIACO",      # Producer Price Index (FRED)
+                #"CPIAUCSL",    # Consumer Price Index (FRED, monthly)
+                #"LQD",         # Investment Grade Corporate Bond ETF
+                #"^IXIC",       # Nasdaq Composite
+                #"^DJI",        # Dow Jones Industrial Average
+                #"BRL=X",       # USD/BRL exchange rate
+                #"^VIX",        # CBOE Volatility Index
+                #"SHY",         # iShares 1-3 Year Treasury Bond ETF
+                #"TIP",         # iShares TIPS Bond ETF (Inflation-Protected)
+                #"^FVX",        # 5-Year Treasury Yield
+                #"^N225",       # Nikkei 225 (Japan)
 ]
-
 
 def load_fixed_params(filepath="hyparams.json"):
     with open(filepath, "r") as f:params = json.load(f)

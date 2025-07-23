@@ -1,12 +1,3 @@
-import os
-import pandas as pd
-import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
-from load import load_config
-from validate import TICKER_LIST, FEAT_LIST, MACRO_LIST
-from feat import load_prices, comp_feat  
-
 def compute_feature_correlations(feat, ret, split_date, top_n=10, output_dir="correlation_test_output", rolling_window=60, stride=5):
     print(f"[INFO] Running feature correlation analysis on test period from {split_date}")
     os.makedirs(output_dir, exist_ok=True)
@@ -22,7 +13,7 @@ def compute_feature_correlations(feat, ret, split_date, top_n=10, output_dir="co
     top_features_per_asset = {}
     aggregate_corrs_by_feature = {}
 
-    # Static correlations per asset
+    # === Static correlations per asset ===
     for asset in ret_test.columns:
         asset_corrs = []
         for feat_col in feat_test.columns:
@@ -59,7 +50,7 @@ def compute_feature_correlations(feat, ret, split_date, top_n=10, output_dir="co
     for feat, mean_corr in sorted_mean_abs[:top_n]:
         print(f"{feat}: {mean_corr:.4f}")
 
-    # ======= Rolling window correlation across all assets with stride =======
+    # === Rolling window correlation across all assets ===
     print(f"\n[INFO] Calculating rolling window correlations across ALL ASSETS (window = {rolling_window} days, stride = {stride})...")
 
     rolling_corrs_list = []
@@ -73,24 +64,46 @@ def compute_feature_correlations(feat, ret, split_date, top_n=10, output_dir="co
             for asset in ret_test.columns:
                 window_ret = ret_test[asset].iloc[i:i+rolling_window]
                 valid = window_feat.notna() & window_ret.notna()
-                if valid.sum() < rolling_window * 0.8:
+                if valid.sum() < rolling_window * 0.5:
+                    rolling_series.append(np.nan)
                     continue
                 corr = np.corrcoef(window_feat[valid], window_ret[valid])[0, 1]
                 if np.isfinite(corr):
                     corrs.append(corr)
             rolling_series.append(np.mean(corrs) if corrs else np.nan)
 
-        # Pad output to full index length for plotting alignment
-        padded_series = pd.Series([np.nan]*range_iter.start + rolling_series, index=feat_test.index)
+        # Pad to full index using stride-aware alignment
+        padded_series = pd.Series(np.nan, index=feat_test.index)
+        rolling_dates = feat_test.index[::stride][:len(rolling_series)]
+        padded_series.loc[rolling_dates] = rolling_series
         padded_series.name = feat_col
         rolling_corrs_list.append(padded_series)
 
     rolling_corrs = pd.concat(rolling_corrs_list, axis=1)
 
+    # Identify most frequent top-N features over time
     top_features_over_time = rolling_corrs.abs().apply(lambda row: row.nlargest(top_n).index.tolist(), axis=1)
     top_features_flat = pd.Series([feat for sublist in top_features_over_time.dropna() for feat in sublist])
+
+    if top_features_flat.empty:
+        print("[WARN] No valid rolling correlations detected. Skipping rolling correlation plot.")
+        return top_features_per_asset
+
     top_features_freq = top_features_flat.value_counts().head(top_n).index.tolist()
 
+    # Debug print
+    print(f"\n[DEBUG] Top features by frequency in rolling correlation:")
+    for feat_col in top_features_freq:
+        valid_points = rolling_corrs[feat_col].notna().sum()
+        print(f"{feat_col}: {valid_points} valid points")
+
+    # Plot only features with valid data
+    top_features_freq = [c for c in top_features_freq if rolling_corrs[c].notna().sum() > 0]
+    if not top_features_freq:
+        print("[WARN] No top features had valid values to plot.")
+        return top_features_per_asset
+
+    # Plot rolling correlation
     plt.figure(figsize=(15, 7))
     for feat_col in top_features_freq:
         plt.plot(rolling_corrs.index, rolling_corrs[feat_col], label=feat_col)
@@ -106,19 +119,3 @@ def compute_feature_correlations(feat, ret, split_date, top_n=10, output_dir="co
     print(f"[INFO] Rolling window correlation plot saved to {output_dir}")
     print(f"\n[INFO] Correlation analysis complete. Results saved in: {output_dir}")
     return top_features_per_asset
-
-def main():
-    config = load_config()
-    split_date = config["SPLIT"]
-    start = config["START"]
-    end = config["END"]
-    feat_names = FEAT_LIST
-    macro_keys = MACRO_LIST
-    print("[INFO] Loading prices and computing features/returns...")
-    cached_data = load_prices(start, end, macro_keys)
-    feat, ret = comp_feat(TICKER_LIST, feat_names, cached_data, macro_keys)
-    ret = ret.loc[feat.index]
-    compute_feature_correlations(feat, ret, split_date)
-
-if __name__ == "__main__":
-    main()
