@@ -1,23 +1,31 @@
 import os, subprocess, re, optuna, json, csv
 from optuna.samplers import TPESampler
 
-TRIALS = 10
+TRIALS = 25
 
 def run_experiment(trial):
     config = {"START": trial.suggest_categorical("START", ["2019-01-01"]),#2019 Jan
         "END": trial.suggest_categorical("END", ["2025-07-01"]),#2025 Jul
         "SPLIT": trial.suggest_categorical("SPLIT", ["2023-01-01"]),#2023 Jan
         "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
-        "MACRO": trial.suggest_categorical("MACRO", ['HG=F,UUP,HYG,VEA,USDJPY=X,EURUSD=X,GC=F,^RUT,ZC=F,^FTSE,^TYX,EEM',
-                                                     'HG=F,UUP,HYG,USDJPY=X,EURUSD=X,GC=F,^FTSE,EEM',
-                                                    "GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM",
+        "MACRO": trial.suggest_categorical("MACRO", [
+                                                            'HG=F,UUP,HYG,VEA,USDJPY=X,EURUSD=X,GC=F,^RUT,ZC=F,^FTSE,^TYX,EEM',
+        'HG=F,UUP,HYG,USDJPY=X,EURUSD=X,GC=F,^FTSE,EEM',
+        "GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM",
+        "GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP",
+        "GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X",
+        "GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC",
+        "GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F",
+        "GC=F,^IRX,^FTSE,HYG,EURUSD=X",
+        "GC=F,^IRX,^FTSE,HYG",
+        "GC=F,^IRX,^FTSE",
+        "GC=F,^IRX",
+        "GC=F",
                                                     '^VIX'
 ]),#'^VIX'
-        "FEAT": trial.suggest_categorical("FEAT", ["sma,volatility_percentile",
-                                                   "price,ema",
-
-
-
+        "FEAT": trial.suggest_categorical("FEAT", [#"sma,volatility_percentile",
+                                                   #"price,ema",
+                                                   "sma,ema,boll,macd,volatility_change,donchain",
                                                    ]),#"price,ema"
         "BATCH": trial.suggest_int("BATCH",53,53),#53
         "LBACK": trial.suggest_int("LBACK",84,84),#84
@@ -117,76 +125,5 @@ def main():
         print(f"{m}: {best.user_attrs.get(m, float('nan')):.4f}")
 
 
-    feats2 = [
-        "sma,volatility_percentile",
-        "price,ema",
-        "sma,ema,boll,macd,volatility_change,donchain",
-        "sma,ema,boll,macd,volatility_change,donchain,stochastic,williams,rsi",
-        "sma,ema,boll,macd,volatility_change,donchain,stochastic,williams",
-        "sma,ema,boll,macd,volatility_change,donchain,stochastic",
-    "sma",
-    "ema",
-    "boll",
-    "macd",
-    "volatility_change",
-    "donchain",
-    "sma,ema",
-    "sma,boll",
-    "sma,macd",
-    "sma,volatility_change",
-    "sma,donchain",
-    "ema,boll",
-    "ema,macd",
-    "ema,volatility_change",
-    "ema,donchain",
-    "boll,macd",
-    "boll,volatility_change",
-    "boll,donchain",
-    "macd,volatility_change",
-    "macd,donchain",
-    "volatility_change,donchain",
-    "sma,ema,boll",
-    "sma,ema,macd",
-    "sma,ema,volatility_change",
-    "sma,ema,donchain",
-    "sma,boll,macd",
-    "sma,boll,volatility_change",
-    "sma,boll,donchain",
-    "sma,macd,volatility_change",
-    "sma,macd,donchain",
-    "sma,volatility_change,donchain",
-    "ema,boll,macd",
-    "ema,boll,volatility_change",
-    "ema,boll,donchain",
-    "ema,macd,volatility_change",
-    "ema,macd,donchain",
-    "ema,volatility_change,donchain",
-    "boll,macd,volatility_change",
-    "boll,macd,donchain",
-    "boll,volatility_change,donchain",
-    "macd,volatility_change,donchain",
-    "sma,ema,boll,macd",
-    "sma,ema,boll,volatility_change",
-    "sma,ema,boll,donchain",
-    "sma,ema,macd,volatility_change",
-    "sma,ema,macd,donchain",
-    "sma,ema,volatility_change,donchain",
-    "sma,boll,macd,volatility_change",
-    "sma,boll,macd,donchain",
-    "sma,boll,volatility_change,donchain",
-    "sma,macd,volatility_change,donchain",
-    "ema,boll,macd,volatility_change",
-    "ema,boll,macd,donchain",
-    "ema,boll,volatility_change,donchain",
-    "ema,macd,volatility_change,donchain",
-    "boll,macd,volatility_change,donchain",
-    "sma,ema,boll,macd,volatility_change",
-    "sma,ema,boll,macd,donchain",
-    "sma,ema,boll,volatility_change,donchain",
-    "sma,ema,macd,volatility_change,donchain",
-    "sma,boll,macd,volatility_change,donchain",
-    "ema,boll,macd,volatility_change,donchain",
-    
-]
-
+ 
     if __name__ == "__main__": main()
