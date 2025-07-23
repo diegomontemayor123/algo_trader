@@ -1,7 +1,7 @@
 import os, subprocess, re, optuna, json, csv
 from optuna.samplers import TPESampler
 
-TRIALS = 10
+TRIALS = 30
 
 def run_experiment(trial):
     config = {"START": trial.suggest_categorical("START", ["2019-01-01"]),#2019 Jan
@@ -19,10 +19,10 @@ def run_experiment(trial):
         "INIT_LR": trial.suggest_float("INIT_LR",.006,.006),#.006
         "EXP_PEN": trial.suggest_float("EXP_PEN",.226,.226),#.235 / .226
         "EXP_EXP": trial.suggest_float("EXP_EXP",1.8,1.8),#1.8
-        "RETURN_PEN": trial.suggest_float("RETURN_PEN",.06,.06),#.105 / .062
-        "RETURN_EXP": trial.suggest_float("RETURN_EXP",.344,.344),#.28 / .344
-        "SD_PEN": trial.suggest_float("SD_PEN",.05,.17),#.17 / .12 <-
-        "SD_EXP": trial.suggest_float("SD_EXP",.65,.74),#.74 / .71 <-
+        "RETURN_PEN": trial.suggest_float("RETURN_PEN",.04,.14),#.105 / .062
+        "RETURN_EXP": trial.suggest_float("RETURN_EXP",.2,.344),#.28 / .344
+        "SD_PEN": trial.suggest_float("SD_PEN",.05,.25),#.17 / .12 
+        "SD_EXP": trial.suggest_float("SD_EXP",.65,.8),#.74 / .71 
         "TEST_CHUNK": trial.suggest_int("TEST_CHUNK",12,12),
         "RETRAIN_WIN": trial.suggest_categorical("RETRAIN_WIN", [0]),
         "SEED": trial.suggest_int("SEED",42,42),
