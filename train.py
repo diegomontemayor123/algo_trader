@@ -9,10 +9,11 @@ MAX_EPOCHS = 20
 
 def train_model(model, train_loader, val_loader, config, asset_sd):
     optimizer = torch.optim.Adam(model.parameters(), lr=config["INIT_LR"], weight_decay=config["DECAY"])
-    #total_steps = MAX_EPOCHS * len(train_loader)
-    #warm_steps = int(total_steps * config["WARMUP"])
-    #print(f"[Scheduler] Total steps: {total_steps}, warmup: {warm_steps}")
-    #learn_scheduler = TransformerLRScheduler(optimizer, d_model=model.mlp_head[0].in_features, warm_steps=warm_steps)
+    if config["WARMUP"] > 0: 
+        total_steps = (MAX_EPOCHS * len(train_loader))
+        warm_steps = int(total_steps * config["WARMUP"])
+        print(f"[Scheduler] Total steps: {total_steps}, warmup: {warm_steps}")
+        learn_scheduler = TransformerLRScheduler(optimizer, d_model=model.mlp_head[0].in_features, warm_steps=warm_steps)
     loss_func = DifferentiableSharpeLoss(return_pen=config["RETURN_PEN"],return_exp=config["RETURN_EXP"],exp_exp=config["EXP_EXP"],exp_pen=config["EXP_PEN"],sd_pen=config["SD_PEN"],sd_exp=config["SD_EXP"],)
     best_val_loss = float('inf')
     patience_counter = 0
@@ -38,8 +39,9 @@ def train_model(model, train_loader, val_loader, config, asset_sd):
                 if param.grad is not None and (torch.isnan(param.grad).any() or torch.isinf(param.grad).any()):
                     print(f"[Warning] Skipping retraining chunk due to NaNs in gradients: {name}");return None
             optimizer.step()
-            #learn_scheduler.step()
-            #print(f"[LR] Current learning rate: {optimizer.param_groups[0]['lr']:.6f}\n")
+            if config["WARMUP"] > 0:
+                learn_scheduler.step()
+                print(f"[LR] Current learning rate: {optimizer.param_groups[0]['lr']:.6f}\n")
             lrs.append(optimizer.param_groups[0]['lr'])
             train_loss.append(loss.item())
         model.eval()

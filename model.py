@@ -27,7 +27,7 @@ class TransformerTrader(nn.Module):
         self.mlp_head = nn.Sequential(nn.Linear(dimen, 64),nn.PReLU(),nn.Dropout(dropout),nn.Linear(64, len(TICK)))
         print(f"Model MLP head output dim: {len(TICK)}")
     def forward(self, x):
-        if self.feat_attent: x = x * self.feat_attention(x)
+        if self.feat_attent: x = x * self.feat_attention(x.mean(dim=1)).unsqueeze(1) 
         x = x + self.pos_embedding
         encoded = self.transformer_encoder(x)
         last_hidden = encoded[:, -1, :]
@@ -60,12 +60,11 @@ class DifferentiableSharpeLoss(nn.Module):
             sd_ret = torch.std(ret, unbiased=False) + 1e-10
             if sd_ret < 1e-4:print("SD - ret too low (<1e-4), skip batch.");return None  
         else:print("ret invalid, skip batch.");return None 
-        loss = -(self.return_pen * torch.sign(mean_ret) * mean_ret.abs().pow(self.return_exp)) #/ (self.sd_pen*sd_ret.pow(self.sd_exp))
+        loss = -(self.return_pen * torch.sign(mean_ret) * mean_ret.abs().pow(self.return_exp))
         loss += self.sd_pen*sd_ret.pow(self.sd_exp) 
-        excess_exp = (pfo_weight * asset_sd).sum(dim=1).abs()
-        loss += self.exp_pen*excess_exp.pow(self.exp_exp).mean() 
+        loss += self.exp_pen*(pfo_weight * asset_sd).sum(dim=1).abs().pow(self.exp_exp).mean() 
         print(f"-Epoch/Batch: {epoch} / {batch_idx}")
-        print(f"-Mean/SD Pen: {-self.return_pen * mean_ret.pow(self.return_exp) :.6f} / {(self.sd_pen * sd_ret.pow(self.sd_exp) ):.6f}")
+        print(f"-Mean/SD/Exp Pen: {-self.return_pen * mean_ret.pow(self.return_exp) :.6f} / {(self.sd_pen * sd_ret.pow(self.sd_exp)):.6f} / {(self.exp_pen*(pfo_weight * asset_sd).sum(dim=1).abs().pow(self.exp_exp).mean()):.6f} ")
         print(f"Loss/Mean/SD: {loss:.6f} / {mean_ret:.6f} / {sd_ret:.6f}")
         return loss
     
@@ -104,7 +103,7 @@ if __name__ == "__main__":
                         split=config["SPLIT"],lback=config["LBACK"],comp_feat=comp_feat,
                         norm_feat=norm_feat,TICK=TICK,start=config["START"],end=config["END"],
                         feat=feat_list,macro_keys=macro_keys,test_chunk=config["TEST_CHUNK"],
-                        model=model0,plot=True,config=config,retrain_win=config["RETRAIN_WIN"],
+                        model=model0,plot=True,config=config,RETRAIN=config["RETRAIN"],
                         )
 
     pfo_sharpe = results["pfo"].get("sharpe", float('nan'));max_down = results["pfo"].get("max_down", float('nan'))

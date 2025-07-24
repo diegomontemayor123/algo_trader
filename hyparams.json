@@ -1,7 +1,7 @@
 {
-    "START": "2019-01-01",
-    "END": "2025-07-01",
-    "SPLIT": "2023-01-01",
+    "START": "2017-01-01",
+    "END": "2025-01-01",
+    "SPLIT": "2021-01-01",
     "TICK": "JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE",
     "MACRO": "GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM",
     "FEAT": "sma,ema,boll,macd,volatility_change,donchain",
@@ -18,13 +18,13 @@
     "RETURN_EXP": 0.28,
     "SD_PEN": 0.17,
     "SD_EXP": 0.74,
-    "TEST_CHUNK": 12,
-    "RETRAIN_WIN": 0,
     "SEED": 42,
     "MAX_HEADS": 1,
     "LAYERS": 1,
     "EARLY_FAIL": 2,
     "VAL_SPLIT": 0.15,
-    "WARMUP": 0.0,
-    "ATTENT": 0
+    "WARMUP": 0,
+    "TEST_CHUNK": 24,
+    "RETRAIN": 1,
+    "ATTENT": 1
 }
