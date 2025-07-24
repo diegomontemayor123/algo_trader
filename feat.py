@@ -21,7 +21,7 @@ def fetch_macro(name, ticker, start, end):
 
 def load_prices(START, END, macro_keys):
     if os.path.exists(PRICE_CACHE):
-        print(f"[Data] Using cached data from {PRICE_CACHE}")
+        print(f"[Data] Using cached data from {START} to {END}")
         data = pd.read_csv(PRICE_CACHE, index_col=0, parse_dates=True)
     else:
         print("[Data] Downloading price and macro data...")
