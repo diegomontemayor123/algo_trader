@@ -18,6 +18,7 @@ def fetch_macro(name, ticker, start, end):
     except Exception as e:
         print(f"[Macro] Failed to fetch {name} ({ticker}): {e}");return pd.Series(dtype='float64')
     
+
 def load_prices(START, END, macro_keys):
     if os.path.exists(PRICE_CACHE):
         print(f"[Data] Using cached data from {PRICE_CACHE}")
@@ -39,6 +40,7 @@ def load_prices(START, END, macro_keys):
         data = data.sort_index()
         data.to_csv(PRICE_CACHE)
         print(f"[Data] Cached to {PRICE_CACHE}")
+    data = data.loc[START:END]
     return data
 
 def process_macro_feat(cached_data, index, macro_keys, min_non_na_ratio=0.1):

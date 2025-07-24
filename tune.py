@@ -1,15 +1,19 @@
 import os, subprocess, re, optuna, json, csv
 from optuna.samplers import TPESampler
 
-TRIALS = 1
+TRIALS = 4
 
 def run_experiment(trial):
     config = {"START": trial.suggest_categorical("START", ["2017-01-01"]),#2019 Jan
-        "END": trial.suggest_categorical("END", ["2025-07-01"]),#2025 Jul
-        "SPLIT": trial.suggest_categorical("SPLIT", ["2023-01-01"]),#2023 Jan
+        "END": trial.suggest_categorical("END", ["2023-01-01"]),#2025 Jul
+        "SPLIT": trial.suggest_categorical("SPLIT", ["2021-01-01"]),#2023 Jan
         "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
-        "MACRO": trial.suggest_categorical("MACRO", ["GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM",]),#'^VIX'
-        "FEAT": trial.suggest_categorical("FEAT", [ "sma,ema,boll,macd,volatility_change,donchain",]),#"price,ema"
+        "MACRO": trial.suggest_categorical("MACRO", ["GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM",
+                                                     "^GSPC,EEM,HYG,^FTSE,UUP,GBPUSD=X,^IRX,EURUSD=X",]),#"GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM"
+        #'^VIX'
+        "FEAT": trial.suggest_categorical("FEAT", ["sma,ema,boll,macd,volatility_change,donchain",
+                                                   "ret,williams,rsi,volatility_change"]),#"sma,ema,boll,macd,volatility_change,donchain"
+        #"price,ema"
         "BATCH": trial.suggest_int("BATCH",53,53),#53
         "LBACK": trial.suggest_int("LBACK",84,84),#84
         "PRED_DAYS": trial.suggest_int("PRED_DAYS",6,6),#6
@@ -17,11 +21,11 @@ def run_experiment(trial):
         "DECAY": trial.suggest_float("DECAY",.003,.003),#.003
         "FEAT_PER": trial.suggest_categorical("FEAT_PER", ["8,12,24"]),
         "INIT_LR": trial.suggest_float("INIT_LR",.006,.006),#.006
-        "EXP_PEN": trial.suggest_float("EXP_PEN",3.23,3.23),#3.36 price,ema,vix     / 3.23 long macro/feat
+        "EXP_PEN": trial.suggest_float("EXP_PEN",.226,.226),#.235 price,ema,vix     / .226 long macro/feat
         "EXP_EXP": trial.suggest_float("EXP_EXP",1.82,1.82),#1.82
-        "RETURN_PEN": trial.suggest_float("RETURN_PEN",0,0),#.105 price,ema,vix / .07 long macro/feat
+        "RETURN_PEN": trial.suggest_float("RETURN_PEN",.07,.07),#.105 price,ema,vix / .07 long macro/feat
         "RETURN_EXP": trial.suggest_float("RETURN_EXP",.28,.28),#.28 
-        "SD_PEN": trial.suggest_float("SD_PEN",2.43,2.43),#1.62 price,ema,vix   / 2.43 long macro/feat
+        "SD_PEN": trial.suggest_float("SD_PEN",.17,.17),#.17 
         "SD_EXP": trial.suggest_float("SD_EXP",.74,.74),#.74 
         "SEED": trial.suggest_int("SEED",42,42),
         "MAX_HEADS": trial.suggest_int("MAX_HEADS", 1, 1),#1
@@ -29,8 +33,8 @@ def run_experiment(trial):
         "EARLY_FAIL": trial.suggest_int("EARLY_FAIL", 2, 2),#2
         "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", .15, .15),#.15
         "WARMUP": trial.suggest_categorical("WARMUP", [0]),
-        "TEST_CHUNK": trial.suggest_int("TEST_CHUNK",24,24),#12
-        "RETRAIN": trial.suggest_categorical("RETRAIN", [0]),
+        "TEST_CHUNK": trial.suggest_int("TEST_CHUNK",24,24),
+        "RETRAIN": trial.suggest_categorical("RETRAIN_WIN", [0]),
         "ATTENT": trial.suggest_categorical("ATTENT", [1]),
     }
 

@@ -6,7 +6,7 @@ from load import load_config
 
 
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
-MODEL_PATH = "0model.pth"
+MODEL_PATH = "1model.pth"
 INITIAL_CAPITAL = 100 
 LOAD_MODEL = False
 
@@ -63,7 +63,7 @@ class DifferentiableSharpeLoss(nn.Module):
         loss = -(self.return_pen * torch.sign(mean_ret) * mean_ret.abs().pow(self.return_exp))
         loss += self.sd_pen*sd_ret.pow(self.sd_exp) 
         loss += self.exp_pen*(pfo_weight * asset_sd).sum(dim=1).abs().pow(self.exp_exp).mean() 
-        #print(f"-Epoch/Batch: {epoch} / {batch_idx}")
+        print(f"-Epoch/Batch: {epoch} / {batch_idx}")
         #print(f"-Mean/SD/Exp Pen: {-self.return_pen * mean_ret.pow(self.return_exp) :.6f} / {(self.sd_pen * sd_ret.pow(self.sd_exp)):.6f} / {(self.exp_pen*(pfo_weight * asset_sd).sum(dim=1).abs().pow(self.exp_exp).mean()):.6f} ")
         #print(f"Loss/Mean/SD: {loss:.6f} / {mean_ret:.6f} / {sd_ret:.6f}")
         return loss

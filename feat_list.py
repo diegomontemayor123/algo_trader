@@ -25,20 +25,20 @@ def add_log_ret(data):
 
 def add_roll_ret(data):
     for p in per:
-        data[f'roll_ret{p}'] = data['close'].pct_change(p)
+        data[f'roll_ret_{p}'] = data['close'].pct_change(p)
 
 # ========================== TREND & MOMENTUM ==========================
 def add_sma(data):
     for p in per:
-        data[f'sma{p}'] = data['close'].rolling(p).mean()
+        data[f'sma_{p}'] = data['close'].rolling(p).mean()
 
 def add_ema(data):
     for p in per:
-        data[f'ema{p}'] = data['close'].ewm(span=p).mean()
+        data[f'ema_{p}'] = data['close'].ewm(span=p).mean()
 
 def add_momentum(data):
     for p in per:
-        data[f'momentum{p}'] = data['close'] / data['close'].shift(p) - 1
+        data[f'momentum_{p}'] = data['close'] / data['close'].shift(p) - 1
 
 def add_macd(data):
     exp12 = data['close'].ewm(span=12).mean()
@@ -47,27 +47,27 @@ def add_macd(data):
 
 def add_acceleration(data):
     for p in per:
-        momentum_col = f'momentum{p}'
+        momentum_col = f'momentum_{p}'
         if momentum_col not in data.columns:
             data[momentum_col] = data['close'] / data['close'].shift(p) - 1
-        data[f'acceleration{p}'] = data[momentum_col].diff()
+        data[f'acceleration_{p}'] = data[momentum_col].diff()
 
 def add_price_vs_high(data):
     for p in per:
-        data[f'price_vs_high{p}'] = data['close'] / (data['close'].rolling(p).max() + 1e-10)
+        data[f'price_vs_high_{p}'] = data['close'] / (data['close'].rolling(p).max() + 1e-10)
 
 def add_up_down_ratio(data):
     for p in per:
         up = (data['close'].diff() > 0).rolling(p).sum()
         down = (data['close'].diff() < 0).rolling(p).sum()
-        data[f'up_down_ratio{p}'] = up / (down + 1e-10)
+        data[f'up_down_ratio_{p}'] = up / (down + 1e-10)
 
-# ========================== VOLATILITY ==========================
+# ========================== vol ==========================
 def add_vol(data):
     if 'ret' not in data:
         data['ret'] = data['close'].pct_change()
     for p in per:
-        data[f'vol{p}'] = data['ret'].rolling(p).std()
+        data[f'vol_{p}'] = data['ret'].rolling(p).std()
 
 def add_atr(data):
     for p in per:
@@ -79,25 +79,25 @@ def add_atr(data):
             (high - close.shift()).abs(),
             (low - close.shift()).abs()
         ], axis=1).max(axis=1)
-        data[f'atr{p}'] = tr.rolling(p).mean()
+        data[f'atr_{p}'] = tr.rolling(p).mean()
 
 def add_range(data):
     data['range'] = (data['high'] - data['low']) / (data['close'] + 1e-10)
 
-def add_volatility_change(data):
+def add_vol_change(data):
     if 'ret' not in data.columns:
         data['ret'] = data['close'].pct_change()
     for p in per:
         vol = data['ret'].rolling(p).std()
-        data[f'vol_change{p}'] = vol.pct_change()
+        data[f'vol_change_{p}'] = vol.pct_change()
 
 
-def add_volatility_percentile(data):
+def add_vol_percentile(data):
     if 'ret' not in data.columns:
         data['ret'] = data['close'].pct_change()
     for p in per:
         vol = data['ret'].rolling(p).std()
-        data[f'vol_percentile{p}'] = vol.rolling(p).apply(lambda x: pd.Series(x).rank(pct=True).iloc[-1])
+        data[f'vol_percentile_{p}'] = vol.rolling(p).apply(lambda x: pd.Series(x).rank(pct=True).iloc[-1])
 
 # ========================== OSCILLATORS / MEAN REVERSION  ==========================
 def add_rsi(data):
@@ -105,44 +105,44 @@ def add_rsi(data):
         delta = data['close'].diff()
         gain = delta.clip(lower=0).rolling(p).mean()
         loss = -delta.clip(upper=0).rolling(p).mean()
-        data[f'rsi{p}'] = 100 - 100 / (1 + gain / (loss + 1e-10))
+        data[f'rsi_{p}'] = 100 - 100 / (1 + gain / (loss + 1e-10))
 
 def add_cmo(data):
     for p in per:
         delta = data['close'].diff()
         up = delta.clip(lower=0).rolling(p).sum()
         down = -delta.clip(upper=0).rolling(p).sum()
-        data[f'cmo{p}'] = 100 * (up - down) / (up + down + 1e-10)
+        data[f'cmo_{p}'] = 100 * (up - down) / (up + down + 1e-10)
 
-def add_williams_r(data):
+def add_williams(data):
     for p in per:
         high = data['close'].rolling(p).max()
         low = data['close'].rolling(p).min()
-        data[f'williams_r{p}'] = (high - data['close']) / (high - low + 1e-10)
+        data[f'williams_{p}'] = (high - data['close']) / (high - low + 1e-10)
 
 def add_zscore(data):
     for p in per:
         mean = data['close'].rolling(p).mean()
         std = data['close'].rolling(p).std()
-        data[f'zscore{p}'] = (data['close'] - mean) / (std + 1e-10)
+        data[f'zscore_{p}'] = (data['close'] - mean) / (std + 1e-10)
 
 def add_stochastic(data):
     for p in per:
         low_min = data['low'].rolling(p).min()
         high_max = data['high'].rolling(p).max()
-        data[f'stoch_k{p}'] = 100 * (data['close'] - low_min) / (high_max - low_min + 1e-10)
+        data[f'stoch_{p}'] = 100 * (data['close'] - low_min) / (high_max - low_min + 1e-10)
 
 # ========================== REGIME ==========================
 
 def add_price_percentiles(data):
     for p in per:
-        data[f'percentile_rank{p}'] = data['close'].rolling(p).apply(lambda x: pd.Series(x).rank(pct=True).iloc[-1])
+        data[f'percentile_rank_{p}'] = data['close'].rolling(p).apply(lambda x: pd.Series(x).rank(pct=True).iloc[-1])
 
 def add_adx(data):
     for p in per:
         try:
             adx = ta.trend.adx(data['high'], data['low'], data['close'], window=p)
-            data[f'adx{p}'] = adx
+            data[f'adx_{p}'] = adx
         except:
             pass
             
@@ -155,27 +155,27 @@ def add_entropy(data):
             counts = np.histogram(x, bins=10)[0]
             probs = counts / counts.sum()
             return -np.sum([p * np.log2(p + 1e-10) for p in probs if p > 0])
-        data[f'entropy{p}'] = ret.rolling(p).apply(shannon_entropy, raw=True)
+        data[f'entropy_{p}'] = ret.rolling(p).apply(shannon_entropy, raw=True)
 
 def add_mean_abs_return(data):
     if 'ret' not in data.columns:
         data['ret'] = data['close'].pct_change()
     for p in per:
-        data[f'mean_abs_ret{p}'] = data['ret'].abs().rolling(p).mean()
+        data[f'mean_abs_ret_{p}'] = data['ret'].abs().rolling(p).mean()
 
 # ========================== BANDS / CHANNELS ==========================
 def add_boll(data):
     for p in per:
         sma = data['close'].rolling(p).mean()
         std = data['close'].rolling(p).std()
-        data[f'boll_upper{p}'] = sma + 2 * std
-        data[f'boll_lower{p}'] = sma - 2 * std
+        data[f'boll_Upper_{p}'] = sma + 2 * std
+        data[f'boll_Lower_{p}'] = sma - 2 * std
 
 def add_donchian_width(data):
     for p in per:
         high = data['high'].rolling(p).max()
         low = data['low'].rolling(p).min()
-        data[f'donchian_width{p}'] = (high - low) / data['close']
+        data[f'donchian_width_{p}'] = (high - low) / data['close']
 
 # ========================== VOLUME ==========================
 def add_volume(volume_df):
@@ -183,13 +183,13 @@ def add_volume(volume_df):
     series = volume_df[col]
     volume_feat = pd.DataFrame(index=series.index)
     for p in per:
-        volume_feat[f'volume_zscore{p}'] = (series - series.rolling(p).mean()) / (series.rolling(p).std() + 1e-10)
+        volume_feat[f'volume_zscore_{p}'] = (series - series.rolling(p).mean()) / (series.rolling(p).std() + 1e-10)
     return volume_feat
 
 # ========================== LAG / TIME FEATURES ==========================
 def add_lags(data):
     for p in per:
-        data[f'lag_close{p}'] = data['close'].shift(p)
+        data[f'lag_close_{p}'] = data['close'].shift(p)
 
 def add_trend_combo(data):
     for fast, med, slow in [(5, 20, 100), (10, 30, 200)]:
@@ -224,7 +224,7 @@ def add_cross_momentum(data, ticker):
         for p in per:
             mom_df = pd.DataFrame({k: df['close'] / df['close'].shift(p) - 1 for k, df in CROSS_FEAT.items()})
             zscores = (mom_df.sub(mom_df.mean(axis=1), axis=0).div(mom_df.std(axis=1) + 1e-10, axis=0))
-            if ticker in zscores: data[f"cross_momentum_z{p}"] = zscores[ticker]
+            if ticker in zscores: data[f"cross_momentum_z_{p}"] = zscores[ticker]
     except Exception as e:
         print(f"[Cross-Momentum] Failed for {ticker}: {e}")
 
@@ -235,7 +235,7 @@ def add_cross_vol_z(data, ticker):
         for p in per:
             vol_df = pd.DataFrame({k: df['ret'].rolling(p).std() for k, df in CROSS_FEAT.items() if 'ret' in df})
             zscores = (vol_df.sub(vol_df.mean(axis=1), axis=0).div(vol_df.std(axis=1) + 1e-10, axis=0))
-            if ticker in zscores: data[f"cross_vol_z{p}"] = zscores[ticker]
+            if ticker in zscores: data[f"cross_vol_z_{p}"] = zscores[ticker]
     except Exception as e:
         print(f"[Cross-Vol-Z] Failed for {ticker}: {e}")
 
@@ -247,7 +247,7 @@ def add_cross_ret_rank(data, ticker):
             roll_ret = {k: df['close'].pct_change(p) for k, df in CROSS_FEAT.items()}
             ret_df = pd.DataFrame(roll_ret)
             ranks = ret_df.rank(axis=1, pct=True)
-            if ticker in ranks: data[f"cross_ret_rank{p}"] = ranks[ticker]
+            if ticker in ranks: data[f"cross_ret_rank_{p}"] = ranks[ticker]
     except Exception as e:
         print(f"[Cross-Rank] Failed for {ticker}: {e}")
 
@@ -257,7 +257,7 @@ def add_cross_rel_strength(data, ticker, benchmark='SPY'):
     try:
         for p in per:
             rel_strength = data['close'] / CROSS_FEAT[benchmark]['close']
-            data[f"cross_rel_strength{p}"] = rel_strength / rel_strength.rolling(p).mean()
+            data[f"cross_rel_strength_{p}"] = rel_strength / rel_strength.rolling(p).mean()
     except Exception as e:
         print(f"[Cross-RelStrength] Failed for {ticker}: {e}")
 
@@ -271,7 +271,7 @@ def add_cross_beta(data, ticker):
         for p in per:
             rolling_cov = data['ret'].rolling(p).cov(basket.mean(axis=1))
             rolling_var = basket.mean(axis=1).rolling(p).var()
-            data[f"cross_beta{p}"] = rolling_cov / (rolling_var + 1e-10)
+            data[f"cross_beta_{p}"] = rolling_cov / (rolling_var + 1e-10)
     except Exception as e:
         print(f"[Cross-Beta] Failed for {ticker}: {e}")
 
@@ -281,7 +281,7 @@ def add_cross_corr(data, ticker):
     try:
         for p in per:
             peers = pd.DataFrame({k: df['ret'] for k, df in CROSS_FEAT.items() if 'ret' in df and k != ticker})
-            data[f'cross_corr{p}'] = data['ret'].rolling(p).corr(peers.mean(axis=1))
+            data[f'cross_corr_{p}'] = data['ret'].rolling(p).corr(peers.mean(axis=1))
     except Exception as e:
         print(f"[Cross-Corr] Failed for {ticker}: {e}")
 
@@ -294,23 +294,23 @@ FTR_FUNC = {
     #"acceleration":add_acceleration,
     "price_vs_high":add_price_vs_high,
     #"up_down_ratio":add_up_down_ratio,
-    # Volatility
+    # vol
     "vol": add_vol, #"atr": add_atr,
-    "range":add_range,"volatility_change":add_volatility_change,
-    "volatility_percentile":add_volatility_percentile,
+    "range":add_range,"vol_change":add_vol_change,
+    "vol_percentile":add_vol_percentile,
     # Oscillators/Mean ReversionRegime
-     "zscore": add_zscore,"rsi": add_rsi, "cmo": add_cmo, "williams": add_williams_r,
+     "zscore": add_zscore,"rsi": add_rsi, "cmo": add_cmo, "williams": add_williams,
      "stochastic":add_stochastic,
     # Structure / Regime
-     "percentile": add_price_percentiles,
+     "price_percentile": add_price_percentiles,
      "adx":add_adx, #"entropy":add_entropy, 
      "mean_abs_return":add_mean_abs_return,
     # Bands
-    "boll": add_boll, "donchian": add_donchian_width,
+    "boll": add_boll, "donchian_width": add_donchian_width,
     # Volume
     #"volume": add_volume,
     # Lag/Time
-    "lag": add_lags,
+    "lags": add_lags,
     #"trend_combo":add_trend_combo,
     # Cross-sectional
     "ret_cross_z": add_ret_cross_z, #"cross_momentum_z": add_cross_momentum,
