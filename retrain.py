@@ -30,12 +30,13 @@ def run_retraining_chunks(chunks, feat_df, ret_df, lback, norm_feat, TICK, feat,
         if idx == 0:
             print("[Info] Skipping retraining for first chunk — using initial model0.")
             current_model = model0
+            
         else:
             original_train_length_days = (chunks[0][0] - pd.to_datetime(start)).days
             train_end = chunk_start - pd.Timedelta(days=1)
             train_start = max(train_end - pd.Timedelta(days=original_train_length_days), pd.to_datetime(start))
             training_days = (train_end - train_start).days
-            
+
             if training_days < original_train_length_days - 5:
                 print(f"Skipping chunk {idx+1} due to short training window: {training_days} days")
                 continue
@@ -45,14 +46,16 @@ def run_retraining_chunks(chunks, feat_df, ret_df, lback, norm_feat, TICK, feat,
             chunk_config["START"] = str(train_start.date())
             chunk_config["END"] = str(train_end.date())
             chunk_config["SPLIT"] = str(chunk_start.date())
-            
+
             cached_chunk_data = load_prices(chunk_config["START"], chunk_config["END"], macro_keys)
             feat_list = config["FEAT"].split(",") if isinstance(config["FEAT"], str) else config["FEAT"]
             feat_train, ret_train = feat(TICK, feat_list, cached_chunk_data, macro_keys)
-            
+
             print(f"Feature train shape: {feat_train.shape}, Return train shape: {ret_train.shape}")
 
+            from prep import prep_data
             train_data, val_data, _ = prep_data(feat_train, ret_train, chunk_config)
+
             print(f"Train samples: {len(train_data)}, Validation samples: {len(val_data)}")
 
             train_loader = DataLoader(train_data, batch_size=config["BATCH"], shuffle=True, num_workers=min(2, multiprocessing.cpu_count()))
@@ -60,9 +63,8 @@ def run_retraining_chunks(chunks, feat_df, ret_df, lback, norm_feat, TICK, feat,
 
             current_model = create_model(train_data[0][0].shape[1], config)
             asset_sd = torch.tensor(ret_train.std(axis=0).values.astype(np.float32), device=device)
-            
-            reset_seeds(config["SEED"])  # Reset seeds before training
 
+            reset_seeds(config["SEED"])
             current_model = train_model(current_model, train_loader, val_loader, config, asset_sd=asset_sd)
 
             if current_model is None:
@@ -82,7 +84,6 @@ def run_retraining_chunks(chunks, feat_df, ret_df, lback, norm_feat, TICK, feat,
             if current_date < chunk_start or current_date > chunk_end:
                 continue
             feat_win = feat_df.iloc[i:i + lback].values.astype(np.float32)
-            print(f"Predicting for date: {current_date.date()}, feat_win shape: {feat_win.shape}")
             normalized_feat = norm_feat(feat_win)
             input_tensor = torch.tensor(normalized_feat).unsqueeze(0).to(device)
             with torch.no_grad():
