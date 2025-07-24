@@ -63,9 +63,9 @@ class DifferentiableSharpeLoss(nn.Module):
         loss = -(self.return_pen * torch.sign(mean_ret) * mean_ret.abs().pow(self.return_exp))
         loss += self.sd_pen*sd_ret.pow(self.sd_exp) 
         loss += self.exp_pen*(pfo_weight * asset_sd).sum(dim=1).abs().pow(self.exp_exp).mean() 
-        print(f"-Epoch/Batch: {epoch} / {batch_idx}")
-        print(f"-Mean/SD/Exp Pen: {-self.return_pen * mean_ret.pow(self.return_exp) :.6f} / {(self.sd_pen * sd_ret.pow(self.sd_exp)):.6f} / {(self.exp_pen*(pfo_weight * asset_sd).sum(dim=1).abs().pow(self.exp_exp).mean()):.6f} ")
-        print(f"Loss/Mean/SD: {loss:.6f} / {mean_ret:.6f} / {sd_ret:.6f}")
+        #print(f"-Epoch/Batch: {epoch} / {batch_idx}")
+        #print(f"-Mean/SD/Exp Pen: {-self.return_pen * mean_ret.pow(self.return_exp) :.6f} / {(self.sd_pen * sd_ret.pow(self.sd_exp)):.6f} / {(self.exp_pen*(pfo_weight * asset_sd).sum(dim=1).abs().pow(self.exp_exp).mean()):.6f} ")
+        #print(f"Loss/Mean/SD: {loss:.6f} / {mean_ret:.6f} / {sd_ret:.6f}")
         return loss
     
 class TransformerLRScheduler(torch.optim.lr_scheduler._LRScheduler):

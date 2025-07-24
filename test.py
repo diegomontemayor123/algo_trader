@@ -32,7 +32,7 @@ def run_btest(  device, initial_capital, split, lback,comp_feat, norm_feat, TICK
     if len(chunks) >= 2:
         fin_start, final_end = chunks[-1]
         dur_months = (final_end.year - fin_start.year) * 12 + (final_end.month - fin_start.month)
-        if dur_months < test_chunk:
+        if dur_months < test_chunk :
             print(f"[Chunk Merge] Merging short final chunk ({fin_start.date()} to {final_end.date()}) into previous.")
             prev_start, _ = chunks[-2]
             chunks[-2] = (prev_start, final_end)

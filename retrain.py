@@ -3,12 +3,12 @@ import multiprocessing
 import copy
 import pandas as pd
 import numpy as np
-from prep import prep_data
 from feat import load_prices
 from model import create_model
 from train import train_model
 from torch.utils.data import DataLoader
 from perf import calc_perf_metrics  
+from prep import prep_data
 
 def reset_seeds(seed):
     torch.manual_seed(seed)
@@ -26,17 +26,14 @@ def run_retraining_chunks(chunks, feat_df, ret_df, lback, norm_feat, TICK, feat,
     
     for idx, (chunk_start, chunk_end) in enumerate(chunks):
         print(f"[BTest] Starting Chunk {idx+1} | Period: {chunk_start.date()} to {chunk_end.date()} ===")
-
         if idx == 0:
             print("[Info] Skipping retraining for first chunk — using initial model0.")
             current_model = model0
-            
         else:
             original_train_length_days = (chunks[0][0] - pd.to_datetime(start)).days
             train_end = chunk_start - pd.Timedelta(days=1)
             train_start = max(train_end - pd.Timedelta(days=original_train_length_days), pd.to_datetime(start))
             training_days = (train_end - train_start).days
-
             if training_days < original_train_length_days - 5:
                 print(f"Skipping chunk {idx+1} due to short training window: {training_days} days")
                 continue
@@ -52,10 +49,7 @@ def run_retraining_chunks(chunks, feat_df, ret_df, lback, norm_feat, TICK, feat,
             feat_train, ret_train = feat(TICK, feat_list, cached_chunk_data, macro_keys)
 
             print(f"Feature train shape: {feat_train.shape}, Return train shape: {ret_train.shape}")
-
-            from prep import prep_data
             train_data, val_data, _ = prep_data(feat_train, ret_train, chunk_config)
-
             print(f"Train samples: {len(train_data)}, Validation samples: {len(val_data)}")
 
             train_loader = DataLoader(train_data, batch_size=config["BATCH"], shuffle=True, num_workers=min(2, multiprocessing.cpu_count()))
