@@ -70,7 +70,6 @@ def run_btest(  device, initial_capital, split, lback,comp_feat, norm_feat, TICK
                 bench_vals = [m[key] for m in all_bench_metrics]
                 diffs = [p - b for p, b in zip(port_vals, bench_vals)]
                 avg_outperf[key] = np.mean(diffs)
-
     else:
         print(f"[BTest] Running test_chunk: {test_chunk} and retrain: {RETRAIN}")
         pfo_values, bench_values, daily_weight, all_pfo_metrics, all_bench_metrics, avg_outperf = run_retraining_chunks(chunks, feat_df, ret_df, lback, norm_feat, TICK, comp_feat, macro_keys, config, start, device, initial_capital, model0=model)
