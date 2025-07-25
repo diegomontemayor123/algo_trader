@@ -37,24 +37,41 @@ def prep_data(feat, ret, config):
         print("[Warning] Duplicate dates found in sequence dates.")
     if any(pd.isna(seq_dates)):
         print("[Warning] NaN detected in sequence dates.")
-    train_sequences, train_targets, test_sequences, test_targets = [], [], [], []
+    
+    train_sequences, train_targets, train_dates = [], [], []
+    test_sequences, test_targets, test_dates = [], [], []
+    
     split = pd.to_datetime(config["SPLIT"])
     for seq, tgt, date in zip(sequences, targets, pd.to_datetime(seq_dates)):
         if date < split:
             train_sequences.append(seq)
             train_targets.append(tgt)
+            train_dates.append(date)
         else:
             test_sequences.append(seq)
             test_targets.append(tgt)
+            test_dates.append(date)
+    
     val_split = config.get("VAL_SPLIT", 0.2)
     val_size = int(len(train_sequences) * val_split)
     train_size = len(train_sequences) - val_size
+    
     train_seq = train_sequences[:train_size]
     train_tgt = train_targets[:train_size]
+    train_dates = train_dates[:train_size]  # Align dates with train subset
+    
     val_seq = train_sequences[train_size:]
-    val_tgt = train_targets[train_size:]
+    val_tgt = train_targets[val_size:]
+    
     train_data = MarketDataset(torch.tensor(np.array(train_seq)), torch.tensor(np.array(train_tgt)))
     val_data = MarketDataset(torch.tensor(np.array(val_seq)), torch.tensor(np.array(val_tgt)))
     test_data = MarketDataset(torch.tensor(np.array(test_sequences)), torch.tensor(np.array(test_targets)))
-    print(f"[Data] Training samples: {len(train_data)}, Validation samples: {len(val_data)}, Test samples: {len(test_data)}")
+    
+    if train_dates:
+        print(f"[Data] Training samples: {len(train_data)}, Validation samples: {len(val_data)}, Test samples: {len(test_data)}")
+        print(f"[Data] Training start/end: {train_dates[0].date()} / {train_dates[-1].date()}")
+    else:
+        print(f"[Data] Training samples: {len(train_data)}, Validation samples: {len(val_data)}, Test samples: {len(test_data)}")
+        print("[Data] Training dates unavailable")
+
     return train_data, val_data, test_data
