@@ -29,6 +29,10 @@ def run_retraining_chunks(chunks, feat_df, ret_df, lback, norm_feat, TICK, feat,
         if idx == 0:
             print("[Info] Skipping retraining for first chunk — using initial model0.")
             current_model = model0
+            # Set the first chunk's training period correctly
+            train_start = pd.to_datetime(config["START"])  # Use the global start date
+            train_end = chunk_start - pd.Timedelta(days=1)  # Training ends the day before the chunk starts
+            training_days = (train_end - train_start).days
         else:
             orig_train = (chunks[0][0] - pd.to_datetime(start))
             train_end = chunk_start - pd.Timedelta(days=1)
