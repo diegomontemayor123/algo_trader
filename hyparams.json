@@ -1,7 +1,7 @@
 {
-    "START": "2018-12-31",
+    "START": "2016-12-31",
     "END": "2025-07-01",
-    "SPLIT": "2022-12-31",
+    "SPLIT": "2020-12-31",
     "TICK": "JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE",
     "MACRO": "GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM",
     "FEAT": "sma,ema,boll,macd,volatility_change,donchain",
