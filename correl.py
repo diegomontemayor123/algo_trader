@@ -5,7 +5,7 @@ from load import load_config
 from validate import TICKER_LIST, FEAT_LIST, MACRO_LIST
 from feat import load_prices, comp_feat  
 
-def compute_feature_correlations(feat, ret, split_date, top_n=30, window=400, output_dir="correl_output"):
+def compute_feature_correlations(feat, ret, split_date, top_n=30, window=0, output_dir="correl_output"):
     print(f"[INFO] Running feature correlation analysis on test period from {split_date}")
     os.makedirs(output_dir, exist_ok=True)
 
@@ -47,7 +47,7 @@ def main():
     split_date = pd.to_datetime(config["SPLIT"])
     start = pd.to_datetime(config["START"])
     end = pd.to_datetime(config["END"])
-    window = 365  # Or load from config if you want
+    window = 550
 
     # Calculate actual_start as split_date - window days, to avoid skewing
     actual_start = max(start, split_date - pd.Timedelta(days=window))
@@ -56,7 +56,7 @@ def main():
     macro_keys = MACRO_LIST
     print("[INFO] Loading prices and computing features/returns...")
     
-    cached_data = load_prices(actual_start.strftime("%Y-%m-%d"), end.strftime("%Y-%m-%d"), macro_keys)
+    cached_data = load_prices(actual_start.strftime("%Y-%m-%d"), split_date.strftime("%Y-%m-%d"), macro_keys)
     
     feat, ret = comp_feat(TICKER_LIST, feat_names, cached_data, macro_keys)
     ret = ret.loc[feat.index]

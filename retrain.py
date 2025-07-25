@@ -29,10 +29,6 @@ def run_retraining_chunks(chunks, feat_df, ret_df, lback, norm_feat, TICK, feat,
         if idx == 0:
             print("[Info] Skipping retraining for first chunk — using initial model0.")
             current_model = model0
-            # Set the first chunk's training period correctly
-            train_start = pd.to_datetime(config["START"])  # Use the global start date
-            train_end = chunk_start - pd.Timedelta(days=1)  # Training ends the day before the chunk starts
-            training_days = (train_end - train_start).days
         else:
             orig_train = (chunks[0][0] - pd.to_datetime(start))
             train_end = chunk_start - pd.Timedelta(days=1)
@@ -46,12 +42,11 @@ def run_retraining_chunks(chunks, feat_df, ret_df, lback, norm_feat, TICK, feat,
             chunk_config["START"] = str(train_start.date())
             chunk_config["END"] = str(train_end.date())
             chunk_config["SPLIT"] = str((train_end + pd.Timedelta(days=1)).date())
-            cached_chunk_data = load_prices(chunk_config["START"], chunk_config["END"], macro_keys)
+            cached_chunk_data = load_prices(chunk_config["START"], config["END"], macro_keys)
             feat_list = config["FEAT"].split(",") if isinstance(config["FEAT"], str) else config["FEAT"]
             feat_train, ret_train = feat(TICK, feat_list, cached_chunk_data, macro_keys)
             print(f"Feature train shape: {feat_train.shape}, Return train shape: {ret_train.shape}")
             train_data, val_data, _ = prep_data(feat_train, ret_train, chunk_config)
-            print(f"Train samples: {len(train_data)}, Validation samples: {len(val_data)}")
             train_loader = DataLoader(train_data, batch_size=config["BATCH"], shuffle=True, num_workers=min(2, multiprocessing.cpu_count()))
             val_loader = DataLoader(val_data, batch_size=config["BATCH"], shuffle=False, num_workers=min(2, multiprocessing.cpu_count()))
             current_model = create_model(train_data[0][0].shape[1], config)
