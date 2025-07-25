@@ -30,8 +30,9 @@ def run_retraining_chunks(chunks, feat_df, ret_df, lback, norm_feat, TICK, feat,
             print("[Info] Skipping retraining for first chunk — using initial model0.")
             current_model = model0
         else:
-            orig_train =  (pd.to_datetime(config["SPLIT"]) - pd.to_datetime(config["START"])) 
+            orig_train = (chunks[0][0] - pd.to_datetime(start))
             train_end = chunk_start - pd.Timedelta(days=1)
+            print(f"train end / chunk start: {train_end} /{chunk_start} ")
             train_start = max(train_end - orig_train, pd.to_datetime(start))
             training_days = (train_end - train_start).days
             if training_days < orig_train.days - 5:
