@@ -42,7 +42,7 @@ def run_retraining_chunks(chunks, feat_df, ret_df, lback, norm_feat, TICK, feat,
             chunk_config = copy.deepcopy(config)
             chunk_config["START"] = str(train_start.date())
             chunk_config["END"] = str(train_end.date())
-            chunk_config["SPLIT"] = str(chunk_start.date())
+            chunk_config["SPLIT"] = str((train_end + pd.Timedelta(days=1)).date())
 
             cached_chunk_data = load_prices(chunk_config["START"], chunk_config["END"], macro_keys)
             feat_list = config["FEAT"].split(",") if isinstance(config["FEAT"], str) else config["FEAT"]
