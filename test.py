@@ -23,8 +23,7 @@ def run_btest(  device, initial_capital, split, lback,comp_feat, norm_feat, TICK
     feat_df.index = pd.to_datetime(feat_df.index) ;     ret_df.index = pd.to_datetime(ret_df.index)
     chunks = [];    curr_start = split_dt
     while curr_start < end_dt:
-        curr_end = curr_start + relativedelta(months=test_chunk) - pd.Timedelta(days=1)
-        if curr_end > end_dt: curr_end = end_dt
+        curr_end = min(curr_start + relativedelta(months=test_chunk) - pd.Timedelta(days=1),end_dt)
         chunks.append((curr_start, curr_end))
         curr_start = curr_end + pd.Timedelta(days=1)
     if len(chunks) >= 2:
