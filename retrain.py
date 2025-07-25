@@ -30,16 +30,9 @@ def run_retraining_chunks(chunks, feat_df, ret_df, lback, norm_feat, TICK, feat,
             print("[Info] Skipping retraining for first chunk — using initial model0.")
             current_model = model0
         else:
-            original_train_length = (chunks[0][0] - pd.to_datetime(start)) + pd.Timedelta(days=8)
-            #train_end = chunk_start - pd.Timedelta(days=1)
-            #train_start = max(train_end - original_train_length, pd.to_datetime(start))
-
-
-            train_start = pd.to_datetime(start)  # or some other logic if desired
-            train_end = min(train_start + original_train_length,chunk_start - pd.Timedelta(days=1))
-
-
-
+            original_train_length = (chunks[0][0] - pd.to_datetime(start)) + pd.Timedelta(days=0)
+            train_end = chunk_start - pd.Timedelta(days=1)
+            train_start = max(train_end - original_train_length, pd.to_datetime(start))
             training_days = (train_end - train_start).days
             if training_days < original_train_length.days - 5:
                 print(f"Skipping chunk {idx+1} due to short training window: {training_days} days")
