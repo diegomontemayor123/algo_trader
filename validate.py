@@ -124,9 +124,9 @@ def run_experiment(trial):
     
 
 
-        score = 0 * sharpe - 1.0 * abs(down) + 1 * (cagr or 0)
-        if avg_outperf and avg_outperf > 0: score += 0
-        if exp_delta and exp_delta > 100: score += 100
+        score = 1 * sharpe - 4.0 * abs(down) + 1 * (cagr or 0)
+        if avg_outperf and avg_outperf > 0: score += 10
+        if exp_delta and exp_delta > 100: score += 90
 
         print(f"  Sharpe: {sharpe}");print(f"  Down: {down}");print(f"  CAGR: {cagr}")
         print(f"  Exp Delta: {exp_delta}");print(f"  Avg Outperf: {avg_outperf}");print(f"  Score: {score}")
