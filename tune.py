@@ -1,12 +1,12 @@
 import os, subprocess, re, optuna, json, csv
 from optuna.samplers import TPESampler
 
-TRIALS = 10
+TRIALS = 1
 
 def run_experiment(trial):
-    config = {"START": trial.suggest_categorical("START", ["2011-01-01"]),#2019 Jan
-        "END": trial.suggest_categorical("END", ["2023-01-01"]),#2025 Jul
-        "SPLIT": trial.suggest_categorical("SPLIT", ["2017-01-01",]),#2023 Jan
+    config = {"START": trial.suggest_categorical("START", ["2017-01-01"]),#2019 Jan
+        "END": trial.suggest_categorical("END", ["2025-07-01"]),#2025 Jul
+        "SPLIT": trial.suggest_categorical("SPLIT", ["2023-01-01",]),#2023 Jan
         "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
         "MACRO": trial.suggest_categorical("MACRO", ["HYG,HG=F,^GSPC,GBPUSD=X,UUP,ZW=F,USDJPY=X,VEA,^RUT,^TYX",]),#"GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM"
         #'^VIX'
@@ -26,8 +26,8 @@ def run_experiment(trial):
         "SD_PEN": trial.suggest_float("SD_PEN",.17,.17),#.17 
         "SD_EXP": trial.suggest_float("SD_EXP",.794,.794),#.74 
         "SEED": trial.suggest_int("SEED",42,42),
-        "MAX_HEADS": trial.suggest_int("MAX_HEADS", 1, 3),#1
-        "LAYERS": trial.suggest_int("LAYERS", 1, 2),#1
+        "MAX_HEADS": trial.suggest_int("MAX_HEADS", 2, 2),#1
+        "LAYERS": trial.suggest_int("LAYERS", 1, 1),#1
         "EARLY_FAIL": trial.suggest_int("EARLY_FAIL", 2, 2),#2
         "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", .15, .15),#.15
         "WARMUP": trial.suggest_categorical("WARMUP", [0]),
