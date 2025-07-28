@@ -122,12 +122,14 @@ def run_experiment(trial):
             print("[error] Missing metric(s) — skipping trial.")
             return -float("inf")
     
-        print(f"  Sharpe: {sharpe}");print(f"  Down: {down}");print(f"  CAGR: {cagr}")
-        print(f"  Exp Delta: {exp_delta}");print(f"  Avg Outperf: {avg_outperf}")
+
 
         score = 0 * sharpe - 1.0 * abs(down) + 1 * (cagr or 0)
         if avg_outperf and avg_outperf > 0: score += 0
         if exp_delta and exp_delta > 100: score += 100
+
+        print(f"  Sharpe: {sharpe}");print(f"  Down: {down}");print(f"  CAGR: {cagr}")
+        print(f"  Exp Delta: {exp_delta}");print(f"  Avg Outperf: {avg_outperf}");print(f"  Score: {score}")
 
         trial.set_user_attr("sharpe", sharpe)
         trial.set_user_attr("down", down)

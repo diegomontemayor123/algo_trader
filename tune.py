@@ -1,7 +1,7 @@
 import os, subprocess, re, optuna, json, csv
 from optuna.samplers import TPESampler
 
-TRIALS = 1
+TRIALS = 20
 
 def run_experiment(trial):
     config = {"START": trial.suggest_categorical("START", ["2011-01-01"]),#2019 Jan
@@ -10,6 +10,8 @@ def run_experiment(trial):
         "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
         "MACRO": trial.suggest_categorical("MACRO", ["GC=F,^GSPC,GBPUSD=X,ZW=F,USDJPY=X,NG=F,VEA,^RUT,^TYX",
                                                      "HYG,HG=F,^GSPC,GBPUSD=X,UUP,ZW=F,USDJPY=X,VEA,^RUT,^TYX",
+                                                     "GC=F,GBPUSD=X,NG=F,VEA,^TYX,HG=F,UUP"
+
                   
                                                     "GC=F, GBPUSD=X, ZW=F, USDJPY=X, VEA, ^RUT, ZC=F, ^TYX", 
                                                      ]),#"GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM"
@@ -17,6 +19,7 @@ def run_experiment(trial):
         "FEAT": trial.suggest_categorical("FEAT", ["sma,boll,stochastic,williams,cross_rel_strength,volatility_percentile",
                                                    "sma,ema,boll,macd,stochastic,price,ret,williams,donchain,cross_rel_strength,volatility_percentile,price_vs_high",
                                                    "sma, boll, stochastic, price, williams, cross_rel_strength, volatility_percentile",
+                                                   "ema,boll,macd,ret,volatility_percentile"
                                                    ]),#"sma,ema,boll,macd,volatility_change,donchain"
         #"price,ema"
         "BATCH": trial.suggest_int("BATCH",53,53),#53
@@ -73,13 +76,14 @@ def run_experiment(trial):
         if sharpe is None or down is None or exp_delta is None:
             print("[error] Missing metric(s) — skipping trial.")
             return -float("inf")
-        
-        print(f"  Sharpe: {sharpe}");print(f"  Down: {down}");print(f"  CAGR: {cagr}")
-        print(f"  Exp Delta: {exp_delta}");print(f"  Avg Outperf: {avg_outperf}")
 
-        score = 0 * sharpe - 2 * abs(down) + 1 * cagr 
+
+        score = 0 * sharpe - 1 * abs(down) + 1 * cagr 
         if avg_outperf>0: score += 0
         if exp_delta > 100: score += 100
+
+        print(f"  Sharpe: {sharpe}");print(f"  Down: {down}");print(f"  CAGR: {cagr}")
+        print(f"  Exp Delta: {exp_delta}");print(f"  Avg Outperf: {avg_outperf}");print(f"  Score: {score}")
 
         trial.set_user_attr("sharpe", sharpe)
         trial.set_user_attr("down", down)
