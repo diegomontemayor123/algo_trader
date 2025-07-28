@@ -1,7 +1,7 @@
 import os, subprocess, re, optuna, json, csv
 from optuna.samplers import TPESampler
 
-TRIALS = 20
+TRIALS = 7
 
 def run_experiment(trial):
     config = {"START": trial.suggest_categorical("START", ["2011-01-01"]),#2019 Jan
@@ -12,9 +12,9 @@ def run_experiment(trial):
         #'^VIX'
         "FEAT": trial.suggest_categorical("FEAT", ["ema,boll,macd,ret,volatility_percentile"]),#"sma,ema,boll,macd,volatility_change,donchain"
         #"price,ema"
-        "BATCH": trial.suggest_int("BATCH",40,65),#53
-        "LBACK": trial.suggest_int("LBACK",75,90),#84
-        "PRED_DAYS": trial.suggest_int("PRED_DAYS",6,6),#6
+        "BATCH": trial.suggest_int("BATCH",53,53),#53
+        "LBACK": trial.suggest_int("LBACK",84,84),#84
+        "PRED_DAYS": trial.suggest_int("PRED_DAYS",2,9),#6
         "DROPOUT": trial.suggest_float("DROPOUT",.028,.028),#.028
         "DECAY": trial.suggest_float("DECAY",.003,.003),#.003
         "FEAT_PER": trial.suggest_categorical("FEAT_PER", ["8,12,24"]),
