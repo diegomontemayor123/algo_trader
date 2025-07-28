@@ -1,7 +1,7 @@
 import os, subprocess, re, optuna, json, csv
 from optuna.samplers import TPESampler
 
-TRIALS = 40
+TRIALS = 1
 
 def run_experiment(trial):
     config = {"START": trial.suggest_categorical("START", ["2011-01-01"]),#2019 Jan
@@ -14,25 +14,25 @@ def run_experiment(trial):
         #"price,ema"
         "BATCH": trial.suggest_int("BATCH",53,53),#53
         "LBACK": trial.suggest_int("LBACK",84,84),#84
-        "PRED_DAYS": trial.suggest_int("PRED_DAYS",3,6),#6
-        "DROPOUT": trial.suggest_float("DROPOUT",.025,.028),#.028
-        "DECAY": trial.suggest_float("DECAY",.0027,.003),#.003
+        "PRED_DAYS": trial.suggest_int("PRED_DAYS",6,6),#6
+        "DROPOUT": trial.suggest_float("DROPOUT",.028,.028),#.028
+        "DECAY": trial.suggest_float("DECAY",.003,.003),#.003
         "FEAT_PER": trial.suggest_categorical("FEAT_PER", ["8,12,24"]),
-        "INIT_LR": trial.suggest_float("INIT_LR",.0022,.006),#.006
-        "EXP_PEN": trial.suggest_float("EXP_PEN",.226,.229),#.235 price,ema,vix     / .226 long macro/feat
+        "INIT_LR": trial.suggest_float("INIT_LR",.006,.006),#.006
+        "EXP_PEN": trial.suggest_float("EXP_PEN",.226,.226),#.235 price,ema,vix     / .226 long macro/feat
         "EXP_EXP": trial.suggest_float("EXP_EXP",1.8,1.8),#1.8
-        "RETURN_PEN": trial.suggest_float("RETURN_PEN",.07,.074),#.105 price,ema,vix / .07 long macro/feat
-        "RETURN_EXP": trial.suggest_float("RETURN_EXP",.28,.325),#.28 
+        "RETURN_PEN": trial.suggest_float("RETURN_PEN",.07,.07),#.105 price,ema,vix / .07 long macro/feat
+        "RETURN_EXP": trial.suggest_float("RETURN_EXP",.28,.28),#.28 
         "SD_PEN": trial.suggest_float("SD_PEN",.17,.17),#.17 
-        "SD_EXP": trial.suggest_float("SD_EXP",.74,.794),#.74 
+        "SD_EXP": trial.suggest_float("SD_EXP",.74,.74),#.74 
         "SEED": trial.suggest_int("SEED",42,42),
-        "MAX_HEADS": trial.suggest_int("MAX_HEADS", 1, 2),#1
-        "LAYERS": trial.suggest_int("LAYERS", 1, 3),#1
+        "MAX_HEADS": trial.suggest_int("MAX_HEADS", 1, 1),#1
+        "LAYERS": trial.suggest_int("LAYERS", 1, 1),#1
         "EARLY_FAIL": trial.suggest_int("EARLY_FAIL", 2, 2),#2
         "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", .15, .15),#.15
         "WARMUP": trial.suggest_categorical("WARMUP", [0]),
         "TEST_CHUNK": trial.suggest_int("TEST_CHUNK",24,24),
-        "RETRAIN": trial.suggest_categorical("RETRAIN", [0]),
+        "RETRAIN": trial.suggest_categorical("RETRAIN", [1]),
         "ATTENT": trial.suggest_categorical("ATTENT", [1]),
     }
 
@@ -68,7 +68,7 @@ def run_experiment(trial):
             return -float("inf")
 
 
-        score = 1 * sharpe - 3 * abs(down) + 1 * cagr 
+        score = 1 * sharpe - 6 * abs(down) + 1 * cagr 
         if avg_outperf>0: score += 10
         if exp_delta > 100: score += 90
 
