@@ -25,13 +25,13 @@ def run_experiment(trial):
         "RETURN_EXP": trial.suggest_float("RETURN_EXP",.28,.28),#.28 
         "SD_PEN": trial.suggest_float("SD_PEN",.17,.17),#.17 
         "SD_EXP": trial.suggest_float("SD_EXP",.74,.74),#.74 
-        "SEED": trial.suggest_int("SEED",42,42),
-        "MAX_HEADS": trial.suggest_int("MAX_HEADS", 1, 1),#1
-        "LAYERS": trial.suggest_int("LAYERS", 1, 1),#1
-        "EARLY_FAIL": trial.suggest_int("EARLY_FAIL", 2, 2),#2
-        "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", .15, .15),#.15
-        "WARMUP": trial.suggest_categorical("WARMUP", [0]),
-        "TEST_CHUNK": trial.suggest_int("TEST_CHUNK",24,24),
+        "SEED": trial.suggest_categorical("SEED",[42]),
+        "MAX_HEADS": trial.suggest_categorical("MAX_HEADS", [1]),#1
+        "LAYERS": trial.suggest_categorical("LAYERS", [1]),#1
+        "EARLY_FAIL": trial.suggest_categorical("EARLY_FAIL",[2]),#2
+        "VAL_SPLIT": trial.suggest_categorical("VAL_SPLIT",[.15]),#.15
+        "WARMUP": trial.suggest_categorical("WARMUP",[0]),
+        "TEST_CHUNK": trial.suggest_categorical("TEST_CHUNK",[24]),
         "RETRAIN": trial.suggest_categorical("RETRAIN", [1]),
         "ATTENT": trial.suggest_categorical("ATTENT", [1]),
     }

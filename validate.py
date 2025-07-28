@@ -7,9 +7,11 @@ TRIALS = 100
 TICKER_LIST = ['JPM', 'MSFT', 'NVDA', 'AVGO', 'LLY', 'COST', 'MA', 'XOM', 'UNH', 'AMZN', 'CAT', 'ADBE', 'TSLA']
 
 
-FEAT_LIST = list(FTR_FUNC.keys()) 
+FEAT_LONG = list(FTR_FUNC.keys()) 
+FEAT_LIST = ["ret","log_ret","roll_ret","sma","price_vs_high","range","vol_percentile","zscore","williams","price_percentile","adx","boll","lags","ret_cross_z","cross_vol_z","cross_rel_strength","cross_beta","cross_corr"]
+MACRO_LIST=["GC=F","^GSPC","GBPUSD=X","EEM","ZW=F","USDJPY=X","ZC=F"]
 
-MACRO_LIST = [  'GC=F',       # Gold – safe haven and inflation hedge
+MACRO_LONG = [  'GC=F',       # Gold – safe haven and inflation hedge
                 "^IRX",       # 13-Week T-Bill Rate
                 '^FTSE',      # UK Index – decent global signal
                 'HYG',        # Risk-on/risk-off signal
@@ -74,7 +76,7 @@ def binary_select(trial, items, prefix): return [item for item in items if trial
 
 def run_experiment(trial):
     select_macros = binary_select(trial, MACRO_LIST, "macro")
-    select_feat = binary_select(trial, FEAT_LIST, "feat")
+    select_feat = FEAT_LIST.copy()
     select_TICK = TICKER_LIST.copy()
 
     if not select_feat or not select_macros or not select_TICK:
