@@ -68,7 +68,7 @@ def run_experiment(trial):
             return -float("inf")
 
 
-        score = 1 * sharpe - 6 * abs(down) + 1 * cagr 
+        score = 1 * sharpe - 3 * abs(down) + 1 * cagr 
         if avg_outperf>0: score += 10
         if exp_delta > 100: score += 90
 
