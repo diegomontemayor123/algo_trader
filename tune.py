@@ -1,7 +1,7 @@
 import os, subprocess, re, optuna, json, csv
 from optuna.samplers import TPESampler
 
-TRIALS = 10
+TRIALS = 2
 
 def run_experiment(trial):
     config = {"START": trial.suggest_categorical("START", ["2011-01-01"]),#2019 Jan
@@ -32,7 +32,7 @@ def run_experiment(trial):
         "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", .15, .15),#.15
         "WARMUP": trial.suggest_categorical("WARMUP", [0]),
         "TEST_CHUNK": trial.suggest_int("TEST_CHUNK",24,24),
-        "RETRAIN": trial.suggest_categorical("RETRAIN", [1]),
+        "RETRAIN": trial.suggest_categorical("RETRAIN", [0,1]),
         "ATTENT": trial.suggest_categorical("ATTENT", [1]),
     }
 
