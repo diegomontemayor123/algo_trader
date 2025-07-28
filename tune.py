@@ -8,22 +8,12 @@ def run_experiment(trial):
         "END": trial.suggest_categorical("END", ["2023-01-01"]),#2025 Jul
         "SPLIT": trial.suggest_categorical("SPLIT", ["2017-01-01",]),#2023 Jan
         "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
-        "MACRO": trial.suggest_categorical("MACRO", ["GC=F,^GSPC,GBPUSD=X,ZW=F,USDJPY=X,NG=F,VEA,^RUT,^TYX",
-                                                     "HYG,HG=F,^GSPC,GBPUSD=X,UUP,ZW=F,USDJPY=X,VEA,^RUT,^TYX",
-                                                     "GC=F,GBPUSD=X,NG=F,VEA,^TYX,HG=F,UUP"
-
-                  
-                                                    "GC=F, GBPUSD=X, ZW=F, USDJPY=X, VEA, ^RUT, ZC=F, ^TYX", 
-                                                     ]),#"GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM"
+        "MACRO": trial.suggest_categorical("MACRO", ["HYG,HG=F,^GSPC,GBPUSD=X,UUP,ZW=F,USDJPY=X,VEA,^RUT,^TYX",]),#"GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM"
         #'^VIX'
-        "FEAT": trial.suggest_categorical("FEAT", ["sma,boll,stochastic,williams,cross_rel_strength,volatility_percentile",
-                                                   "sma,ema,boll,macd,stochastic,price,ret,williams,donchain,cross_rel_strength,volatility_percentile,price_vs_high",
-                                                   "sma, boll, stochastic, price, williams, cross_rel_strength, volatility_percentile",
-                                                   "ema,boll,macd,ret,volatility_percentile"
-                                                   ]),#"sma,ema,boll,macd,volatility_change,donchain"
+        "FEAT": trial.suggest_categorical("FEAT", ["ema,boll,macd,ret,volatility_percentile"]),#"sma,ema,boll,macd,volatility_change,donchain"
         #"price,ema"
-        "BATCH": trial.suggest_int("BATCH",53,53),#53
-        "LBACK": trial.suggest_int("LBACK",84,84),#84
+        "BATCH": trial.suggest_int("BATCH",40,65),#53
+        "LBACK": trial.suggest_int("LBACK",75,90),#84
         "PRED_DAYS": trial.suggest_int("PRED_DAYS",6,6),#6
         "DROPOUT": trial.suggest_float("DROPOUT",.028,.028),#.028
         "DECAY": trial.suggest_float("DECAY",.003,.003),#.003
