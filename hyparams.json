@@ -1,10 +1,10 @@
 {
     "START": "2011-01-01",
-    "END": "2025-07-01",
+    "END": "2023-01-01",
     "SPLIT": "2017-01-01",
     "TICK": "JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE",
-    "MACRO": "GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM",
-    "FEAT": "sma,ema,boll,macd,volatility_change,donchain",
+    "MACRO": "GC=F, GBPUSD=X, ZW=F, USDJPY=X, VEA, ^RUT, ZC=F, ^TYX",
+    "FEAT": "sma, boll, stochastic, price, williams, cross_rel_strength, volatility_percentile",
     "BATCH": 53,
     "LBACK": 84,
     "PRED_DAYS": 6,

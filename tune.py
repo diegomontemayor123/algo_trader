@@ -1,19 +1,21 @@
 import os, subprocess, re, optuna, json, csv
 from optuna.samplers import TPESampler
 
-TRIALS = 2
+TRIALS = 1
 
 def run_experiment(trial):
     config = {"START": trial.suggest_categorical("START", ["2011-01-01"]),#2019 Jan
         "END": trial.suggest_categorical("END", ["2023-01-01"]),#2025 Jul
         "SPLIT": trial.suggest_categorical("SPLIT", ["2017-01-01",]),#2023 Jan
         "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
-        "MACRO": trial.suggest_categorical("MACRO", ["GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM",
-                                                     #"^GSPC,EEM,HYG,^FTSE,UUP,GBPUSD=X,^IRX,EURUSD=X",
+        "MACRO": trial.suggest_categorical("MACRO", ["GC=F,^GSPC,GBPUSD=X,ZW=F,USDJPY=X,NG=F,VEA,^RUT,^TYX",
+                  
+                                                    "GC=F, GBPUSD=X, ZW=F, USDJPY=X, VEA, ^RUT, ZC=F, ^TYX", 
                                                      ]),#"GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM"
         #'^VIX'
-        "FEAT": trial.suggest_categorical("FEAT", ["sma,ema,boll,macd,volatility_change,donchain",
-                                                   #"ret,williams,rsi,volatility_change",
+        "FEAT": trial.suggest_categorical("FEAT", ["sma,boll,stochastic,williams,cross_rel_strength,volatility_percentile",
+                                                   
+                                                   "sma, boll, stochastic, price, williams, cross_rel_strength, volatility_percentile",
                                                    ]),#"sma,ema,boll,macd,volatility_change,donchain"
         #"price,ema"
         "BATCH": trial.suggest_int("BATCH",53,53),#53
@@ -36,7 +38,7 @@ def run_experiment(trial):
         "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", .15, .15),#.15
         "WARMUP": trial.suggest_categorical("WARMUP", [0]),
         "TEST_CHUNK": trial.suggest_int("TEST_CHUNK",24,24),
-        "RETRAIN": trial.suggest_categorical("RETRAIN", [0,1]),
+        "RETRAIN": trial.suggest_categorical("RETRAIN", [0]),
         "ATTENT": trial.suggest_categorical("ATTENT", [1]),
     }
 
@@ -70,13 +72,13 @@ def run_experiment(trial):
         if sharpe is None or down is None or exp_delta is None:
             print("[error] Missing metric(s) — skipping trial.")
             return -float("inf")
-        print("[debug] Metrics extracted:")
+        
         print(f"  Sharpe: {sharpe}");print(f"  Down: {down}");print(f"  CAGR: {cagr}")
         print(f"  Exp Delta: {exp_delta}");print(f"  Avg Outperf: {avg_outperf}")
 
         score = 1* sharpe - 6 * abs(down) + 0.5 * cagr 
-        if avg_outperf>0: score += 90
-        if exp_delta > 100: score += 10
+        if avg_outperf>0: score += 0
+        if exp_delta > 100: score += 100
 
         trial.set_user_attr("sharpe", sharpe)
         trial.set_user_attr("down", down)
@@ -114,3 +116,4 @@ def main():
         print(f"{m}: {best.user_attrs.get(m, float('nan')):.4f}")
 
 if __name__ == "__main__": main()
+
