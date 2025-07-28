@@ -1,12 +1,12 @@
 import os, subprocess, re, optuna, json, csv
 from optuna.samplers import TPESampler
 
-TRIALS = 4
+TRIALS = 2
 
 def run_experiment(trial):
     config = {"START": trial.suggest_categorical("START", ["2011-01-01"]),#2019 Jan
         "END": trial.suggest_categorical("END", ["2023-01-01"]),#2025 Jul
-        "SPLIT": trial.suggest_categorical("SPLIT", ["2015-01-01","2016-01-01","2017-01-01",]),#2023 Jan
+        "SPLIT": trial.suggest_categorical("SPLIT", ["2017-01-01",]),#2023 Jan
         "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
         "MACRO": trial.suggest_categorical("MACRO", ["GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM",
                                                      #"^GSPC,EEM,HYG,^FTSE,UUP,GBPUSD=X,^IRX,EURUSD=X",
@@ -36,7 +36,7 @@ def run_experiment(trial):
         "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", .15, .15),#.15
         "WARMUP": trial.suggest_categorical("WARMUP", [0]),
         "TEST_CHUNK": trial.suggest_int("TEST_CHUNK",24,24),
-        "RETRAIN": trial.suggest_categorical("RETRAIN_WIN", [0]),
+        "RETRAIN": trial.suggest_categorical("RETRAIN", [0,1]),
         "ATTENT": trial.suggest_categorical("ATTENT", [1]),
     }
 
