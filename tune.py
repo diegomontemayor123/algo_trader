@@ -1,7 +1,7 @@
 import os, subprocess, re, optuna, json, csv
 from optuna.samplers import TPESampler
 
-TRIALS = 2
+TRIALS = 100
 
 def run_experiment(trial):
     config = {"START": trial.suggest_categorical("START", ["2011-01-01"]),#2019 Jan
@@ -15,16 +15,16 @@ def run_experiment(trial):
         "BATCH": trial.suggest_int("BATCH",53,53),#53
         "LBACK": trial.suggest_int("LBACK",84,84),#84
         "PRED_DAYS": trial.suggest_int("PRED_DAYS",3,3),#6
-        "DROPOUT": trial.suggest_float("DROPOUT",.017,.017),#.028
-        "DECAY": trial.suggest_float("DECAY",.0011,.0011),#.003
+        "DROPOUT": trial.suggest_float("DROPOUT",.017,.028),#.028
+        "DECAY": trial.suggest_float("DECAY",.0011,.003),#.003
         "FEAT_PER": trial.suggest_categorical("FEAT_PER", ["8,12,24"]),
         "INIT_LR": trial.suggest_float("INIT_LR",.006,.006),#.006
-        "EXP_PEN": trial.suggest_float("EXP_PEN",.222,.222),#.235 price,ema,vix     / .226 long macro/feat
-        "EXP_EXP": trial.suggest_float("EXP_EXP",1.68,1.68),#1.82
-        "RETURN_PEN": trial.suggest_float("RETURN_PEN",.078,.078),#.105 price,ema,vix / .07 long macro/feat
-        "RETURN_EXP": trial.suggest_float("RETURN_EXP",.351,.351),#.28 
-        "SD_PEN": trial.suggest_float("SD_PEN",.176,.176),#.17 
-        "SD_EXP": trial.suggest_float("SD_EXP",.819,.819),#.74 
+        "EXP_PEN": trial.suggest_float("EXP_PEN",.222,.226),#.235 price,ema,vix     / .226 long macro/feat
+        "EXP_EXP": trial.suggest_float("EXP_EXP",1.68,1.82),#1.82
+        "RETURN_PEN": trial.suggest_float("RETURN_PEN",.07,.078),#.105 price,ema,vix / .07 long macro/feat
+        "RETURN_EXP": trial.suggest_float("RETURN_EXP",.28,.351),#.28 
+        "SD_PEN": trial.suggest_float("SD_PEN",.17,.176),#.17 
+        "SD_EXP": trial.suggest_float("SD_EXP",.74,.819),#.74 
         "SEED": trial.suggest_int("SEED",42,42),
         "MAX_HEADS": trial.suggest_int("MAX_HEADS", 3, 3),#1
         "LAYERS": trial.suggest_int("LAYERS", 2, 2),#1
@@ -33,7 +33,7 @@ def run_experiment(trial):
         "WARMUP": trial.suggest_categorical("WARMUP", [0]),
         "TEST_CHUNK": trial.suggest_int("TEST_CHUNK",24,24),
         "RETRAIN": trial.suggest_categorical("RETRAIN", [0]),
-        "ATTENT": trial.suggest_categorical("ATTENT", [0,1]),
+        "ATTENT": trial.suggest_categorical("ATTENT", [1]),
     }
 
     env = os.environ.copy()
