@@ -10,7 +10,7 @@ def run_experiment(trial):
         "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
         "MACRO": trial.suggest_categorical("MACRO", ["HYG,HG=F,^GSPC,GBPUSD=X,UUP,ZW=F,USDJPY=X,VEA,^RUT,^TYX",]),#"GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM"
         #'^VIX'
-        "FEAT": trial.suggest_categorical("FEAT", ["ema,boll,macd,ret,volatility_percentile"]),#"sma,ema,boll,macd,volatility_change,donchain"
+        "FEAT": trial.suggest_categorical("FEAT", ["ema,boll,macd,ret,volatility_percentile"]),#"sma,ema,boll,macd,volatility_change,donchian_width"
         #"price,ema"
         "BATCH": trial.suggest_int("BATCH",53,53),#53
         "LBACK": trial.suggest_int("LBACK",84,84),#84
