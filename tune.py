@@ -15,16 +15,16 @@ def run_experiment(trial):
         "BATCH": trial.suggest_int("BATCH",53,53),#53
         "LBACK": trial.suggest_int("LBACK",84,84),#84
         "PRED_DAYS": trial.suggest_int("PRED_DAYS",3,3),#6
-        "DROPOUT": trial.suggest_float("DROPOUT",.01,.028),#.028
-        "DECAY": trial.suggest_float("DECAY",.001,.003),#.003
+        "DROPOUT": trial.suggest_float("DROPOUT",.017,.017),#.028
+        "DECAY": trial.suggest_float("DECAY",.0005,.0013),#.003
         "FEAT_PER": trial.suggest_categorical("FEAT_PER", ["8,12,24"]),
         "INIT_LR": trial.suggest_float("INIT_LR",.006,.006),#.006
-        "EXP_PEN": trial.suggest_float("EXP_PEN",.226,.226),#.235 price,ema,vix     / .226 long macro/feat
-        "EXP_EXP": trial.suggest_float("EXP_EXP",1.72,1.92),#1.82
-        "RETURN_PEN": trial.suggest_float("RETURN_PEN",.07,.07),#.105 price,ema,vix / .07 long macro/feat
-        "RETURN_EXP": trial.suggest_float("RETURN_EXP",.25,.31),#.28 
-        "SD_PEN": trial.suggest_float("SD_PEN",.17,.17),#.17 
-        "SD_EXP": trial.suggest_float("SD_EXP",.7,.8),#.74 
+        "EXP_PEN": trial.suggest_float("EXP_PEN",.22,.23),#.235 price,ema,vix     / .226 long macro/feat
+        "EXP_EXP": trial.suggest_float("EXP_EXP",1.6,1.74),#1.82
+        "RETURN_PEN": trial.suggest_float("RETURN_PEN",.03,.1),#.105 price,ema,vix / .07 long macro/feat
+        "RETURN_EXP": trial.suggest_float("RETURN_EXP",.31,.4),#.28 
+        "SD_PEN": trial.suggest_float("SD_PEN",.1,.2),#.17 
+        "SD_EXP": trial.suggest_float("SD_EXP",.79,.85),#.74 
         "SEED": trial.suggest_int("SEED",42,42),
         "MAX_HEADS": trial.suggest_int("MAX_HEADS", 3, 3),#1
         "LAYERS": trial.suggest_int("LAYERS", 2, 2),#1
