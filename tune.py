@@ -18,7 +18,7 @@ def run_experiment(trial):
         "DROPOUT": trial.suggest_float("DROPOUT",.017,.028),#.028
         "DECAY": trial.suggest_float("DECAY",.0011,.003),#.003
         "FEAT_PER": trial.suggest_categorical("FEAT_PER", ["8,12,24"]),
-        "INIT_LR": trial.suggest_float("INIT_LR",.006,.006),#.006
+        "INIT_LR": trial.suggest_float("INIT_LR",.001,.01),#.006
         "EXP_PEN": trial.suggest_float("EXP_PEN",.222,.226),#.235 price,ema,vix     / .226 long macro/feat
         "EXP_EXP": trial.suggest_float("EXP_EXP",1.68,1.82),#1.82
         "RETURN_PEN": trial.suggest_float("RETURN_PEN",.07,.078),#.105 price,ema,vix / .07 long macro/feat
