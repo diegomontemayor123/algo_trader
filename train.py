@@ -1,6 +1,5 @@
 import torch, multiprocessing
 import numpy as np
-import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 from model import DifferentiableSharpeLoss, TransformerLRScheduler, create_model
 

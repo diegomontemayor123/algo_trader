@@ -4,15 +4,17 @@ from optuna.samplers import TPESampler
 TRIALS = 4
 
 def run_experiment(trial):
-    config = {"START": trial.suggest_categorical("START", ["2017-01-01"]),#2019 Jan
+    config = {"START": trial.suggest_categorical("START", ["2011-01-01"]),#2019 Jan
         "END": trial.suggest_categorical("END", ["2023-01-01"]),#2025 Jul
-        "SPLIT": trial.suggest_categorical("SPLIT", ["2021-01-01"]),#2023 Jan
+        "SPLIT": trial.suggest_categorical("SPLIT", ["2015-01-01","2016-01-01","2017-01-01",]),#2023 Jan
         "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
         "MACRO": trial.suggest_categorical("MACRO", ["GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM",
-                                                     "^GSPC,EEM,HYG,^FTSE,UUP,GBPUSD=X,^IRX,EURUSD=X",]),#"GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM"
+                                                     #"^GSPC,EEM,HYG,^FTSE,UUP,GBPUSD=X,^IRX,EURUSD=X",
+                                                     ]),#"GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM"
         #'^VIX'
         "FEAT": trial.suggest_categorical("FEAT", ["sma,ema,boll,macd,volatility_change,donchain",
-                                                   "ret,williams,rsi,volatility_change"]),#"sma,ema,boll,macd,volatility_change,donchain"
+                                                   #"ret,williams,rsi,volatility_change",
+                                                   ]),#"sma,ema,boll,macd,volatility_change,donchain"
         #"price,ema"
         "BATCH": trial.suggest_int("BATCH",53,53),#53
         "LBACK": trial.suggest_int("LBACK",84,84),#84

@@ -1,6 +1,4 @@
-import torch
-import multiprocessing
-import copy
+import torch, multiprocessing, copy
 import pandas as pd
 import numpy as np
 from feat import load_prices
