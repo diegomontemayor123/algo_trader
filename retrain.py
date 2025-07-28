@@ -32,7 +32,7 @@ def run_retraining_chunks(chunks, feat_df, ret_df, lback, norm_feat, TICK, feat,
             train_end = chunk_start - pd.Timedelta(days=1)
             train_start = max(train_end - orig_train, pd.to_datetime(start))
             training_days = (train_end - train_start).days
-            if training_days < orig_train.days - 5:
+            if training_days < orig_train.days - 30:
                 print(f"Skipping chunk {idx+1} due to short training window: {training_days} days")
                 continue
             print(f"Chunk {idx+1}: Training from {train_start.date()} to {train_end.date()} ({training_days} days)")

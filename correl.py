@@ -6,7 +6,7 @@ from load import load_config
 from validate import TICKER_LIST, FEAT_LONG, MACRO_LONG
 from feat import load_prices, comp_feat
 
-START = "2017-01-01"
+START = "2021-01-01"
 END = "2023-01-01"
 
 def compute_feature_correlations(feat, ret, start_date, end_date, top_n=30, output_dir="correl_output"):

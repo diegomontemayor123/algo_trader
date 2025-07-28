@@ -8,7 +8,7 @@ from load import load_config
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 MODEL_PATH = "1model.pth"
 INITIAL_CAPITAL = 100 
-LOAD_MODEL = False
+LOAD_MODEL = True
 
 config = load_config()
 SEED = config["SEED"]

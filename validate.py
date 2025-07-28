@@ -3,14 +3,16 @@ from optuna.samplers import TPESampler
 from collections import Counter
 from feat_list import FTR_FUNC
 
-TRIALS = 70
+TRIALS = 40
 TICKER_LIST = ['JPM', 'MSFT', 'NVDA', 'AVGO', 'LLY', 'COST', 'MA', 'XOM', 'UNH', 'AMZN', 'CAT', 'ADBE', 'TSLA']
 
 
-FEAT_LIST = ['sma','ema','boll','macd','volatility_change','stochastic','price','ret','williams','donchain','rsi','cross_rel_strength','volatility_percentile',"log_ret","price_vs_high","roll_ret"]
+FEAT_LIST_REAL = ['sma','ema','boll','macd','volatility_change','stochastic','price','ret','williams','donchain','rsi','cross_rel_strength','volatility_percentile',"log_ret","price_vs_high","roll_ret"]
+FEAT_LIST = ["sma","boll","stochastic","williams","cross_rel_strength","volatility_percentile","ema","macd","price","ret","donchain","price_vs_high"]
 FEAT_LONG = list(FTR_FUNC.keys()) 
+MACRO_LIST = "GC=F","^GSPC","GBPUSD=X","ZW=F","USDJPY=X","NG=F","VEA","^RUT","^TYX","HYG","HG=F","UUP","ZC=F"
 
-MACRO_LIST = [  'GC=F',       # Gold – safe haven and inflation hedge
+MACRO_LIST_REAL = [  'GC=F',       # Gold – safe haven and inflation hedge
                 "^IRX",       # 13-Week T-Bill Rate
                 '^FTSE',      # UK Index – decent global signal
                 'HYG',        # Risk-on/risk-off signal
@@ -123,7 +125,7 @@ def run_experiment(trial):
         print(f"  Sharpe: {sharpe}");print(f"  Down: {down}");print(f"  CAGR: {cagr}")
         print(f"  Exp Delta: {exp_delta}");print(f"  Avg Outperf: {avg_outperf}")
 
-        score = 1.0 * sharpe - 6.0 * abs(down) + 0.5 * (cagr or 0)
+        score = 3.0 * sharpe - 6.0 * abs(down) + 1 * (cagr or 0)
         if avg_outperf and avg_outperf > 0: score += 0
         if exp_delta and exp_delta > 100: score += 100
 

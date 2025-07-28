@@ -9,12 +9,13 @@ def run_experiment(trial):
         "SPLIT": trial.suggest_categorical("SPLIT", ["2017-01-01",]),#2023 Jan
         "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
         "MACRO": trial.suggest_categorical("MACRO", ["GC=F,^GSPC,GBPUSD=X,ZW=F,USDJPY=X,NG=F,VEA,^RUT,^TYX",
+                                                     "HYG,HG=F,^GSPC,GBPUSD=X,UUP,ZW=F,USDJPY=X,VEA,^RUT,^TYX",
                   
                                                     "GC=F, GBPUSD=X, ZW=F, USDJPY=X, VEA, ^RUT, ZC=F, ^TYX", 
                                                      ]),#"GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM"
         #'^VIX'
         "FEAT": trial.suggest_categorical("FEAT", ["sma,boll,stochastic,williams,cross_rel_strength,volatility_percentile",
-                                                   
+                                                   "sma,ema,boll,macd,stochastic,price,ret,williams,donchain,cross_rel_strength,volatility_percentile,price_vs_high",
                                                    "sma, boll, stochastic, price, williams, cross_rel_strength, volatility_percentile",
                                                    ]),#"sma,ema,boll,macd,volatility_change,donchain"
         #"price,ema"
@@ -76,7 +77,7 @@ def run_experiment(trial):
         print(f"  Sharpe: {sharpe}");print(f"  Down: {down}");print(f"  CAGR: {cagr}")
         print(f"  Exp Delta: {exp_delta}");print(f"  Avg Outperf: {avg_outperf}")
 
-        score = 1* sharpe - 6 * abs(down) + 0.5 * cagr 
+        score = 3 * sharpe - 6 * abs(down) + 1 * cagr 
         if avg_outperf>0: score += 0
         if exp_delta > 100: score += 100
 
