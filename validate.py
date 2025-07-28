@@ -6,7 +6,7 @@ from feat_list import FTR_FUNC
 TRIALS = 70
 TICKER_LIST = ['JPM', 'MSFT', 'NVDA', 'AVGO', 'LLY', 'COST', 'MA', 'XOM', 'UNH', 'AMZN', 'CAT', 'ADBE', 'TSLA']
 
-FEAT_LIST = ['sma','ema','boll','macd','volatility_change','stochastic','williams','donchain','rsi','cross_rel_strength','volatility_percentile',]
+FEAT_LIST = ['sma','ema','boll','macd','volatility_change','stochastic','price','ret','williams','donchain','rsi','cross_rel_strength','volatility_percentile',]
 FEAT_LONG = list(FTR_FUNC.keys()) 
 
 MACRO_LIST = [  'GC=F',       # Gold – safe haven and inflation hedge
@@ -21,11 +21,11 @@ MACRO_LIST = [  'GC=F',       # Gold – safe haven and inflation hedge
                 "EEM",        # EM    
                 "ZW=F",       # Wheat Futures
                 'USDJPY=X',   # Currency regime
-                #"NG=F",      # Natural Gas
-                #'VEA',       # Developed Intl Equities
-                #'^RUT',      # Russell 2000 – small cap US
-                #'ZC=F',      # Corn – appears in low trials, but still strong in top
-                #"^TYX",      #30Y
+                "NG=F",      # Natural Gas
+                'VEA',       # Developed Intl Equities
+                '^RUT',      # Russell 2000 – small cap US
+                'ZC=F',      # Corn – appears in low trials, but still strong in top
+                "^TYX",      #30Y
 ]
 
 MACRO_LONG = [  "^GSPC",        # S&P 500
