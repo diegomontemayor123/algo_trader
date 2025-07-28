@@ -3,12 +3,12 @@ from optuna.samplers import TPESampler
 from collections import Counter
 from feat_list import FTR_FUNC
 
-TRIALS = 70
+TRIALS = 100
 TICKER_LIST = ['JPM', 'MSFT', 'NVDA', 'AVGO', 'LLY', 'COST', 'MA', 'XOM', 'UNH', 'AMZN', 'CAT', 'ADBE', 'TSLA']
 
 
 FEAT_LONG = list(FTR_FUNC.keys()) 
-FEAT_LIST = ["ret","price","log_ret","roll_ret","sma","price_vs_high","range","vol_percentile","zscore","williams","price_percentile","adx","boll","lags","ret_cross_z","cross_vol_z","cross_rel_strength","cross_beta","cross_corr","ema","macd","vol_change","donchian_width"]
+FEAT_LIST = ["ret","price","log_ret","roll_ret","sma","price_vs_high","range","vol_percentile","zscore","williams","price_percentile","adx","boll","lags","ret_cross_z","cross_vol_z","cross_rel_strength","cross_beta","cross_corr","ema","macd","vol_change","donchian_width","stochastic"]
 
 MACRO_LIST = [  'GC=F',       # Gold – safe haven and inflation hedge
                 "^IRX",       # 13-Week T-Bill Rate
