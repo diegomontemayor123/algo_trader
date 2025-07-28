@@ -26,8 +26,8 @@ def run_experiment(trial):
         "SD_PEN": trial.suggest_float("SD_PEN",.17,.17),#.17 
         "SD_EXP": trial.suggest_float("SD_EXP",.74,.74),#.74 
         "SEED": trial.suggest_int("SEED",42,42),
-        "MAX_HEADS": trial.suggest_int("MAX_HEADS", 1, 1),#1
-        "LAYERS": trial.suggest_int("LAYERS", 1, 1),#1
+        "MAX_HEADS": trial.suggest_int("MAX_HEADS", 3, 3),#1
+        "LAYERS": trial.suggest_int("LAYERS", 2, 2),#1
         "EARLY_FAIL": trial.suggest_int("EARLY_FAIL", 2, 2),#2
         "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", .15, .15),#.15
         "WARMUP": trial.suggest_categorical("WARMUP", [0]),
