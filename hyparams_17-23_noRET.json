@@ -4,7 +4,7 @@
     "SPLIT": "2017-01-01",
     "TICK": "JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE",
     "MACRO": "HYG,HG=F,^GSPC,GBPUSD=X,UUP,ZW=F,USDJPY=X,VEA,^RUT,^TYX",
-    "FEAT": "ema,boll,macd,ret,vol_percentile",
+    "FEAT": "ema,boll,macd,ret,vol_ptile",
     "BATCH": 53,
     "LBACK": 84,
     "PRED_DAYS": 3,

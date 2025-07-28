@@ -4,7 +4,7 @@
     "SPLIT": "2023-01-01",
     "TICK": "JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE",
     "MACRO": "GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM",
-    "FEAT": "sma,ema,boll,macd,vol_change,donchian_width",
+    "FEAT": "sma,ema,boll,macd,vol_change,donchian",
     "BATCH": 53,
     "LBACK": 84,
     "PRED_DAYS": 6,

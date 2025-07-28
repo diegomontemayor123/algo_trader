@@ -92,12 +92,12 @@ def add_vol_change(data):
         data[f'vol_change_{p}'] = vol.pct_change()
 
 
-def add_vol_percentile(data):
+def add_vol_ptile(data):
     if 'ret' not in data.columns:
         data['ret'] = data['close'].pct_change()
     for p in per:
         vol = data['ret'].rolling(p).std()
-        data[f'vol_percentile_{p}'] = vol.rolling(p).apply(lambda x: pd.Series(x).rank(pct=True).iloc[-1])
+        data[f'vol_ptile_{p}'] = vol.rolling(p).apply(lambda x: pd.Series(x).rank(pct=True).iloc[-1])
 
 # ========================== OSCILLATORS / MEAN REVERSION  ==========================
 def add_rsi(data):
@@ -126,7 +126,7 @@ def add_zscore(data):
         std = data['close'].rolling(p).std()
         data[f'zscore_{p}'] = (data['close'] - mean) / (std + 1e-10)
 
-def add_stochastic(data):
+def add_stoch(data):
     for p in per:
         low_min = data['low'].rolling(p).min()
         high_max = data['high'].rolling(p).max()
@@ -134,9 +134,9 @@ def add_stochastic(data):
 
 # ========================== REGIME ==========================
 
-def add_price_percentiles(data):
+def add_price_ptiles(data):
     for p in per:
-        data[f'percentile_rank_{p}'] = data['close'].rolling(p).apply(lambda x: pd.Series(x).rank(pct=True).iloc[-1])
+        data[f'ptile_rank_{p}'] = data['close'].rolling(p).apply(lambda x: pd.Series(x).rank(pct=True).iloc[-1])
 
 def add_adx(data):
     for p in per:
@@ -171,11 +171,11 @@ def add_boll(data):
         data[f'boll_Upper_{p}'] = sma + 2 * std
         data[f'boll_Lower_{p}'] = sma - 2 * std
 
-def add_donchian_width(data):
+def add_donchian(data):
     for p in per:
         high = data['high'].rolling(p).max()
         low = data['low'].rolling(p).min()
-        data[f'donchian_width_{p}'] = (high - low) / data['close']
+        data[f'donchian_{p}'] = (high - low) / data['close']
 
 # ========================== VOLUME ==========================
 def add_volume(volume_df):
@@ -297,16 +297,16 @@ FTR_FUNC = {
     # vol
     "vol": add_vol, #"atr": add_atr,
     "range":add_range,"vol_change":add_vol_change,
-    "vol_percentile":add_vol_percentile,
+    "vol_ptile":add_vol_ptile,
     # Oscillators/Mean ReversionRegime
      "zscore": add_zscore,"rsi": add_rsi, "cmo": add_cmo, "williams": add_williams,
-     "stochastic":add_stochastic,
+     "stoch":add_stoch,
     # Structure / Regime
-     "price_percentile": add_price_percentiles,
+     "price_ptile": add_price_ptiles,
      "adx":add_adx, #"entropy":add_entropy, 
      "mean_abs_return":add_mean_abs_return,
     # Bands
-    "boll": add_boll, "donchian_width": add_donchian_width,
+    "boll": add_boll, "donchian": add_donchian,
     # Volume
     #"volume": add_volume,
     # Lag/Time
