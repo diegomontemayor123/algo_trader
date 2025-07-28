@@ -4,9 +4,9 @@ from optuna.samplers import TPESampler
 TRIALS = 1
 
 def run_experiment(trial):
-    config = {"START": trial.suggest_categorical("START", ["2017-01-01"]),#2019 Jan
-        "END": trial.suggest_categorical("END", ["2025-07-01"]),#2025 Jul
-        "SPLIT": trial.suggest_categorical("SPLIT", ["2023-01-01",]),#2023 Jan
+    config = {"START": trial.suggest_categorical("START", ["2011-01-01"]),#2019 Jan
+        "END": trial.suggest_categorical("END", ["2023-01-01"]),#2025 Jul
+        "SPLIT": trial.suggest_categorical("SPLIT", ["2017-01-01",]),#2023 Jan
         "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
         "MACRO": trial.suggest_categorical("MACRO", ["HYG,HG=F,^GSPC,GBPUSD=X,UUP,ZW=F,USDJPY=X,VEA,^RUT,^TYX",]),#"GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM"
         #'^VIX'
@@ -15,8 +15,8 @@ def run_experiment(trial):
         "BATCH": trial.suggest_int("BATCH",53,53),#53
         "LBACK": trial.suggest_int("LBACK",84,84),#84
         "PRED_DAYS": trial.suggest_int("PRED_DAYS",3,3),#6
-        "DROPOUT": trial.suggest_float("DROPOUT",.025,.025),#.028
-        "DECAY": trial.suggest_float("DECAY",.0027,.0027),#.003
+        "DROPOUT": trial.suggest_float("DROPOUT",.028,.028),#.028
+        "DECAY": trial.suggest_float("DECAY",.003,.003),#.003
         "FEAT_PER": trial.suggest_categorical("FEAT_PER", ["8,12,24"]),
         "INIT_LR": trial.suggest_float("INIT_LR",.0022,.0022),#.006
         "EXP_PEN": trial.suggest_float("EXP_PEN",.229,.229),#.235 price,ema,vix     / .226 long macro/feat
@@ -68,7 +68,7 @@ def run_experiment(trial):
             return -float("inf")
 
 
-        score = 1 * sharpe - 6 * abs(down) + 1 * cagr 
+        score = 1 * sharpe - 3 * abs(down) + 1 * cagr 
         if avg_outperf>0: score += 10
         if exp_delta > 100: score += 90
 
