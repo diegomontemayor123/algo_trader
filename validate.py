@@ -7,12 +7,9 @@ TRIALS = 100
 TICKER_LIST = ['JPM', 'MSFT', 'NVDA', 'AVGO', 'LLY', 'COST', 'MA', 'XOM', 'UNH', 'AMZN', 'CAT', 'ADBE', 'TSLA']
 
 
-FEAT_LIST_REAL = ['sma','ema','boll','macd','volatility_change','stochastic','price','ret','williams','donchain','rsi','cross_rel_strength','volatility_percentile',"log_ret","price_vs_high","roll_ret"]
-FEAT_LIST = ["sma","boll","stochastic","williams","cross_rel_strength","volatility_percentile","ema","macd","price","ret","donchain","price_vs_high"]
-FEAT_LONG = list(FTR_FUNC.keys()) 
-MACRO_LIST = "GC=F","^GSPC","GBPUSD=X","ZW=F","USDJPY=X","NG=F","VEA","^RUT","^TYX","HYG","HG=F","UUP","ZC=F"
+FEAT_LIST = list(FTR_FUNC.keys()) 
 
-MACRO_LIST_REAL = [  'GC=F',       # Gold – safe haven and inflation hedge
+MACRO_LIST = [  'GC=F',       # Gold – safe haven and inflation hedge
                 "^IRX",       # 13-Week T-Bill Rate
                 '^FTSE',      # UK Index – decent global signal
                 'HYG',        # Risk-on/risk-off signal
