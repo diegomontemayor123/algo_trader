@@ -14,7 +14,7 @@ def run_experiment(trial):
         #"price,ema"
         "BATCH": trial.suggest_int("BATCH",53,53),#53
         "LBACK": trial.suggest_int("LBACK",84,84),#84
-        "PRED_DAYS": trial.suggest_int("PRED_DAYS",6,6),#6
+        "PRED_DAYS": trial.suggest_int("PRED_DAYS",3,3),#6
         "DROPOUT": trial.suggest_float("DROPOUT",.02,.04),#.028
         "DECAY": trial.suggest_float("DECAY",.001,.005),#.003
         "FEAT_PER": trial.suggest_categorical("FEAT_PER", ["8,12,24"]),
