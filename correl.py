@@ -2,8 +2,6 @@ import os
 import re
 import pandas as pd
 import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
 from load import load_config
 from validate import TICKER_LIST, FEAT_LIST, MACRO_LIST
 from feat import load_prices, comp_feat
@@ -49,33 +47,7 @@ def compute_feature_correlations(feat, ret, start_date, end_date, top_n=30, outp
     for feat, mean_corr in sorted_mean_abs[:top_n]:
         print(f"{feat}: {mean_corr:.4f}")
 
-    # --- New Section: Calculate Cross-Correlation for Features ---
-    print("\n[INFO] Calculating cross-correlation between features...")
-    cross_corr_results = compute_cross_correlation(feat_test)
-    
-    # Output the cross-correlation results to a file
-    cross_corr_results.to_csv(os.path.join(output_dir, "cross_correlation_matrix.csv"))
-    print(f"[INFO] Cross-correlation matrix saved to {output_dir}/cross_correlation_matrix.csv")
-
-    # --- Heatmap of Cross-Correlation Matrix ---
-    print("\n[INFO] Generating heatmap of the cross-correlation matrix...")
-    plt.figure(figsize=(10, 8))
-    sns.heatmap(cross_corr_results, annot=True, cmap='coolwarm', fmt='.2f', linewidths=0.5)
-    heatmap_path = os.path.join(output_dir, "cross_correlation_heatmap.png")
-    plt.title("Cross-Correlation Heatmap of Features")
-    plt.savefig(heatmap_path)
-    plt.close()
-    print(f"[INFO] Heatmap saved to {heatmap_path}")
-
-    return top_features_per_asset, sorted_mean_abs, cross_corr_results
-
-def compute_cross_correlation(feat_test):
-    """
-    Computes the cross-correlation matrix between features.
-    This function computes the correlation between all pairs of features on the same dates.
-    """
-    corr_matrix = feat_test.corr()  # Pandas function computes Pearson correlation
-    return corr_matrix
+    return top_features_per_asset, sorted_mean_abs
 
 def main():
     config = load_config()
@@ -91,7 +63,7 @@ def main():
     feat, ret = comp_feat(TICKER_LIST, feat_names, cached_data, macro_keys)
     ret = ret.loc[feat.index]
 
-    top_features_per_asset, sorted_mean_abs, cross_corr_results = compute_feature_correlations(feat, ret, start_date, end_date)
+    top_features_per_asset, sorted_mean_abs = compute_feature_correlations(feat, ret, start_date, end_date)
 
     top_30_features = [feat for feat, _ in sorted_mean_abs[:30]]
     top_macros = [f for f in top_30_features if f in MACRO_LIST]
