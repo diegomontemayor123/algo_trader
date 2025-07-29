@@ -75,7 +75,7 @@ def load_fixed_params(filepath="hyparams.json"):
 def binary_select(trial, items, prefix): return [item for item in items if trial.suggest_categorical(f"{prefix}_{item}", [False, True])]
 
 def run_experiment(trial):
-    select_macros = MACRO_LIST.copy()
+    select_macros = binary_select(trial, MACRO_LIST, "m")
     select_feat = binary_select(trial, FEAT_LIST, "f")
     select_TICK = TICKER_LIST.copy()
 
