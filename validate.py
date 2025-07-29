@@ -3,14 +3,15 @@ from optuna.samplers import TPESampler
 from collections import Counter
 from feat_list import FTR_FUNC
 
-TRIALS = 100
+TRIALS = 40
 TICKER_LIST = ['JPM', 'MSFT', 'NVDA', 'AVGO', 'LLY', 'COST', 'MA', 'XOM', 'UNH', 'AMZN', 'CAT', 'ADBE', 'TSLA']
 
 
 FEAT_LONG = list(FTR_FUNC.keys()) 
-FEAT_LIST = ["ret","price","log_ret","roll_ret","sma","price_vs_high","range","vol_ptile","zscore","williams","price_ptile","adx","boll","lags","ret_cross_z","cross_vol_z","cross_rel_strength","cross_beta","cross_corr","ema","macd","vol_change","donchian","stoch"]
+FEAT_LIST = ['log_ret', 'roll_ret', 'sma', 'price_vs_high', 'range', 'vol_ptile', 'price_ptile', 'adx', 'boll', 'lags', 'cross_vol_z', 'cross_rel_strength', 'cross_corr', 'ema', 'macd', 'stoch']
+MACRO_LIST =  ['GC=F', '^FTSE', 'HYG', 'EURUSD=X', 'GBPUSD=X', 'UUP', 'ZW=F', 'USDJPY=X', 'NG=F', 'VEA', '^TYX']
 
-MACRO_LIST = [  'GC=F',       # Gold – safe haven and inflation hedge
+MACRO = [  'GC=F',       # Gold – safe haven and inflation hedge
                 "^IRX",       # 13-Week T-Bill Rate
                 '^FTSE',      # UK Index – decent global signal
                 'HYG',        # Risk-on/risk-off signal
@@ -74,12 +75,12 @@ def load_fixed_params(filepath="hyparams.json"):
 def binary_select(trial, items, prefix): return [item for item in items if trial.suggest_categorical(f"{prefix}_{item}", [False, True])]
 
 def run_experiment(trial):
-    select_macros = binary_select(trial, MACRO_LIST, "macro")
-    select_feat = binary_select(trial, FEAT_LIST, "feat")
+    select_macros = binary_select(trial, MACRO_LIST, "m")
+    select_feat = binary_select(trial, FEAT_LIST, "f")
     select_TICK = TICKER_LIST.copy()
 
     if not select_feat or not select_macros or not select_TICK:
-        print("[skip] Empty selection for tickers/features/macros")
+        print("[skip] Empty selection for features/macros")
         return -float("inf")
 
     fixed_params = load_fixed_params()
