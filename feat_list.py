@@ -315,6 +315,6 @@ FTR_FUNC = {
     # Cross-sectional
     "ret_cross_z": add_ret_cross_z, #"cross_momentum_z": add_cross_momentum,
     "cross_vol_z": add_cross_vol_z, "cross_ret_rank": add_cross_ret_rank,
-    "cross_rel_strength": add_cross_rel_strength, "cross_beta": add_cross_beta,
+    "cross_rel_strength": add_cross_rel_strength, #"cross_beta": add_cross_beta,
     "cross_corr":add_cross_corr,
 }

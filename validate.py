@@ -10,26 +10,7 @@ TICKER_LIST = ['JPM', 'MSFT', 'NVDA', 'AVGO', 'LLY', 'COST', 'MA', 'XOM', 'UNH',
 FEAT_LIST = list(FTR_FUNC.keys()) 
 
 
-MACRO_LIST = [  'GC=F',       # Gold – safe haven and inflation hedge
-                "^IRX",       # 13-Week T-Bill Rate
-                '^FTSE',      # UK Index – decent global signal
-                'HYG',        # Risk-on/risk-off signal
-                'EURUSD=X',   # Euro regime
-                'HG=F',       # Copper – strong industrial signal
-                "^GSPC",      # S&P 500
-                "GBPUSD=X",   # GBP/USD
-                'UUP',        # USD Index – macro regime signal
-                "EEM",        # EM    
-                "ZW=F",       # Wheat Futures
-                'USDJPY=X',   # Currency regime
-                "NG=F",      # Natural Gas
-                'VEA',       # Developed Intl Equities
-                '^RUT',      # Russell 2000 – small cap US
-                'ZC=F',      # Corn – appears in low trials, but still strong in top
-                "^TYX",      #30Y
-]
-
-MACRO_LONG = [  "^GSPC",        # S&P 500
+MACRO_LIST = [  "^GSPC",        # S&P 500
                 "CL=F",         # Crude Oil (WTI)
                 "SI=F",         # Silver
                 "NG=F",         # Natural Gas
