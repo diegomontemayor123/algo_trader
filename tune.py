@@ -1,7 +1,7 @@
 import os, subprocess, re, optuna, json, csv
 from optuna.samplers import TPESampler
 
-TRIALS = 15
+TRIALS = 1
 
 def run_experiment(trial):
     config = {"START": trial.suggest_categorical("START", ["2013-01-01"]),#2019 Jan
@@ -11,40 +11,11 @@ def run_experiment(trial):
         "MACRO": trial.suggest_categorical("MACRO", [
                                                      #'GC=F,HYG,EURUSD=X,UUP,ZW=F,USDJPY=X,NG=F,^TYX,ZC=F,GBPUSD=X',
                                                      'GC=F,HYG,EURUSD=X,UUP,ZW=F,USDJPY=X,NG=F,^TYX,ZC=F',
-                                                     #'GC=F,HYG,EURUSD=X,UUP,ZW=F,USDJPY=X,NG=F,^TYX',
-                                                     #'GC=F,HYG,EURUSD=X,UUP,ZW=F,USDJPY=X,NG=F,ZC=F',
-                                                     #'GC=F,HYG,EURUSD=X,UUP,ZW=F,USDJPY=X,^TYX,ZC=F',
-                                                     #'GC=F,HYG,EURUSD=X,UUP,ZW=F,NG=F,^TYX,ZC=F',
-                                                     #'GC=F,HYG,EURUSD=X,UUP,USDJPY=X,NG=F,^TYX,ZC=F',
-                                                     #'GC=F,HYG,EURUSD=X,ZW=F,USDJPY=X,NG=F,^TYX,ZC=F',
-                                                     #'GC=F,HYG,UUP,ZW=F,USDJPY=X,NG=F,^TYX,ZC=F',
-                                                     #'GC=F,EURUSD=X,UUP,ZW=F,USDJPY=X,NG=F,^TYX,ZC=F',
-                                                     #'GC=F,HYG,EURUSD=X,UUP,ZW=F,USDJPY=X,NG=F,^TYX,ZC=F',
                                                      ]),#"GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM"
         #'^VIX'
         "FEAT": trial.suggest_categorical("FEAT", [
                                                    #'roll_ret,sma,price_vs_high,vol_ptile,adx,cross_vol_z,cross_rel_strength,cross_corr,ema,macd,stoch,vol_change,zscore,price,lags,log_ret,ret',
-                                                   #'roll_ret,sma,price_vs_high,vol_ptile,adx,cross_vol_z,cross_rel_strength,cross_corr,ema,macd,stoch,vol_change,zscore,price,lags,log_ret',
-                                                   #'roll_ret,sma,price_vs_high,vol_ptile,adx,cross_vol_z,cross_rel_strength,cross_corr,ema,macd,stoch,vol_change,zscore,price,lags,ret',
-                                                   #'roll_ret,sma,price_vs_high,vol_ptile,adx,cross_vol_z,cross_rel_strength,cross_corr,ema,macd,stoch,vol_change,zscore,price,log_ret,ret',
-                                                   #'roll_ret,sma,price_vs_high,vol_ptile,adx,cross_vol_z,cross_rel_strength,cross_corr,ema,macd,stoch,vol_change,zscore,price,lags',
-                                                   #'roll_ret,sma,price_vs_high,vol_ptile,adx,cross_vol_z,cross_rel_strength,cross_corr,ema,macd,stoch,vol_change,zscore,price,log_ret',
-                                                   #'roll_ret,sma,price_vs_high,vol_ptile,adx,cross_vol_z,cross_rel_strength,cross_corr,ema,macd,stoch,vol_change,zscore,price,ret',
                                                    'roll_ret,sma,price_vs_high,vol_ptile,adx,cross_vol_z,cross_rel_strength,cross_corr,ema,macd,stoch,vol_change,zscore,price',
-                                                   'roll_ret,sma,price_vs_high,vol_ptile,adx,cross_vol_z,cross_rel_strength,cross_corr,ema,macd,stoch,vol_change,zscore',
-                                                   'roll_ret,sma,price_vs_high,vol_ptile,adx,cross_vol_z,cross_rel_strength,cross_corr,ema,macd,stoch,vol_change,price',
-                                                   'roll_ret,sma,price_vs_high,vol_ptile,adx,cross_vol_z,cross_rel_strength,cross_corr,ema,macd,stoch,zscore,price',
-                                                   'roll_ret,sma,price_vs_high,vol_ptile,adx,cross_vol_z,cross_rel_strength,cross_corr,ema,macd,vol_change,zscore,price',
-                                                   'roll_ret,sma,price_vs_high,vol_ptile,adx,cross_vol_z,cross_rel_strength,cross_corr,ema,stoch,vol_change,zscore,price',
-                                                   'roll_ret,sma,price_vs_high,vol_ptile,adx,cross_vol_z,cross_rel_strength,cross_corr,macd,stoch,vol_change,zscore,price',
-                                                   'roll_ret,sma,price_vs_high,vol_ptile,adx,cross_vol_z,cross_rel_strength,ema,macd,stoch,vol_change,zscore,price',
-                                                   'roll_ret,sma,price_vs_high,vol_ptile,adx,cross_vol_z,cross_corr,ema,macd,stoch,vol_change,zscore,price',
-                                                   'roll_ret,sma,price_vs_high,vol_ptile,adx,cross_rel_strength,cross_corr,ema,macd,stoch,vol_change,zscore,price',
-                                                   'roll_ret,sma,price_vs_high,vol_ptile,cross_vol_z,cross_rel_strength,cross_corr,ema,macd,stoch,vol_change,zscore,price',
-                                                   'roll_ret,sma,price_vs_high,adx,cross_vol_z,cross_rel_strength,cross_corr,ema,macd,stoch,vol_change,zscore,price',
-                                                   'roll_ret,sma,vol_ptile,adx,cross_vol_z,cross_rel_strength,cross_corr,ema,macd,stoch,vol_change,zscore,price',
-                                                   'roll_ret,price_vs_high,vol_ptile,adx,cross_vol_z,cross_rel_strength,cross_corr,ema,macd,stoch,vol_change,zscore,price',
-                                                   'sma,price_vs_high,vol_ptile,adx,cross_vol_z,cross_rel_strength,cross_corr,ema,macd,stoch,vol_change,zscore,price',
                                                    ]),#"sma,ema,boll,macd,vol_change,donchian"
         #"price,ema"
         "BATCH": trial.suggest_int("BATCH",53,53),#53
