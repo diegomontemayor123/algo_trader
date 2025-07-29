@@ -140,7 +140,7 @@ def run_experiment(trial):
 def main():
     from load import load_config
     config = load_config()
-    sampler = TPESampler(n_startup_trials=TRIALS/5,seed=config["SEED"])
+    sampler = TPESampler(seed=config["SEED"])
     study = optuna.create_study(direction="maximize", sampler=sampler)
     study.optimize(run_experiment, n_trials=TRIALS, n_jobs=1)
 
