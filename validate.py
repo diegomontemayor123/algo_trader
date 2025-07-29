@@ -8,8 +8,8 @@ TICKER_LIST = ['JPM', 'MSFT', 'NVDA', 'AVGO', 'LLY', 'COST', 'MA', 'XOM', 'UNH',
 
 
 FEAT_LONG = list(FTR_FUNC.keys()) 
-FEAT_LIST = ['log_ret', 'roll_ret', 'sma', 'price_vs_high', 'range', 'vol_ptile', 'price_ptile', 'adx', 'boll', 'lags', 'cross_vol_z', 'cross_rel_strength', 'cross_corr', 'ema', 'macd', 'stoch','vol_change','ret_cross_z','ret','zscore','price']
-MACRO_LIST =  ['GC=F', '^FTSE', 'HYG', 'EURUSD=X', 'GBPUSD=X', 'UUP', 'ZW=F', 'USDJPY=X', 'NG=F', 'VEA', '^TYX','ZC=F']
+FEAT_LIST = ['roll_ret', 'sma', 'price_vs_high', 'vol_ptile', 'adx', 'cross_vol_z', 'cross_rel_strength', 'cross_corr', 'ema', 'macd', 'stoch', 'vol_change', 'zscore', 'price','lags','log_ret','ret']
+MACRO_LIST =  ['GC=F', 'HYG', 'EURUSD=X', 'UUP', 'ZW=F', 'USDJPY=X', 'NG=F', '^TYX', 'ZC=F','GBPUSD=X']
 
 MACRO = [  'GC=F',       # Gold – safe haven and inflation hedge
                 "^IRX",       # 13-Week T-Bill Rate
@@ -160,7 +160,7 @@ def run_experiment(trial):
 def main():
     from load import load_config
     config = load_config()
-    sampler = TPESampler(seed=config["SEED"])
+    sampler = TPESampler(n_startup_trials=TRIALS/5, gamma=0.5,seed=config["SEED"])
     study = optuna.create_study(direction="maximize", sampler=sampler)
     study.optimize(run_experiment, n_trials=TRIALS, n_jobs=1)
 
