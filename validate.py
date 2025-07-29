@@ -8,8 +8,8 @@ TICKER_LIST = ['JPM', 'MSFT', 'NVDA', 'AVGO', 'LLY', 'COST', 'MA', 'XOM', 'UNH',
 
 
 FEAT_LONG = list(FTR_FUNC.keys()) 
-FEAT_LIST = ['roll_ret', 'sma', 'price_vs_high', 'vol_ptile', 'adx', 'cross_vol_z', 'cross_rel_strength', 'cross_corr', 'ema', 'macd', 'stoch', 'vol_change', 'zscore', 'price','lags','log_ret','ret']
-MACRO_LIST =  ['GC=F', 'HYG', 'EURUSD=X', 'UUP', 'ZW=F', 'USDJPY=X', 'NG=F', '^TYX', 'ZC=F','GBPUSD=X']
+FEAT_LIST = ['roll_ret', 'sma', 'price_vs_high', 'vol_ptile', 'adx', 'cross_vol_z', 'cross_rel_strength', 'cross_corr', 'ema', 'macd', 'stoch', 'vol_change', 'zscore', 'price'] #,'lags','log_ret','ret'
+MACRO_LIST =  ['GC=F', 'HYG', 'EURUSD=X', 'UUP', 'ZW=F', 'USDJPY=X', 'NG=F', '^TYX', 'ZC=F']#,'GBPUSD=X'
 
 MACRO = [  'GC=F',       # Gold – safe haven and inflation hedge
                 "^IRX",       # 13-Week T-Bill Rate
