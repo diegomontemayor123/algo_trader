@@ -3,13 +3,13 @@ from optuna.samplers import TPESampler
 from collections import Counter
 from feat_list import FTR_FUNC
 
-TRIALS = 40
+TRIALS = 55
 TICKER_LIST = ['JPM', 'MSFT', 'NVDA', 'AVGO', 'LLY', 'COST', 'MA', 'XOM', 'UNH', 'AMZN', 'CAT', 'ADBE', 'TSLA']
 
 
 FEAT_LONG = list(FTR_FUNC.keys()) 
-FEAT_LIST = ['log_ret', 'roll_ret', 'sma', 'price_vs_high', 'range', 'vol_ptile', 'price_ptile', 'adx', 'boll', 'lags', 'cross_vol_z', 'cross_rel_strength', 'cross_corr', 'ema', 'macd', 'stoch']
-MACRO_LIST =  ['GC=F', '^FTSE', 'HYG', 'EURUSD=X', 'GBPUSD=X', 'UUP', 'ZW=F', 'USDJPY=X', 'NG=F', 'VEA', '^TYX']
+FEAT_LIST = ['log_ret', 'roll_ret', 'sma', 'price_vs_high', 'range', 'vol_ptile', 'price_ptile', 'adx', 'boll', 'lags', 'cross_vol_z', 'cross_rel_strength', 'cross_corr', 'ema', 'macd', 'stoch','vol_change','ret_cross_z','ret','zscore','price']
+MACRO_LIST =  ['GC=F', '^FTSE', 'HYG', 'EURUSD=X', 'GBPUSD=X', 'UUP', 'ZW=F', 'USDJPY=X', 'NG=F', 'VEA', '^TYX','ZC=F']
 
 MACRO = [  'GC=F',       # Gold – safe haven and inflation hedge
                 "^IRX",       # 13-Week T-Bill Rate
