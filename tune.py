@@ -4,9 +4,9 @@ from optuna.samplers import TPESampler
 TRIALS = 30
 
 def run_experiment(trial,study=None):
-    config = {"START": trial.suggest_categorical("START", ["2017-01-01"]),#2019 Jan
+    config = {"START": trial.suggest_categorical("START", ["2018-01-01"]),#2019 Jan
         "END": trial.suggest_categorical("END", ["2023-01-01"]),#2025 Jul
-        "SPLIT": trial.suggest_categorical("SPLIT", ["2021-01-01",]),#2023 Jan
+        "SPLIT": trial.suggest_categorical("SPLIT", ["2022-01-01",]),#2023 Jan
         "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
         "MACRO": trial.suggest_categorical("MACRO", ['^FTSE,^GSPC,^TYX,EURUSD=X,GBPUSD=X,GC=F,HYG,NG=F,SI=F,TLT,UUP,USDJPY=X,ZC=F,ZW=F,^IRX,EEM,HG=F',]),#"GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM"
         "FEAT": trial.suggest_categorical("FEAT", ['adx,boll,cmo,cross_corr,cross_rel_strength,cross_ret_rank,cross_vol_z,ema,lags,log_ret,macd,mean_abs_return,price,price_vs_high,range,ret,roll_ret,rsi,sma,stoch,vol_change,vol_ptile,zscore,donchian',]),#"sma,ema,boll,macd,vol_change,donchian"
