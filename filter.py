@@ -13,12 +13,12 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=confi
     start = split_date_ts - pd.DateOffset(months=config["FILTERWIN"])
     mask = ret.notna().all(axis=1)
     mask = mask & (mask.index < split_date_ts) & (mask.index >= start)
-    def max_drawdown(returns): cum = (1 + returns).cumprod();drawdown = (cum - cum.cummax()) / cum.cummax();return drawdown.min()
     window = config["YWIN"] 
-    #FWD Sharpe 
+
     y = (ret.loc[mask].mean(axis=1).shift(-window).rolling(window).mean() / (ret.loc[mask].mean(axis=1).shift(-window).rolling(window).std() + 1e-10)).dropna()
+    #def max_drawdown(returns): cum = (1 + returns).cumprod();drawdown = (cum - cum.cummax()) / cum.cummax();return drawdown.min()
     #FWD RETURN adj. DOWN y = (ret.loc[mask].mean(axis=1).shift(-window).rolling(window).mean() - (ret.loc[mask].mean(axis=1).shift(-window).rolling(window).apply(max_drawdown, raw=False) + 1e-10)).dropna()
-  
+    
     X = feat.loc[y.index]
     if method == "rf":
         model = RandomForestRegressor(n_estimators=config["NESTIM"], random_state=config["SEED"])
