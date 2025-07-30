@@ -1,7 +1,7 @@
 import os, subprocess, re, optuna, json, csv
 from optuna.samplers import TPESampler
 
-TRIALS = 40
+TRIALS = 1
 
 def run_experiment(trial):
     config = {"START": trial.suggest_categorical("START", ["2013-01-01"]),#2019 Jan
