@@ -22,31 +22,11 @@ def add_price(data): data['price'] = data['close']
 import numpy as np
 
 def add_log_ret(data):
-    shifted = data['close'].shift(1)
-    ratio = data['close'] / shifted
-
-    # Replace inf and -inf with NaN
-    ratio = ratio.replace([np.inf, -np.inf], np.nan)
-
-    # Now fill NaNs with a safe value — 1 is neutral for ratio (log(1) = 0)
-    ratio = ratio.fillna(1)
-
-    # Now the comparison should be safe, since all values are finite numbers
-    ratio_clean = ratio.where(ratio > 0, 1)  # replace invalid with 1 to avoid NaN in logs
-
-    # Compute log returns
+    ratio = (data['close'] / data['close'].shift(1)).replace([np.inf, -np.inf], np.nan).fillna(1)
+    ratio_clean = ratio.where(ratio > 0, 1)
     log_ret = np.log(ratio_clean)
-
-    # You can optionally drop rows where close or shifted was originally NaN:
-    log_ret = log_ret.replace(0, np.nan)  # zero log return probably comes from filled 1s
-    log_ret = log_ret.dropna()
-
-    # Assign back to data aligned by index
     data['log_ret'] = log_ret.reindex(data.index)
-
     return data
-
-
 
 def add_roll_ret(data):
     for p in per:
@@ -125,12 +105,9 @@ def add_vol_ptile(data):
         data[f'vol_ptile_{p}'] = vol.rolling(p).apply(lambda x: pd.Series(x).rank(pct=True).iloc[-1])
 
 # ========================== OSCILLATORS / MEAN REVERSION  ==========================
-def clean_delta(delta):
-    return delta.replace([np.inf, -np.inf], np.nan).fillna(0)
 
 def add_rsi(data):
-    delta = data['close'].diff()
-    delta = clean_delta(delta)
+    delta = data['close'].diff().replace([np.inf, -np.inf], np.nan).fillna(0)
     for p in per:
         gain = delta.clip(lower=0).rolling(p).mean()
         loss = -delta.clip(upper=0).rolling(p).mean()
@@ -138,8 +115,7 @@ def add_rsi(data):
         data[f'rsi_{p}'] = 100 - (100 / (1 + rs))
 
 def add_cmo(data):
-    delta = data['close'].diff()
-    delta = clean_delta(delta)
+    delta = data['close'].diff().replace([np.inf, -np.inf], np.nan).fillna(0)
     for p in per:
         up = delta.clip(lower=0).rolling(p).sum()
         down = -delta.clip(upper=0).rolling(p).sum()
