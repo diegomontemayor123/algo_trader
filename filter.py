@@ -15,11 +15,12 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=confi
     def max_drawdown(returns): cum = (1 + returns).cumprod();drawdown = (cum - cum.cummax()) / cum.cummax();return drawdown.min()
     window = config["YWIN"] 
     #FWD RETURN y = (ret.loc[mask].mean(axis=1).shift(-window).rolling(window).mean() ).dropna()
-    y = (ret.loc[mask].mean(axis=1).shift(-window).rolling(window).mean() / (ret.loc[mask].mean(axis=1).shift(-window).rolling(window).std() + 1e-10)).dropna()
+    #FWD Sharpey = (ret.loc[mask].mean(axis=1).shift(-window).rolling(window).mean() / (ret.loc[mask].mean(axis=1).shift(-window).rolling(window).std() + 1e-10)).dropna()
     #CAGR adj. DOWN y = ((1 + ret.loc[mask].mean(axis=1).shift(-window)).rolling(window).apply(lambda x: x.prod()**(252/window)-1, raw=True) - (ret.loc[mask].mean(axis=1).shift(-window).rolling(window).apply(max_drawdown, raw=False) + 1e-10)).dropna()
     #CAGR y = (1 + ret.loc[mask].mean(axis=1).shift(-window)).rolling(window).apply(lambda x: x.prod()**(252/window)-1, raw=True).dropna()
     #FWD RETURN adj. DOWN y = (ret.loc[mask].mean(axis=1).shift(-window).rolling(window).mean() - (ret.loc[mask].mean(axis=1).shift(-window).rolling(window).apply(max_drawdown, raw=False) + 1e-10)).dropna()
-    # USED FOR GOOD RUN BUT DOESNT MAKE SENSE: y = ret.loc[mask].mean(axis=1) / (ret.loc[mask].std(axis=1) + 1e-10)
+    # USED FOR GOOD RUN BUT DOESNT MAKE SENSE: 
+    y = ret.loc[mask].mean(axis=1) / (ret.loc[mask].std(axis=1) + 1e-10)
     X = feat.loc[y.index]
     if method == "rf":
         model = RandomForestRegressor(n_estimators=config["NESTIM"], random_state=config["SEED"])
