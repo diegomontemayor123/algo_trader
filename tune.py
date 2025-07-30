@@ -4,14 +4,14 @@ from optuna.samplers import TPESampler
 TRIALS = 30
 
 def run_experiment(trial,study=None):
-    config = {"START": trial.suggest_categorical("START", ["2013-01-01"]),#2019 Jan
+    config = {"START": trial.suggest_categorical("START", ["2015-01-01"]),#2019 Jan
         "END": trial.suggest_categorical("END", ["2023-01-01"]),#2025 Jul
-        "SPLIT": trial.suggest_categorical("SPLIT", ["2017-01-01",]),#2023 Jan
+        "SPLIT": trial.suggest_categorical("SPLIT", ["2019-01-01",]),#2023 Jan
         "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
         "MACRO": trial.suggest_categorical("MACRO", ['^FTSE,^GSPC,^TYX,EURUSD=X,GBPUSD=X,GC=F,HYG,NG=F,SI=F,TLT,UUP,USDJPY=X,ZC=F,ZW=F,^IRX,EEM,HG=F',]),#"GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM"
         "FEAT": trial.suggest_categorical("FEAT", ['adx,boll,cmo,cross_corr,cross_rel_strength,cross_ret_rank,cross_vol_z,ema,lags,log_ret,macd,mean_abs_return,price,price_vs_high,range,ret,roll_ret,rsi,sma,stoch,vol_change,vol_ptile,zscore,donchian',]),#"sma,ema,boll,macd,vol_change,donchian"
         "FILTER": trial.suggest_categorical("FILTER", ["rf"]),#"none","mutual","correl","rf"
-        "YWIN": trial.suggest_int("YWIN",20,90),#60
+        "YWIN": trial.suggest_int("YWIN",1,30),#60
         "FILTERWIN": trial.suggest_int("FILTERWIN",23,29),#26
         "THRESH": trial.suggest_int("THRESH",105,125),#113
         "NESTIM": trial.suggest_int("NESTIM",350,500),#406
@@ -34,7 +34,7 @@ def run_experiment(trial,study=None):
         "EARLY_FAIL": trial.suggest_categorical("EARLY_FAIL",[2]),#2
         "VAL_SPLIT": trial.suggest_categorical("VAL_SPLIT",[.15]),#.15
         "WARMUP": trial.suggest_categorical("WARMUP",[0]),
-        "TEST_CHUNK": trial.suggest_categorical("TEST_CHUNK",[12]),
+        "TEST_CHUNK": trial.suggest_categorical("TEST_CHUNK",[24]),#12
         "RETRAIN": trial.suggest_categorical("RETRAIN", [1]),
         "ATTENT": trial.suggest_categorical("ATTENT", [1]),
     }
