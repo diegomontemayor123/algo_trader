@@ -15,7 +15,7 @@ def run_experiment(trial):
         "FILTERMETHOD": trial.suggest_categorical("FILTERMETHOD", [#"none","mutual","correl",
                                                                    "rf"]),#none
         "FILTERWIN": trial.suggest_int("FILTERWIN",12,36),#24
-        "THRESH": trial.suggest_float("THRESH",0.0005,0.09),#0.01
+        "THRESH": trial.suggest_float("THRESH",0.0005,0.01),#0.01
         "BATCH": trial.suggest_int("BATCH",53,53),#53
         "LBACK": trial.suggest_int("LBACK",84,84),#84
         "PRED_DAYS": trial.suggest_int("PRED_DAYS",6,6),#6
