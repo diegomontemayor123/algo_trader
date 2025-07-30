@@ -22,11 +22,19 @@ def add_price(data): data['price'] = data['close']
 def add_log_ret(data):
     shifted = data['close'].shift(1)
     ratio = data['close'] / shifted
+
+    # Replace inf and -inf with NaN
+    ratio = ratio.replace([np.inf, -np.inf], np.nan)
+
+    # Now safe to compare
     ratio_clean = ratio.where(ratio > 0, np.nan)
+
     log_ret = np.log(ratio_clean)
     log_ret = log_ret.dropna()
+
     data['log_ret'] = log_ret.reindex(data.index)
     return data
+
 
 def add_roll_ret(data):
     for p in per:
