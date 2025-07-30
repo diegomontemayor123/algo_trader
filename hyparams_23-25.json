@@ -6,6 +6,7 @@
     "MACRO": "GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM",
     "FEAT": "sma,ema,boll,macd,vol_change,donchian",
     "FILTER": "none",
+    "YWIN":60,
     "FILTERWIN": 0,
     "THRESH": 0,
     "NESTIM": 0,

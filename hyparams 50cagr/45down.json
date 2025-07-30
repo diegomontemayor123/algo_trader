@@ -6,6 +6,7 @@
     "MACRO": "GC=F,HYG,EURUSD=X,UUP,ZW=F,USDJPY=X,NG=F,^TYX,ZC=F,GBPUSD=X",
     "FEAT": "roll_ret,sma,price_vs_high,vol_ptile,cross_vol_z,cross_rel_strength,cross_corr,ema,macd,vol_change,zscore,lags,log_ret",
     "FILTER": "none",
+    "YWIN":60,
     "FILTERWIN": 0,
     "THRESH": 0,
     "NESTIM": 0,

@@ -6,6 +6,7 @@
     "MACRO": "HYG,HG=F,^GSPC,GBPUSD=X,UUP,ZW=F,USDJPY=X,VEA,^RUT,^TYX",
     "FEAT": "ema,boll,macd,ret,vol_ptile",
     "FILTER": "none",
+    "YWIN":60,
     "FILTERWIN": 0,
     "THRESH": 0,
     "NESTIM": 0,
