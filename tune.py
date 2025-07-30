@@ -11,9 +11,9 @@ def run_experiment(trial):
         "MACRO": trial.suggest_categorical("MACRO", ['^FTSE,^GSPC,^TYX,EURUSD=X,GBPUSD=X,GC=F,HYG,NG=F,SI=F,TLT,UUP,USDJPY=X,ZC=F,ZW=F,^IRX,EEM,HG=F',]),#"GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM"
         "FEAT": trial.suggest_categorical("FEAT", ['adx,boll,cmo,cross_corr,cross_rel_strength,cross_ret_rank,cross_vol_z,ema,lags,log_ret,macd,mean_abs_return,price,price_vs_high,range,ret,roll_ret,rsi,sma,stoch,vol_change,vol_ptile,zscore,donchian',]),#"sma,ema,boll,macd,vol_change,donchian"
         "FILTER": trial.suggest_categorical("FILTER", ["rf"]),#"none","mutual","correl","rf"
-        "FILTERWIN": trial.suggest_int("FILTERWIN",20,30),#23
-        "THRESH": trial.suggest_int("THRESH",70,130),#115
-        "NESTIM": trial.suggest_categorical("NESTIM",[350,375,400,425,450]),#300
+        "FILTERWIN": trial.suggest_int("FILTERWIN",20,30),#25
+        "THRESH": trial.suggest_int("THRESH",70,130),#106
+        "NESTIM": trial.suggest_int("NESTIM",400,700),#450
         "BATCH": trial.suggest_int("BATCH",53,53),#53
         "LBACK": trial.suggest_int("LBACK",84,84),#84
         "PRED_DAYS": trial.suggest_int("PRED_DAYS",6,6),#6
@@ -33,7 +33,7 @@ def run_experiment(trial):
         "EARLY_FAIL": trial.suggest_categorical("EARLY_FAIL",[2]),#2
         "VAL_SPLIT": trial.suggest_categorical("VAL_SPLIT",[.15]),#.15
         "WARMUP": trial.suggest_categorical("WARMUP",[0]),
-        "TEST_CHUNK": trial.suggest_categorical("TEST_CHUNK",[9,12]),
+        "TEST_CHUNK": trial.suggest_int("TEST_CHUNK",6,12),
         "RETRAIN": trial.suggest_categorical("RETRAIN", [1]),
         "ATTENT": trial.suggest_categorical("ATTENT", [1]),
     }
