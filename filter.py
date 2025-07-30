@@ -28,13 +28,9 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=confi
         return feat
     score_name=method
     if 1<thresh:
-        selected_features = scores.nlargest(thresh).index
+        selected_features = scores.nlargest(int(thresh)).index
         print(f"[FILTER] Selected top {thresh} features by {score_name} between {start.date()} - {split_date.date()}")
-    elif  0 < thresh < 1:
+    elif  0 < thresh <= 1:
         selected_features = scores[scores > thresh].index
         print(f"[FILTER] Selected {len(selected_features)} features with {score_name} > {thresh} between {start.date()} - {split_date.date()}")
-    else:
-        selected_features = scores.index
-        print(f"[FILTER] No valid threshold specified, using all {len(selected_features)} features")
-
     return feat[selected_features]
