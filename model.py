@@ -92,7 +92,7 @@ if __name__ == "__main__":
     macro_keys = config.get("MACRO", [])
     if isinstance(macro_keys, str): macro_keys = [k.strip() for k in macro_keys.split(",") if k.strip()]
     cached_data = load_prices(config["START"], config["END"], MACRO_LIST)
-    feat, ret = comp_feat(TICK, feat_list, cached_data, macro_keys, split_date=config["SPLIT"], method=config["FILTERMETHOD"])
+    feat, ret = comp_feat(TICK, feat_list, cached_data, macro_keys, split_date=config["SPLIT"], method=config["FILTER"])
     print(f"Feat shape: {feat.shape}, Columns: {feat.columns[:5].tolist()}...")
     print(f"Ret shape: {ret.shape}, Columns: {ret.columns[:5].tolist()}...")
     _, _, test_data = prep_data(feat, ret, config)

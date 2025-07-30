@@ -289,13 +289,13 @@ FTR_FUNC = {
     # Basic
     "ret": add_ret, "price": add_price, "log_ret": add_log_ret, "roll_ret": add_roll_ret,
     # Trend / Momentum
-    "sma": add_sma, "ema": add_ema,# "momentum": add_momentum, 
+    "sma": add_sma, "ema": add_ema, "momentum": add_momentum, 
     "macd": add_macd,
-    #"acceleration":add_acceleration,
+    "acceleration":add_acceleration,
     "price_vs_high":add_price_vs_high,
-    #"up_down_ratio":add_up_down_ratio,
+    "up_down_ratio":add_up_down_ratio,
     # vol
-    "vol": add_vol, #"atr": add_atr,
+    "vol": add_vol, "atr": add_atr,
     "range":add_range,"vol_change":add_vol_change,
     "vol_ptile":add_vol_ptile,
     # Oscillators/Mean ReversionRegime
@@ -303,18 +303,18 @@ FTR_FUNC = {
      "stoch":add_stoch,
     # Structure / Regime
      "price_ptile": add_price_ptiles,
-     "adx":add_adx, #"entropy":add_entropy, 
+     "adx":add_adx, "entropy":add_entropy, 
      "mean_abs_return":add_mean_abs_return,
     # Bands
     "boll": add_boll, "donchian": add_donchian,
     # Volume
-    #"volume": add_volume,
+    "volume": add_volume,
     # Lag/Time
     "lags": add_lags,
-    #"trend_combo":add_trend_combo,
+    "trend_combo":add_trend_combo,
     # Cross-sectional
-    "ret_cross_z": add_ret_cross_z, #"cross_momentum_z": add_cross_momentum,
+    "ret_cross_z": add_ret_cross_z, "cross_momentum_z": add_cross_momentum,
     "cross_vol_z": add_cross_vol_z, "cross_ret_rank": add_cross_ret_rank,
-    "cross_rel_strength": add_cross_rel_strength, #"cross_beta": add_cross_beta,
+    "cross_rel_strength": add_cross_rel_strength, "cross_beta": add_cross_beta,
     "cross_corr":add_cross_corr,
 }

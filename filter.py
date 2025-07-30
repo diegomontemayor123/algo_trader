@@ -5,7 +5,7 @@ from load import load_config
 
 config = load_config()
 
-def select_features(feat, ret, split_date, thresh=config["THRESH"], method=config["FILTERMETHOD"]):
+def select_features(feat, ret, split_date, thresh=config["THRESH"], method=config["FILTER"]):
     if method is None: 
         return feat
     method = method[0]
@@ -20,7 +20,7 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=confi
     y = ret.loc[mask].mean(axis=1) / (ret.loc[mask].std(axis=1) + 1e-10) if method == "rf" else ret.loc[mask].mean(axis=1)
 
     if method == "rf":
-        model = RandomForestRegressor(n_estimators=100, random_state=config["SEED"])
+        model = RandomForestRegressor(n_estimators=config["NESTIM"], random_state=config["SEED"])
         model.fit(X, y)
         scores = pd.Series(model.feature_importances_, index=X.columns)
     elif method == "mutual":

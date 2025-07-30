@@ -39,7 +39,7 @@ def run_retraining_chunks(chunks, feat_df, ret_df, lback, norm_feat, TICK, comp_
             chunk_config["SPLIT"] = str((train_end + pd.Timedelta(days=1)).date())
             cached_chunk_data = load_prices(chunk_config["START"], config["END"], macro_keys)
             feat_list = config["FEAT"].split(",") if isinstance(config["FEAT"], str) else config["FEAT"]
-            feat_train, ret_train = comp_feat(TICK, feat_list, cached_chunk_data, macro_keys, split_date=chunk_config["SPLIT"], method=config["FILTERMETHOD"])
+            feat_train, ret_train = comp_feat(TICK, feat_list, cached_chunk_data, macro_keys, split_date=chunk_config["SPLIT"], method=config["FILTER"])
             print(f"Feature train shape: {feat_train.shape}, Return train shape: {ret_train.shape}")
             train_data, val_data, _ = prep_data(feat_train, ret_train, chunk_config)
             train_loader = DataLoader(train_data, batch_size=config["BATCH"], shuffle=True, num_workers=min(2, multiprocessing.cpu_count()))

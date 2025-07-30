@@ -58,7 +58,7 @@ def main():
     
     cached_data = load_prices(start_date.strftime("%Y-%m-%d"), end_date.strftime("%Y-%m-%d"), macro_keys)
     
-    feat, ret = comp_feat(TICKER_LIST, feat_names, cached_data, macro_keys,)
+    feat, ret = comp_feat(TICKER_LIST, feat_names, cached_data, macro_keys, method=None)
     ret = ret.loc[feat.index]
 
     top_features_per_asset, sorted_mean_abs = compute_feature_correlations(feat, ret, start_date, end_date)
