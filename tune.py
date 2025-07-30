@@ -22,13 +22,13 @@ def run_experiment(trial,study=None):
         "DECAY": trial.suggest_float("DECAY",.003,.003),#.003
         "FEAT_PER": trial.suggest_categorical("FEAT_PER", ["8,12,24"]),
         "INIT_LR": trial.suggest_float("INIT_LR",.006,.006),#.006
-        "EXP_PEN": trial.suggest_float("EXP_PEN",.226,.226),#.235 price,ema,vix     / .226 long macro/feat
+        "EXP_PEN": trial.suggest_float("EXP_PEN",.226,.226),#.226 long macro/feat
         "EXP_EXP": trial.suggest_float("EXP_EXP",1.8,1.8),#1.8
-        "RETURN_PEN": trial.suggest_float("RETURN_PEN",.07,.07),#.105 price,ema,vix / .07 long macro/feat
+        "RETURN_PEN": trial.suggest_float("RETURN_PEN",.07,.07),#.07 long macro/feat
         "RETURN_EXP": trial.suggest_float("RETURN_EXP",.28,.28),#.28 
         "SD_PEN": trial.suggest_float("SD_PEN",.17,.17),#.17 
         "SD_EXP": trial.suggest_float("SD_EXP",.74,.74),#.74 
-        "SEED": trial.suggest_categorical("SEED",[42]),
+        "SEED": trial.suggest_categorical("SEED",[42]),#42
         "MAX_HEADS": trial.suggest_categorical("MAX_HEADS", [1]),#1
         "LAYERS": trial.suggest_categorical("LAYERS", [1]),#1
         "EARLY_FAIL": trial.suggest_categorical("EARLY_FAIL",[2]),#2
