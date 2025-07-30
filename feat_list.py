@@ -20,9 +20,13 @@ def add_ret(data): data['ret'] = data['close'].pct_change()
 def add_price(data): data['price'] = data['close']
 
 def add_log_ret(data):
-    days = 5
-    data['log_ret'] = np.log(data['close'] / data['close'].shift(1))
-    data['log_ret_norm5'] = (data['log_ret'] - data['log_ret'].rolling(days).mean()) / (data['log_ret'].rolling(days).std() + 1e-10)
+    shifted = data['close'].shift(1)
+    ratio = data['close'] / shifted
+    ratio_clean = ratio.where(ratio > 0, np.nan)
+    log_ret = np.log(ratio_clean)
+    log_ret = log_ret.dropna()
+    data['log_ret'] = log_ret.reindex(data.index)
+    return data
 
 def add_roll_ret(data):
     for p in per:
