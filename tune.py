@@ -13,7 +13,7 @@ def run_experiment(trial):
         "FEAT": trial.suggest_categorical("FEAT", ['adx,boll,cmo,cross_corr,cross_rel_strength,cross_ret_rank,cross_vol_z,ema,lags,log_ret,macd,mean_abs_return,price,price_vs_high,range,ret,roll_ret,rsi,sma,stoch,vol_change,vol_ptile,zscore,donchian',]),#"sma,ema,boll,macd,vol_change,donchian"
         #"price,ema"
         "FILTERMETHOD": trial.suggest_categorical("FILTERMETHOD", [#"none","mutual","correl",
-                                                                   "rf"]),#none
+                                                                   "rf","none","correl","mutual"]),#none
         "FILTERWIN": trial.suggest_int("FILTERWIN",24,24),#24
         "THRESH": trial.suggest_float("THRESH",250,250),#0.01
         "BATCH": trial.suggest_int("BATCH",53,53),#53
