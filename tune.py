@@ -11,7 +11,7 @@ def run_experiment(trial,study=None):
         "MACRO": trial.suggest_categorical("MACRO", ['^FTSE,^GSPC,^TYX,EURUSD=X,GBPUSD=X,GC=F,HYG,NG=F,SI=F,TLT,UUP,USDJPY=X,ZC=F,ZW=F,^IRX,EEM,HG=F',]),#"GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM"
         "FEAT": trial.suggest_categorical("FEAT", ['adx,boll,cmo,cross_corr,cross_rel_strength,cross_ret_rank,cross_vol_z,ema,lags,log_ret,macd,mean_abs_return,price,price_vs_high,range,ret,roll_ret,rsi,sma,stoch,vol_change,vol_ptile,zscore,donchian',]),#"sma,ema,boll,macd,vol_change,donchian"
         "FILTER": trial.suggest_categorical("FILTER", ["rf"]),#"none","mutual","correl","rf"
-        "YWIN": trial.suggest_int("YWIN",1,30),#60
+        "YWIN": trial.suggest_int("YWIN",1,10),
         "FILTERWIN": trial.suggest_int("FILTERWIN",23,29),#26
         "THRESH": trial.suggest_int("THRESH",105,125),#113
         "NESTIM": trial.suggest_int("NESTIM",350,500),#406
