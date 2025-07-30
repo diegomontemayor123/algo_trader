@@ -19,18 +19,14 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=confi
         model = RandomForestRegressor(n_estimators=100, random_state=config["SEED"])
         model.fit(X, y)
         scores = pd.Series(model.feature_importances_, index=X.columns)
-        score_name = "RF importance"
     elif method == "mutual":
         scores = pd.Series(mutual_info_regression(X, y, random_state=config["SEED"]), index=X.columns)
-        score_name = "mutual info"
     elif method == "correl":
         scores = X.apply(lambda col: col.corr(y)).abs()
-        score_name = "correlation"
     else:
         print(f"[FILTER] Unknown method '{method}' specified, skipping filtering")
         return feat
-
-    # Apply threshold logic
+    score_name=method
     if isinstance(thresh, int):
         selected_features = scores.nlargest(thresh).index
         print(f"[FILTER] Selected top {thresh} features by {score_name} between {start.date()} - {split_date.date()}")
