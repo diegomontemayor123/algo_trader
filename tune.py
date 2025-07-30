@@ -10,7 +10,7 @@ def run_experiment(trial):
         "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
         "MACRO": trial.suggest_categorical("MACRO", ['^FTSE,^GSPC,^TYX,EURUSD=X,GBPUSD=X,GC=F,HYG,NG=F,SI=F,TLT,UUP,USDJPY=X,ZC=F,ZW=F,^IRX,EEM,HG=F',]),#"GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM"
         "FEAT": trial.suggest_categorical("FEAT", ['adx,boll,cmo,cross_corr,cross_rel_strength,cross_ret_rank,cross_vol_z,ema,lags,log_ret,macd,mean_abs_return,price,price_vs_high,range,ret,roll_ret,rsi,sma,stoch,vol_change,vol_ptile,zscore,donchian',]),#"sma,ema,boll,macd,vol_change,donchian"
-        "FILTERMETHOD": trial.suggest_categorical("FILTERMETHOD", ["rf"]),#"none","mutual","correl","none"
+        "FILTER": trial.suggest_categorical("FILTER", ["rf"]),#"none","mutual","correl","none"
         "FILTERWIN": trial.suggest_int("FILTERWIN",12,20),#24
         "THRESH": trial.suggest_int("THRESH",150,500),#250
         "NESTIM": trial.suggest_categorical("NESTIM",[50,100,200,300]),#100
