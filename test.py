@@ -91,7 +91,6 @@ def run_btest(  device, initial_capital, split, lback,comp_feat, norm_feat, TICK
         for key, val in metrics_std.items():f.write(f"{key.title()}: ±{val:.2%}\n")
         f.write("\n=Average Outperf Across Chunks (Strat - Bench)=\n")
         for key, val in avg_outperf.items():f.write(f"{key.title()}: {val:.2%}\n")
-    print(f"[BTest] Saved perf report to {report_path}")
     if plot:
         plt.figure(figsize=(12, 6));plt.plot(pfo_series.index, pfo_series.values, label="Combined Strat Equity Curve", linewidth=2)
         plt.plot(bench_series.index, bench_series.values, label="Combined Bench Equity Curve", linewidth=2)

@@ -6,11 +6,15 @@ from load import load_config
 config = load_config()
 
 def select_features(feat, ret, split_date, thresh=config["THRESH"], method=config["FILTERMETHOD"]):
-    if method is None: return feat
+    if method is None: 
+        return feat
     method = method[0]
+
+    split_date_ts = pd.to_datetime(split_date)
+    start = split_date_ts - pd.DateOffset(months=config["FILTERWIN"])
+
     mask = ret.notna().all(axis=1)
-    start = (pd.to_datetime(split_date) - pd.DateOffset(months=config["FILTERWIN"]))
-    mask = mask & (mask.index < pd.to_datetime(split_date)) & (mask.index >= start)
+    mask = mask & (mask.index < split_date_ts) & (mask.index >= start)
 
     X = feat.loc[mask]
     y = ret.loc[mask].mean(axis=1) / (ret.loc[mask].std(axis=1) + 1e-10) if method == "rf" else ret.loc[mask].mean(axis=1)
@@ -26,11 +30,14 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=confi
     else:
         print(f"[FILTER] Unknown method '{method}' specified, skipping filtering")
         return feat
-    score_name=method
-    if 1<thresh:
+
+    score_name = method
+
+    if thresh > 1:
         selected_features = scores.nlargest(int(thresh)).index
-        print(f"[FILTER] Selected top {thresh} features by {score_name} between {start.date()} - {split_date.date()}")
-    elif  0 < thresh <= 1:
+        print(f"[FILTER] Selected top {int(thresh)} features by {score_name} between {start.date()} - {split_date_ts.date()}")
+    elif 0 < thresh <= 1:
         selected_features = scores[scores > thresh].index
-        print(f"[FILTER] Selected {len(selected_features)} features with {score_name} > {thresh} between {start.date()} - {split_date.date()}")
+        print(f"[FILTER] Selected {len(selected_features)} features with {score_name} > {thresh} between {start.date()} - {split_date_ts.date()}")
+
     return feat[selected_features]
