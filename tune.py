@@ -9,13 +9,10 @@ def run_experiment(trial):
         "SPLIT": trial.suggest_categorical("SPLIT", ["2017-01-01",]),#2023 Jan
         "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
         "MACRO": trial.suggest_categorical("MACRO", ['^FTSE,^GSPC,^TYX,EURUSD=X,GBPUSD=X,GC=F,HYG,NG=F,SI=F,TLT,UUP,USDJPY=X,ZC=F,ZW=F,^IRX,EEM,HG=F',]),#"GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM"
-        #'^VIX'
         "FEAT": trial.suggest_categorical("FEAT", ['adx,boll,cmo,cross_corr,cross_rel_strength,cross_ret_rank,cross_vol_z,ema,lags,log_ret,macd,mean_abs_return,price,price_vs_high,range,ret,roll_ret,rsi,sma,stoch,vol_change,vol_ptile,zscore,donchian',]),#"sma,ema,boll,macd,vol_change,donchian"
-        #"price,ema"
-        "FILTERMETHOD": trial.suggest_categorical("FILTERMETHOD", [#"none","mutual","correl",
-                                                                   "rf","none","correl","mutual"]),#none
+        "FILTERMETHOD": trial.suggest_categorical("FILTERMETHOD", ["rf","none","correl","mutual"]),#"none","mutual","correl","none"
         "FILTERWIN": trial.suggest_int("FILTERWIN",24,24),#24
-        "THRESH": trial.suggest_float("THRESH",250,250),#0.01
+        "THRESH": trial.suggest_float("THRESH",250,250),#250
         "BATCH": trial.suggest_int("BATCH",53,53),#53
         "LBACK": trial.suggest_int("LBACK",84,84),#84
         "PRED_DAYS": trial.suggest_int("PRED_DAYS",6,6),#6

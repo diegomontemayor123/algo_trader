@@ -27,10 +27,10 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=confi
         print(f"[FILTER] Unknown method '{method}' specified, skipping filtering")
         return feat
     score_name=method
-    if isinstance(thresh, int):
+    if 1<thresh:
         selected_features = scores.nlargest(thresh).index
         print(f"[FILTER] Selected top {thresh} features by {score_name} between {start.date()} - {split_date.date()}")
-    elif isinstance(thresh, float) and 0 < thresh < 1:
+    elif  0 < thresh < 1:
         selected_features = scores[scores > thresh].index
         print(f"[FILTER] Selected {len(selected_features)} features with {score_name} > {thresh} between {start.date()} - {split_date.date()}")
     else:
