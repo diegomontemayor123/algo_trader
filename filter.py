@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.feature_selection import mutual_info_regression
@@ -31,7 +32,7 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=confi
             model = RandomForestRegressor(n_estimators=config["NESTIM"], random_state=config["SEED"])
             model.fit(X, y)
             scores = pd.Series(model.feature_importances_, index=X.columns)
-            zero_rf_feats = scores[scores <= 1e-6]
+            zero_rf_feats = scores[scores <= 1e-3]
             if not zero_rf_feats.empty:
                 zero_rf_records = [{"feature": feat_name,"asset": asset,"score": imp,"split_date": split_date,
                                     "start_date": start.date()} for feat_name, imp in zero_rf_feats.items()]
