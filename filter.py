@@ -19,7 +19,7 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=confi
 
     def max_drawdown(returns): cum = (1 + returns).cumprod();drawdown = (cum - cum.cummax()) / cum.cummax();return drawdown.min()
     window = 60  
-    y = ret.loc[mask].mean(axis=1).shift(-window).rolling(window).mean() - (-ret.loc[mask].mean(axis=1).shift(-window).rolling(window).apply(max_drawdown, raw=False) + 1e-10).dropna()
+    y = (ret.loc[mask].mean(axis=1).shift(-window).rolling(window).mean() - (-ret.loc[mask].mean(axis=1).shift(-window).rolling(window).apply(max_drawdown, raw=False) + 1e-10)).dropna()
     #y = ret.loc[mask].mean(axis=1) / (ret.loc[mask].std(axis=1) + 1e-10)
     X = feat.loc[y.index]
 

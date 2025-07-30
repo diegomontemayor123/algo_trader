@@ -28,7 +28,7 @@
     "EARLY_FAIL": 2,
     "VAL_SPLIT": 0.15,
     "WARMUP": 0,
-    "TEST_CHUNK": 9,
+    "TEST_CHUNK": 12,
     "RETRAIN": 1,
     "ATTENT": 1
 }
