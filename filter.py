@@ -9,7 +9,6 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=confi
     if method is None: 
         return feat
     method = method[0]
-
     split_date_ts = pd.to_datetime(split_date)
     start = split_date_ts - pd.DateOffset(months=config["FILTERWIN"])
 
