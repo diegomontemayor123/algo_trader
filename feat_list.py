@@ -104,7 +104,7 @@ def add_vol_ptile(data):
 def clean_delta(delta):
     return delta.replace([np.inf, -np.inf], np.nan).fillna(0)
 
-def add_rsi(data, per):
+def add_rsi(data):
     delta = data['close'].diff()
     delta = clean_delta(delta)
     for p in per:
@@ -113,7 +113,7 @@ def add_rsi(data, per):
         rs = gain / (loss + 1e-10)
         data[f'rsi_{p}'] = 100 - (100 / (1 + rs))
 
-def add_cmo(data, per):
+def add_cmo(data):
     delta = data['close'].diff()
     delta = clean_delta(delta)
     for p in per:
