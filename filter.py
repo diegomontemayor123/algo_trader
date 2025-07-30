@@ -7,19 +7,16 @@ config = load_config()
 
 def select_features(feat, ret, split_date, thresh=config["THRESH"], method=config["FILTER"]):
     if method is None: return feat
-
     method = method[0]
     split_date_ts = pd.to_datetime(split_date)
     start = split_date_ts - pd.DateOffset(months=config["FILTERWIN"])
     window = config["YWIN"]
     all_scores = []
-
     for asset in ret.columns:
         asset_ret = ret[asset]
         mask = asset_ret.notna()
         mask &= (asset_ret.index < split_date_ts) & (asset_ret.index >= start)
 
-        # Create asset-specific y (forward-looking Sharpe)
         y = (asset_ret.loc[mask].shift(-window).rolling(window).mean() /
             (asset_ret.loc[mask].shift(-window).rolling(window).std() + 1e-10)).dropna()
 
@@ -28,22 +25,23 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=confi
 
         asset_feat_cols = [col for col in feat.columns if col.endswith(f"_{asset}")]
         if not asset_feat_cols: continue  
-
         X = feat.loc[y.index, asset_feat_cols]
         if X.empty or len(X) < 10: continue  
-
         if method == "rf":
             model = RandomForestRegressor(n_estimators=config["NESTIM"], random_state=config["SEED"])
             model.fit(X, y)
             scores = pd.Series(model.feature_importances_, index=X.columns)
-        elif method == "mutual":
-            scores = pd.Series(mutual_info_regression(X, y, random_state=config["SEED"]), index=X.columns)
-        elif method == "correl":
-            scores = X.apply(lambda col: col.corr(y)).abs()
-        else:
-            print(f"[Filter] Unknown method '{method}' specified. Skipping filtering.")
-            return feat
-
+            zero_rf_feats = scores[scores <= 1e-6]
+            if not zero_rf_feats.empty:
+                zero_rf_records = [{"feature": feat_name,"asset": asset,"score": imp,"split_date": split_date,
+                                    "start_date": start.date()} for feat_name, imp in zero_rf_feats.items()]
+                df_zero_rf = pd.DataFrame(zero_rf_records)
+                if os.path.exists("rf_prune.csv"): df_zero_rf.to_csv("rf_prune.csv", mode='a', index=False, header=False)
+                else: df_zero_rf.to_csv("rf_prune.csv", index=False)
+                print(f"[Filter] Logged {len(zero_rf_feats)} zero-importance RF features to {"rf_prune.csv"}")
+        elif method == "mutual": scores = pd.Series(mutual_info_regression(X, y, random_state=config["SEED"]), index=X.columns)
+        elif method == "correl":scores = X.apply(lambda col: col.corr(y)).abs()
+        else:print(f"[Filter] Unknown method '{method}' specified. Skipping filtering.");return feat
         all_scores.append(scores)
 
     if not all_scores:
@@ -59,6 +57,5 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=confi
         selected_features = combined_scores[combined_scores > thresh].index
         print(f"[Filter] Selected {len(selected_features)} features with {method} > {thresh} from {start.date()} to {split_date_ts.date()}")
     else: return feat
-
     print(f"[Filter] Top 10 feature scores:\n{combined_scores.loc[selected_features].head(10).to_string()}")
     return feat[selected_features]

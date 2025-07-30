@@ -6,7 +6,7 @@
     "MACRO": "^FTSE,^GSPC,^TYX,EURUSD=X,GBPUSD=X,GC=F,HYG,NG=F,SI=F,TLT,UUP,USDJPY=X,ZC=F,ZW=F,^IRX,EEM,HG=F",
     "FEAT": "adx,boll,cmo,cross_corr,cross_rel_strength,cross_ret_rank,cross_vol_z,ema,lags,log_ret,macd,mean_abs_return,price,price_vs_high,range,ret,roll_ret,rsi,sma,stoch,vol_change,vol_ptile,zscore,donchian",
     "FILTER": "rf",
-    "YWIN":30,
+    "YWIN":26,
     "FILTERWIN": 26,
     "THRESH": 113,
     "NESTIM": 406,
