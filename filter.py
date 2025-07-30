@@ -38,7 +38,7 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=confi
                 df_zero_rf = pd.DataFrame(zero_rf_records)
                 if os.path.exists("rf_prune.csv"): df_zero_rf.to_csv("rf_prune.csv", mode='a', index=False, header=False)
                 else: df_zero_rf.to_csv("rf_prune.csv", index=False)
-                print(f"[Filter] Logged {len(zero_rf_feats)} zero-importance RF features to {"rf_prune.csv"}")
+                print(f"[Filter] Logged {len(zero_rf_feats)} zero-importance RF features to rf_prune.csv")
         elif method == "mutual": scores = pd.Series(mutual_info_regression(X, y, random_state=config["SEED"]), index=X.columns)
         elif method == "correl":scores = X.apply(lambda col: col.corr(y)).abs()
         else:print(f"[Filter] Unknown method '{method}' specified. Skipping filtering.");return feat
@@ -52,10 +52,10 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=confi
 
     if thresh > 1:
         selected_features = combined_scores.nlargest(int(thresh)).index
-        print(f"[Filter] Selected top {int(thresh)} features by {method} from {start.date()} to {split_date_ts.date()}")
+        print(f"[Filter] Selected top {int(thresh)} features by {method} from {start.date()}-{split_date_ts.date()}")
     elif 0 < thresh <= 1:
         selected_features = combined_scores[combined_scores > thresh].index
-        print(f"[Filter] Selected {len(selected_features)} features with {method} > {thresh} from {start.date()} to {split_date_ts.date()}")
+        print(f"[Filter] Selected {len(selected_features)} features with {method} > {thresh} from {start.date()}-{split_date_ts.date()}")
     else: return feat
     print(f"[Filter] Top 10 feature scores:\n{combined_scores.loc[selected_features].head(10).to_string()}")
     return feat[selected_features]
