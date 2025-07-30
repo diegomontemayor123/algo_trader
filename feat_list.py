@@ -101,19 +101,26 @@ def add_vol_ptile(data):
         data[f'vol_ptile_{p}'] = vol.rolling(p).apply(lambda x: pd.Series(x).rank(pct=True).iloc[-1])
 
 # ========================== OSCILLATORS / MEAN REVERSION  ==========================
-def add_rsi(data):
+def clean_delta(delta):
+    return delta.replace([np.inf, -np.inf], np.nan).fillna(0)
+
+def add_rsi(data, per):
+    delta = data['close'].diff()
+    delta = clean_delta(delta)
     for p in per:
-        delta = data['close'].diff()
         gain = delta.clip(lower=0).rolling(p).mean()
         loss = -delta.clip(upper=0).rolling(p).mean()
-        data[f'rsi_{p}'] = 100 - 100 / (1 + gain / (loss + 1e-10))
+        rs = gain / (loss + 1e-10)
+        data[f'rsi_{p}'] = 100 - (100 / (1 + rs))
 
-def add_cmo(data):
+def add_cmo(data, per):
+    delta = data['close'].diff()
+    delta = clean_delta(delta)
     for p in per:
-        delta = data['close'].diff()
         up = delta.clip(lower=0).rolling(p).sum()
         down = -delta.clip(upper=0).rolling(p).sum()
         data[f'cmo_{p}'] = 100 * (up - down) / (up + down + 1e-10)
+
 
 def add_williams(data):
     for p in per:
