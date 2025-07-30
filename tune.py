@@ -1,7 +1,7 @@
 import os, subprocess, re, optuna, json, csv
 from optuna.samplers import TPESampler
 
-TRIALS = 20
+TRIALS = 30
 
 def run_experiment(trial):
     config = {"START": trial.suggest_categorical("START", ["2013-01-01"]),#2019 Jan
@@ -11,11 +11,13 @@ def run_experiment(trial):
         "MACRO": trial.suggest_categorical("MACRO", ['^GSPC,SI=F,NG=F,ZC=F,TLT,^FTSE,GBPUSD=X,ZW=F',
                                                      'GC=F,HYG,EURUSD=X,UUP,ZW=F,USDJPY=X,NG=F,^TYX,ZC=F,GBPUSD=X',
                                                      'GC=F,HYG,EURUSD=X,UUP,ZW=F,USDJPY=X,NG=F,^TYX,ZC=F',
+
                                                      ]),#"GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM"
         #'^VIX'
         "FEAT": trial.suggest_categorical("FEAT", ['ret,sma,ema,macd,range,vol_change,vol_ptile,rsi,cmo,mean_abs_return,boll,lags,cross_ret_rank,cross_rel_strength,cross_corr',
                                                    'roll_ret,sma,price_vs_high,vol_ptile,adx,cross_vol_z,cross_rel_strength,cross_corr,ema,macd,stoch,vol_change,zscore,price,lags,log_ret,ret',
                                                    'roll_ret,sma,price_vs_high,vol_ptile,adx,cross_vol_z,cross_rel_strength,cross_corr,ema,macd,stoch,vol_change,zscore,price',
+                                                   'roll_ret,sma,price_vs_high,vol_ptile,cross_vol_z,cross_rel_strength,cross_corr,ema,macd,vol_change,zscore,lags,log_ret',
                                                    ]),#"sma,ema,boll,macd,vol_change,donchian"
         #"price,ema"
         "BATCH": trial.suggest_int("BATCH",53,53),#53
