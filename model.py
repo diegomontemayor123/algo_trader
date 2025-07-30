@@ -92,24 +92,18 @@ if __name__ == "__main__":
     macro_keys = config.get("MACRO", [])
     if isinstance(macro_keys, str): macro_keys = [k.strip() for k in macro_keys.split(",") if k.strip()]
     cached_data = load_prices(config["START"], config["END"], MACRO_LIST)
-    feat, ret = comp_feat(TICK, feat_list, cached_data, macro_keys)
+    feat, ret = comp_feat(TICK, feat_list, cached_data, macro_keys, split_date=config["SPLIT"], method=config["FILTERMETHOD"])
     print(f"Feat shape: {feat.shape}, Columns: {feat.columns[:5].tolist()}...")
     print(f"Ret shape: {ret.shape}, Columns: {ret.columns[:5].tolist()}...")
-
     _, _, test_data = prep_data(feat, ret, config)
     if LOAD_MODEL and os.path.exists(MODEL_PATH):model0 = load_model(test_data[0][0].shape[1], config)
     else:model0 = train(config, feat, ret);torch.save(model0.state_dict(), MODEL_PATH)
-    results = run_btest(device=DEVICE,initial_capital=INITIAL_CAPITAL,
-                        split=config["SPLIT"],lback=config["LBACK"],comp_feat=comp_feat,
-                        norm_feat=norm_feat,TICK=TICK,start=config["START"],end=config["END"],
-                        feat=feat_list,macro_keys=macro_keys,test_chunk=config["TEST_CHUNK"],
-                        model=model0,plot=True,config=config,RETRAIN=config["RETRAIN"],
-                        )
-
+    results = run_btest(device=DEVICE,initial_capital=INITIAL_CAPITAL, split=config["SPLIT"],lback=config["LBACK"],comp_feat=comp_feat,
+                        norm_feat=norm_feat,TICK=TICK,start=config["START"],end=config["END"], feat=feat_list,macro_keys=macro_keys,test_chunk=config["TEST_CHUNK"],
+                        model=model0,plot=True,config=config,RETRAIN=config["RETRAIN"], selected_feat=feat.columns)
     pfo_sharpe = results["pfo"].get("sharpe", float('nan'));max_down = results["pfo"].get("max_down", float('nan'))
     cagr = results["pfo"].get("cagr", float('nan'));bench_sharpe = results["bench"].get("sharpe", float('nan'))
     bench_down = results["bench"].get("max_down", float('nan'));bench_cagr = results["bench"].get("cagr", float('nan'))
-
     weight = pd.read_csv("csv/weight.csv", index_col="Date", parse_dates=True)
     exp_delta = weight.loc[(weight["total"] < 100), "total"].sum()
     print(f"\nSharpe Ratio: Strat: {pfo_sharpe * 100:.6f}%");print(f"Sharpe Ratio: Bench: {bench_sharpe * 100:.6f}%")

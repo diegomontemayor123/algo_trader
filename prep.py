@@ -15,9 +15,7 @@ class MarketDataset(torch.utils.data.Dataset):
         return self.feat[index], self.ret[index]
 
 def create_sequences(feat, ret, lback, pred_days, TICK):
-    print(f"[Info] Creating sequences with lookback={lback}, pred_days={pred_days}")
-    print(f"[Info] Feature DataFrame shape: {feat.shape}")
-    print(f"[Info] Return DataFrame shape: {ret.shape}")
+
     sequences = []
     targets = []
     indices = []
@@ -35,27 +33,17 @@ def create_sequences(feat, ret, lback, pred_days, TICK):
         sequences.append(norm_win)
         targets.append(future_ret)
         indices.append(feat.index[i + lback])
-
-    print(f"[Info] Total sequences created: {len(sequences)}")
+    print(f"Feature/Return DataFrame shape: {feat.shape} / {ret.shape}, num_seq: {len(sequences)} ")
     return sequences, targets, indices
 
 def prep_data(feat, ret, config):
-    print(f"[Config] Start: {config['START']}, End: {config['END']}, Split: {config['SPLIT']}")
-    print(f"Feature date range: {feat.index[0]} to {feat.index[-1]}")
-    print(f"Return date range: {ret.index[0]} to {ret.index[-1]}")
+    print(f"Feat/Ret date range: {feat.index[0].date()} to {feat.index[-1].date()} / {ret.index[0].date()} to {ret.index[-1].date()}")
     sequences, targets, seq_dates = create_sequences(feat, ret, config["LBACK"], config["PRED_DAYS"], config["TICK"])
-
-    if len(set(seq_dates)) != len(seq_dates):
-        print("[Warning] Duplicate dates found in sequence dates.")
-    if any(pd.isna(seq_dates)):
-        print("[Warning] NaN detected in sequence dates.")
-
+    if len(set(seq_dates)) != len(seq_dates): print("[Warning] Duplicate dates found in sequence dates.")
+    if any(pd.isna(seq_dates)): print("[Warning] NaN detected in sequence dates.")
     train_sequences, train_targets, train_dates = [], [], []
     test_sequences, test_targets, test_dates = [], [], []
-
     split = pd.to_datetime(config["SPLIT"])
-    print(f"[Info] Splitting data at {split.date()}")
-
     for seq, tgt, date in zip(sequences, targets, pd.to_datetime(seq_dates)):
         if date < split:
             train_sequences.append(seq)
@@ -65,33 +53,19 @@ def prep_data(feat, ret, config):
             test_sequences.append(seq)
             test_targets.append(tgt)
             test_dates.append(date)
-
-    print(f"[Split] Total train sequences: {len(train_sequences)}")
-    print(f"[Split] Total test sequences: {len(test_sequences)}")
-    if train_sequences:
-        print(f"[Split] Train date range: {train_dates[0].date()} to {train_dates[-1].date()}")
-    if test_sequences:
-        print(f"[Split] Test date range: {test_dates[0].date()} to {test_dates[-1].date()}")
-
+    print(f"Train/Test date range: {train_dates[0].date()} to {train_dates[-1].date()} / {test_dates[0].date()} to {test_dates[-1].date()}, train/test_seq: {len(train_sequences)} / {len(test_sequences)}")
     val_split = config["VAL_SPLIT"]
     val_size = int(len(train_sequences) * val_split)
     train_size = len(train_sequences) - val_size
-
-    print(f"[Split] Training set size: {train_size}, Validation set size: {val_size}")
-
     train_seq = train_sequences[:train_size]
     train_tgt = train_targets[:train_size]
     train_dates = train_dates[:train_size]
-
     val_seq = train_sequences[train_size:]
     val_tgt = train_targets[train_size:]
-
     train_data = MarketDataset(torch.tensor(np.array(train_seq)), torch.tensor(np.array(train_tgt)))
     val_data = MarketDataset(torch.tensor(np.array(val_seq)), torch.tensor(np.array(val_tgt)))
     test_data = MarketDataset(torch.tensor(np.array(test_sequences)), torch.tensor(np.array(test_targets)))
-
     print(f"[Data] Final sample counts - Train: {len(train_data)}, Val: {len(val_data)}, Test: {len(test_data)}")
-    if train_dates:
-        print(f"[Data] Final training date range: {train_dates[0].date()} to {train_dates[-1].date()}")
+    if train_dates:  print(f"[Data] Adj.training dates: {train_dates[0].date()} to {train_dates[-1].date()}")
 
     return train_data, val_data, test_data

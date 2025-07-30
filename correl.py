@@ -2,7 +2,6 @@ import os
 import re
 import pandas as pd
 import numpy as np
-from load import load_config
 from validate import TICKER_LIST, FEAT_LIST, MACRO_LIST
 from feat import load_prices, comp_feat
 
@@ -50,7 +49,6 @@ def compute_feature_correlations(feat, ret, start_date, end_date, top_n=30, outp
     return top_features_per_asset, sorted_mean_abs
 
 def main():
-    config = load_config()
     start_date = pd.to_datetime(START)
     end_date = pd.to_datetime(END)
 
@@ -60,7 +58,7 @@ def main():
     
     cached_data = load_prices(start_date.strftime("%Y-%m-%d"), end_date.strftime("%Y-%m-%d"), macro_keys)
     
-    feat, ret = comp_feat(TICKER_LIST, feat_names, cached_data, macro_keys)
+    feat, ret = comp_feat(TICKER_LIST, feat_names, cached_data, macro_keys,)
     ret = ret.loc[feat.index]
 
     top_features_per_asset, sorted_mean_abs = compute_feature_correlations(feat, ret, start_date, end_date)

@@ -16,10 +16,11 @@ def save_to_csv(var,csv_path):
     except Exception as e:print(f"Error saving {var} to {csv_path}: {e}")
 
 def run_btest(  device, initial_capital, split, lback,comp_feat, norm_feat, TICK, start, end,feat, macro_keys,
-                test_chunk, RETRAIN, model=None, plot=False,weight_csv_path="csv/weight.csv", config=None):
+                test_chunk, RETRAIN, model=None, plot=False,weight_csv_path="csv/weight.csv", config=None, selected_feat=None):
     split_dt = pd.to_datetime(split);   end_dt = pd.to_datetime(end)
     cached_data = load_prices(config["START"], end, macro_keys)
     feat_df, ret_df = comp_feat(TICK, feat, cached_data, macro_keys)
+    if selected_feat is not None: feat_df = feat_df[selected_feat]
     feat_df.index = pd.to_datetime(feat_df.index) ;     ret_df.index = pd.to_datetime(ret_df.index)
     chunks = [];    curr_start = split_dt
     while curr_start < end_dt:
