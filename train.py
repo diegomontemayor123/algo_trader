@@ -2,6 +2,7 @@ import torch, multiprocessing
 import numpy as np
 from torch.utils.data import DataLoader
 from model import DifferentiableSharpeLoss, TransformerLRScheduler, create_model
+np.seterr(all='raise')
 
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 MAX_EPOCHS = 20

@@ -3,6 +3,7 @@ import numpy as np
 import torch.nn as nn
 from feat import *
 from load import load_config
+np.seterr(all='raise')
 
 
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'

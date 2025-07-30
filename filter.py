@@ -2,8 +2,6 @@ import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.feature_selection import mutual_info_regression
 from load import load_config
-import warnings
-warnings.filterwarnings('error')  # Turn warnings into exceptions
 
 
 config = load_config()

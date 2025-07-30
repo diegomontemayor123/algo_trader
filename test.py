@@ -6,6 +6,7 @@ from dateutil.relativedelta import relativedelta
 from feat import load_prices
 from perf import calc_perf_metrics
 from retrain import run_retraining_chunks
+np.seterr(all='raise')
 
 def save_to_csv(var,csv_path):
     x = pd.DataFrame(var)

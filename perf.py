@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+np.seterr(all='raise')
 
 def calc_perf_metrics(eq_curve):
     eq_curve = pd.Series(eq_curve).dropna()

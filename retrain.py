@@ -7,6 +7,7 @@ from train import train_model
 from torch.utils.data import DataLoader
 from perf import calc_perf_metrics  
 from prep import prep_data
+np.seterr(all='raise')
 
 def reset_seeds(seed):
     torch.manual_seed(seed)

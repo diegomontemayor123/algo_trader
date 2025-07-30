@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import ta
 from load import load_config
+np.seterr(all='raise')
 
 config = load_config()
 
