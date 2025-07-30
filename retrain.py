@@ -77,8 +77,9 @@ def run_retraining_chunks(chunks, feat_df, ret_df, lback, norm_feat, TICK, comp_
         bench_metrics = calc_perf_metrics(chunk_bench_series)
         all_pfo_metrics.append(pfo_metrics)
         all_bench_metrics.append(bench_metrics)
-        print(f"[Test] Chunk {idx+1}: Number of daily weights so far: {len(daily_weight)}")
-        print(f"[Test] Chunk {idx+1}: Performance Metrics: {pfo_metrics}\n")
+        print(f"[Retrain] Chunk {idx+1}: Number of daily weights so far: {len(daily_weight)}")
+        print(f"[Retrain] Chunk {idx+1}: Performance Metrics: {pfo_metrics}\n")
+        if pfo_metrics["sharpe"] < bench_metrics["sharpe"] - 0.25 * abs(bench_metrics["sharpe"]): print("KILLRUN")
     avg_outperf = {}
     if all_pfo_metrics and all_bench_metrics:
         metrics_keys = all_pfo_metrics[0].keys()

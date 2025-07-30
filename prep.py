@@ -24,11 +24,11 @@ def create_sequences(feat, ret, lback, pred_days, TICK):
         norm_win = norm_feat(feat_win)
 
         if np.isnan(norm_win).any():
-            print(f"[Warning] NaN detected in norm feat at index {i}")
+            print(f"[Prep] NaN detected in norm feat at index {i}")
 
         future_ret = ret.iloc[i + lback:i + lback + pred_days].mean().values.astype(np.float32)
         if len(future_ret) != len(TICK):
-            print(f"[Warning] Future ret length mismatch at index {i}: {future_ret.shape}")
+            print(f"[Prep] Future ret length mismatch at index {i}: {future_ret.shape}")
 
         sequences.append(norm_win)
         targets.append(future_ret)
@@ -39,8 +39,8 @@ def create_sequences(feat, ret, lback, pred_days, TICK):
 def prep_data(feat, ret, config):
     print(f"Feat/Ret date range: {feat.index[0].date()} to {feat.index[-1].date()} / {ret.index[0].date()} to {ret.index[-1].date()}")
     sequences, targets, seq_dates = create_sequences(feat, ret, config["LBACK"], config["PRED_DAYS"], config["TICK"])
-    if len(set(seq_dates)) != len(seq_dates): print("[Warning] Duplicate dates found in sequence dates.")
-    if any(pd.isna(seq_dates)): print("[Warning] NaN detected in sequence dates.")
+    if len(set(seq_dates)) != len(seq_dates): print("[Prep] Duplicate dates found in sequence dates.")
+    if any(pd.isna(seq_dates)): print("[Prep] NaN detected in sequence dates.")
     train_sequences, train_targets, train_dates = [], [], []
     test_sequences, test_targets, test_dates = [], [], []
     split = pd.to_datetime(config["SPLIT"])
@@ -65,7 +65,7 @@ def prep_data(feat, ret, config):
     train_data = MarketDataset(torch.tensor(np.array(train_seq)), torch.tensor(np.array(train_tgt)))
     val_data = MarketDataset(torch.tensor(np.array(val_seq)), torch.tensor(np.array(val_tgt)))
     test_data = MarketDataset(torch.tensor(np.array(test_sequences)), torch.tensor(np.array(test_targets)))
-    print(f"[Data] Final sample counts - Train: {len(train_data)}, Val: {len(val_data)}, Test: {len(test_data)}")
-    if train_dates:  print(f"[Data] Adj.training dates: {train_dates[0].date()} to {train_dates[-1].date()}")
+    print(f"[Prep] Final sample counts - Train: {len(train_data)}, Val: {len(val_data)}, Test: {len(test_data)}")
+    if train_dates:  print(f"[Prep] Adj.training dates: {train_dates[0].date()} to {train_dates[-1].date()}")
 
     return train_data, val_data, test_data

@@ -16,8 +16,12 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=confi
     mask = ret.notna().all(axis=1)
     mask = mask & (mask.index < split_date_ts) & (mask.index >= start)
 
-    X = feat.loc[mask]
-    y = ret.loc[mask].mean(axis=1) / (ret.loc[mask].std(axis=1) + 1e-10) if method == "rf" else ret.loc[mask].mean(axis=1)
+
+    def max_drawdown(returns): cum = (1 + returns).cumprod();drawdown = (cum - cum.cummax()) / cum.cummax();return drawdown.min()
+    window = 60  
+    y = ret.loc[mask].mean(axis=1).shift(-window).rolling(window).mean() - (-ret.loc[mask].mean(axis=1).shift(-window).rolling(window).apply(max_drawdown, raw=False) + 1e-10).dropna()
+    #y = ret.loc[mask].mean(axis=1) / (ret.loc[mask].std(axis=1) + 1e-10)
+    X = feat.loc[y.index]
 
     if method == "rf":
         model = RandomForestRegressor(n_estimators=config["NESTIM"], random_state=config["SEED"])
@@ -28,16 +32,20 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=confi
     elif method == "correl":
         scores = X.apply(lambda col: col.corr(y)).abs()
     else:
-        print(f"[FILTER] Unknown method '{method}' specified, skipping filtering")
+        print(f"[Filter] Unknown method '{method}' specified, skipping filtering")
         return feat
 
     score_name = method
 
     if thresh > 1:
         selected_features = scores.nlargest(int(thresh)).index
-        print(f"[FILTER] Selected top {int(thresh)} features by {score_name} between {start.date()} - {split_date_ts.date()}")
+        print(f"[Filter] Selected top {int(thresh)} features by {score_name} between {start.date()} - {split_date_ts.date()}")
+        print(f"[Filter] x/y date range: {X.index.min().date()} to {X.index.max().date()} / {y.index.min().date()} to {y.index.max().date()}")
     elif 0 < thresh <= 1:
         selected_features = scores[scores > thresh].index
-        print(f"[FILTER] Selected {len(selected_features)} features with {score_name} > {thresh} between {start.date()} - {split_date_ts.date()}")
+        print(f"[Filter] Selected {len(selected_features)} features with {score_name} > {thresh} between {start.date()} - {split_date_ts.date()}")
+        print(f"[Filter] x/y date range: {X.index.min().date()} to {X.index.max().date()} / {y.index.min().date()} to {y.index.max().date()}")
+        
+
 
     return feat[selected_features]

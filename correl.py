@@ -9,7 +9,7 @@ START = "2017-01-01"
 END = "2023-01-01"
 
 def compute_feature_correlations(feat, ret, start_date, end_date, top_n=30, output_dir="correl_output"):
-    print(f"[INFO] Running feature correlation analysis on test period from {start_date} to {end_date}")
+    print(f"[Correl] Running feature correlation analysis on test period from {start_date} to {end_date}")
     os.makedirs(output_dir, exist_ok=True)
 
     start_date = pd.to_datetime(start_date)
@@ -19,7 +19,7 @@ def compute_feature_correlations(feat, ret, start_date, end_date, top_n=30, outp
 
     actual_start = feat_test.index.min().strftime("%Y-%m-%d")
     actual_end = feat_test.index.max().strftime("%Y-%m-%d")
-    print(f"[INFO] Correlation calculated over period: {actual_start} to {actual_end}")
+    print(f"[Correl] Correlation calculated over period: {actual_start} to {actual_end}")
     
     top_features_per_asset = {}
     aggregate_corrs_by_feature = {}
@@ -42,7 +42,7 @@ def compute_feature_correlations(feat, ret, start_date, end_date, top_n=30, outp
     mean_abs_corrs = {feat: np.mean(corrs) for feat, corrs in aggregate_corrs_by_feature.items()}
     sorted_mean_abs = sorted(mean_abs_corrs.items(), key=lambda x: x[1], reverse=True)
 
-    print("\n[INFO] Aggregate mean absolute correlations per feature across all assets:")
+    print("\n[Correl] Aggregate mean absolute correlations per feature across all assets:")
     for feat, mean_corr in sorted_mean_abs[:top_n]:
         print(f"{feat}: {mean_corr:.4f}")
 
@@ -54,7 +54,7 @@ def main():
 
     feat_names = FEAT_LIST
     macro_keys = MACRO_LIST
-    print("[INFO] Loading prices and computing features/returns...")
+    print("[Correl] Loading prices and computing features/returns...")
     
     cached_data = load_prices(start_date.strftime("%Y-%m-%d"), end_date.strftime("%Y-%m-%d"), macro_keys)
     

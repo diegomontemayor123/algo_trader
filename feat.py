@@ -19,15 +19,15 @@ def fetch_macro(name, ticker, start, end):
         series.name = name
         return series
     except Exception as e:
-        print(f"[Macro] Failed to fetch {name} ({ticker}): {e}");return pd.Series(dtype='float64')
+        print(f"[Feat] Failed to fetch {name} ({ticker}): {e}");return pd.Series(dtype='float64')
     
 
 def load_prices(START, END, macro_keys):
     if os.path.exists(PRICE_CACHE):
-        print(f"[Data] Using cache from {pd.to_datetime(START).date()} to {pd.to_datetime(END).date()}")
+        print(f"[Feat] Using cache from {pd.to_datetime(START).date()} to {pd.to_datetime(END).date()}")
         data = pd.read_csv(PRICE_CACHE, index_col=0, parse_dates=True)
     else:
-        print("[Data] Downloading price and macro data...")
+        print("[Feat] Downloading price and macro data...")
         raw_data = yf.download(" ".join(TICK), start=START, end=END, auto_adjust=False)
         price = raw_data['Adj Close']
         volume = raw_data['Volume']
@@ -42,7 +42,7 @@ def load_prices(START, END, macro_keys):
             data[macro_name] = macro_series
         data = data.sort_index()
         data.to_csv(PRICE_CACHE)
-        print(f"[Data] Cached to {PRICE_CACHE}")
+        print(f"[Feat] Cached to {PRICE_CACHE}")
     data = data.loc[START:END]
     return data
 
@@ -53,12 +53,12 @@ def process_macro_feat(cached_data, index, macro_keys, min_non_na_ratio=0.1):
         series = cached_data[col].reindex(index)
         non_na_ratio = series.notna().mean()
         if  non_na_ratio < min_non_na_ratio:
-            print(f"[Macro] Excluding {col} due to low data coverage ({non_na_ratio:.2%} non-NA)")
+            print(f"[Feat] Excluding {col} due to low data coverage ({non_na_ratio:.2%} non-NA)")
             continue
         series = series.bfill().ffill()
         try:pct_series = series.pct_change(fill_method=None).fillna(0)
         except Exception as e:
-            print(f"[Macro] Warning: pct_change failed for {col} with error {e}, filling zeros")
+            print(f"[Feat] Warning: pct_change failed for {col} with error {e}, filling zeros")
             pct_series = pd.Series(0, index=series.index)
         macro_feat[col] = pct_series
     return pd.DataFrame(macro_feat, index=index)

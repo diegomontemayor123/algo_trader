@@ -3,17 +3,17 @@ from optuna.samplers import TPESampler
 
 TRIALS = 30
 
-def run_experiment(trial):
-    config = {"START": trial.suggest_categorical("START", ["2015-01-01"]),#2019 Jan
+def run_experiment(trial,study=None):
+    config = {"START": trial.suggest_categorical("START", ["2013-01-01"]),#2019 Jan
         "END": trial.suggest_categorical("END", ["2023-01-01"]),#2025 Jul
-        "SPLIT": trial.suggest_categorical("SPLIT", ["2019-01-01",]),#2023 Jan
+        "SPLIT": trial.suggest_categorical("SPLIT", ["2017-01-01",]),#2023 Jan
         "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
         "MACRO": trial.suggest_categorical("MACRO", ['^FTSE,^GSPC,^TYX,EURUSD=X,GBPUSD=X,GC=F,HYG,NG=F,SI=F,TLT,UUP,USDJPY=X,ZC=F,ZW=F,^IRX,EEM,HG=F',]),#"GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM"
         "FEAT": trial.suggest_categorical("FEAT", ['adx,boll,cmo,cross_corr,cross_rel_strength,cross_ret_rank,cross_vol_z,ema,lags,log_ret,macd,mean_abs_return,price,price_vs_high,range,ret,roll_ret,rsi,sma,stoch,vol_change,vol_ptile,zscore,donchian',]),#"sma,ema,boll,macd,vol_change,donchian"
         "FILTER": trial.suggest_categorical("FILTER", ["rf"]),#"none","mutual","correl","rf"
-        "FILTERWIN": trial.suggest_int("FILTERWIN",20,30),#25
-        "THRESH": trial.suggest_int("THRESH",70,130),#106
-        "NESTIM": trial.suggest_int("NESTIM",400,700),#450
+        "FILTERWIN": trial.suggest_int("FILTERWIN",23,29),#26
+        "THRESH": trial.suggest_int("THRESH",105,125),#113
+        "NESTIM": trial.suggest_int("NESTIM",350,500),#406
         "BATCH": trial.suggest_int("BATCH",53,53),#53
         "LBACK": trial.suggest_int("LBACK",84,84),#84
         "PRED_DAYS": trial.suggest_int("PRED_DAYS",6,6),#6
@@ -33,18 +33,21 @@ def run_experiment(trial):
         "EARLY_FAIL": trial.suggest_categorical("EARLY_FAIL",[2]),#2
         "VAL_SPLIT": trial.suggest_categorical("VAL_SPLIT",[.15]),#.15
         "WARMUP": trial.suggest_categorical("WARMUP",[0]),
-        "TEST_CHUNK": trial.suggest_int("TEST_CHUNK",6,12),
+        "TEST_CHUNK": trial.suggest_categorical("TEST_CHUNK",[12]),
         "RETRAIN": trial.suggest_categorical("RETRAIN", [1]),
         "ATTENT": trial.suggest_categorical("ATTENT", [1]),
     }
 
     env = os.environ.copy()
     for k, v in config.items():env[k] = str(v)
+    dup_value = is_duplicate_trial(study, {k: str(v) for k, v in config.items()})
+    if dup_value is not None: return dup_value 
     try:
         result = subprocess.run(["python", "model.py"], capture_output=True, text=True, env=env, timeout=1800)
         if result.returncode != 0:print(f"  Subprocess failed: {result.stdout} / {result.stderr}")
         output = result.stdout + result.stderr
         if not output.strip():print("[error] Empty subprocess output.");return -float("inf")
+        if "KILLRUN" in output:print("[KILLRUN] Portfolio Sharpe below benchmark Sharpe — aborting trial.");return -float("inf")
         def extract_metric(label, out):
             pattern = rf"{re.escape(label)}:\s*Strat:\s*([-+]?\d+(?:\.\d+)?)%"
             match = re.search(pattern, out, re.IGNORECASE)
@@ -92,18 +95,27 @@ def run_experiment(trial):
             writer.writerow(row)
         return score
     except subprocess.TimeoutExpired:
-        print(f"[Timeout] Trial failed for config: {config}")
+        print(f"[Tune] Trial failed for config: {config}")
         return -float("inf")
     except Exception as e:
-        print(f"[error] Trial failed with exception: {e}")
+        print(f"[Tune] Trial failed with exception: {e}")
         return -float("inf")
 
+
+def is_duplicate_trial(study, params):
+    for t in study.trials:
+        if t.state != optuna.trial.TrialState.COMPLETE: continue
+        if t.params == params:
+            print(f"[DUPLICATE] Found duplicate trial #{t.number}, skipping...")
+            return t.value  
+    return None
+
+
 def main():
-    from load import load_config
-    config = load_config()
-    sampler = TPESampler(n_startup_trials=TRIALS/5,seed=config["SEED"])
+    from load import load_config; config = load_config()
+    sampler = TPESampler(seed=config["SEED"])
     study = optuna.create_study(direction="maximize", sampler=sampler)
-    study.optimize(run_experiment, n_trials=TRIALS, n_jobs=1)
+    study.optimize(lambda trial: run_experiment(trial, study), n_trials=TRIALS, n_jobs=1)
     best = study.best_trial
     best_params = best.params.copy()
     with open("hyparams.json", "w") as f: json.dump(best_params, f, indent=4)

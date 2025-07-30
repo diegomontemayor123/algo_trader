@@ -31,7 +31,7 @@ def run_btest(  device, initial_capital, split, lback,comp_feat, norm_feat, TICK
         fin_start, final_end = chunks[-1]
         dur_months = (final_end.year - fin_start.year) * 12 + (final_end.month - fin_start.month)
         if dur_months < test_chunk -1 :
-            print(f"[Chunk Merge] Merging short final chunk ({fin_start.date()} to {final_end.date()}) into previous.")
+            print(f"[Test] Merging short final chunk ({fin_start.date()} to {final_end.date()}) into previous.")
             prev_start, _ = chunks[-2]
             chunks[-2] = (prev_start, final_end)
             chunks.pop()
@@ -62,8 +62,8 @@ def run_btest(  device, initial_capital, split, lback,comp_feat, norm_feat, TICK
             if len(chunk_pfo) < 2: continue
             pfo_metrics = calc_perf_metrics(chunk_pfo);bench_metrics = calc_perf_metrics(chunk_bench)
             all_pfo_metrics.append(pfo_metrics); all_bench_metrics.append(bench_metrics)
-            print(f"[BTest] Chunk {idx+1}: Pfo Metrics: {pfo_metrics}")
-            print(f"[BTest] Chunk {idx+1}: Bench Metrics: {bench_metrics}")
+            print(f"[Test] Chunk {idx+1}: Pfo Metrics: {pfo_metrics}")
+            print(f"[Test] Chunk {idx+1}: Bench Metrics: {bench_metrics}")
         if all_pfo_metrics and all_bench_metrics:
             metrics_keys = all_pfo_metrics[0].keys()
             for key in metrics_keys:
@@ -72,7 +72,7 @@ def run_btest(  device, initial_capital, split, lback,comp_feat, norm_feat, TICK
                 diffs = [p - b for p, b in zip(port_vals, bench_vals)]
                 avg_outperf[key] = np.mean(diffs)
     else:
-        print(f"[BTest] Running test_chunk: {test_chunk} and retrain: {RETRAIN}")
+        print(f"[Test] Running test_chunk: {test_chunk} and retrain: {RETRAIN}")
         pfo_values, bench_values, daily_weight, all_pfo_metrics, all_bench_metrics, avg_outperf = run_retraining_chunks(chunks, feat_df, ret_df, lback, norm_feat, TICK, comp_feat, macro_keys, config, start, device, initial_capital, model0=model)
         save_to_csv(daily_weight, weight_csv_path);weight_df = pd.read_csv(weight_csv_path, index_col="Date", parse_dates=True)
         pfo_series = pd.Series(pfo_values[1:], index=weight_df.index);  bench_series = pd.Series(bench_values[1:], index=weight_df.index)

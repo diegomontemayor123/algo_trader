@@ -53,7 +53,7 @@ def load_fixed_params(filepath="hyparams.json"):
 
 def binary_select(trial, items, prefix): return [item for item in items if trial.suggest_categorical(f"{prefix}_{item}", [False, True])]
 
-def run_experiment(trial):
+def run_experiment(trial,study=None):
     select_macros = binary_select(trial, MACRO_LIST, "m")
     select_feat = binary_select(trial, FEAT_LIST, "f")
     select_TICK = TICKER_LIST.copy()
@@ -68,13 +68,14 @@ def run_experiment(trial):
 
     env = os.environ.copy()
     for k, v in config.items(): env[k] = str(v)
-
+    dup_value = is_duplicate_trial(study, {k: str(v) for k, v in config.items()})
+    if dup_value is not None: return dup_value 
     try:
         result = subprocess.run(["python", "model.py"], capture_output=True, text=True, env=env, timeout=1800)
         if result.returncode != 0:print(f"  Subprocess failed: {result.stdout} / {result.stderr}")
         output = result.stdout + result.stderr
         if not output.strip():print("[error] Empty subprocess output.");return -float("inf")
-
+        if "KILLRUN" in output:print("[KILLRUN] Portfolio Sharpe below benchmark Sharpe — aborting trial.");return -float("inf")
         def extract_metric(label, out):
             match = re.search(rf"{label}:\s*Strat:\s*([-+]?\d+(?:\.\d+)?)%", out, re.IGNORECASE)
             return float(match.group(1)) / 100 if match else None
@@ -130,19 +131,32 @@ def run_experiment(trial):
         return score
 
     except subprocess.TimeoutExpired:
-        print(f"[timeout] Trial failed for config: {config}")
+        print(f"[Validate] Trial failed for config: {config}")
         return -float("inf")
     except Exception as e:
-        print(f"[exception] Trial failed with exception: {e}")
+        print(f"[Validate] Trial failed with exception: {e}")
         return -float("inf")
+
+
+
+
+
+def is_duplicate_trial(study, params):
+    for t in study.trials:
+        if t.state != optuna.trial.TrialState.COMPLETE: continue
+        if t.params == params:
+            print(f"[DUPLICATE] Found duplicate trial #{t.number}, skipping...")
+            return t.value 
+    return None
+
+
 
 def main():
     from load import load_config
     config = load_config()
     sampler = TPESampler(seed=config["SEED"])
     study = optuna.create_study(direction="maximize", sampler=sampler)
-    study.optimize(run_experiment, n_trials=TRIALS, n_jobs=1)
-
+    study.optimize(lambda trial: run_experiment(trial, study), n_trials=TRIALS, n_jobs=1)
     best = study.best_trial
     print("\n=== Best Trial Metrics ===")
     for m in ["sharpe", "down", "CAGR", "avg_outperf", "exp_delta"]:
