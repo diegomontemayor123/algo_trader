@@ -54,7 +54,7 @@ def prep_data(feat, ret, config):
             test_sequences.append(seq)
             test_targets.append(tgt)
             test_dates.append(date)
-    print(f"Train/Test date range: {train_dates[0].date()} to {train_dates[-1].date()} / {test_dates[0].date()} to {test_dates[-1].date()}, train/test_seq: {len(train_sequences)} / {len(test_sequences)}")
+    print(f"Train/Test date range: {train_dates[0].date()}-{train_dates[-1].date()} / {test_dates[0].date()}-{test_dates[-1].date()}, train/test_seq: {len(train_sequences)}/{len(test_sequences)}")
     val_split = config["VAL_SPLIT"]
     val_size = int(len(train_sequences) * val_split)
     train_size = len(train_sequences) - val_size
@@ -66,7 +66,7 @@ def prep_data(feat, ret, config):
     train_data = MarketDataset(torch.tensor(np.array(train_seq)), torch.tensor(np.array(train_tgt)))
     val_data = MarketDataset(torch.tensor(np.array(val_seq)), torch.tensor(np.array(val_tgt)))
     test_data = MarketDataset(torch.tensor(np.array(test_sequences)), torch.tensor(np.array(test_targets)))
-    print(f"[Prep] Final sample counts - Train: {len(train_data)}, Val: {len(val_data)}, Test: {len(test_data)}")
-    if train_dates:  print(f"[Prep] Adj.training dates: {train_dates[0].date()} to {train_dates[-1].date()}")
+    print(f"[Prep] Final sample counts - Train/Val/Test: {len(train_data)}/{len(val_data)}/{len(test_data)}")
+    if train_dates:  print(f"[Prep] Adj.training dates: {train_dates[0].date()}-{train_dates[-1].date()}")
 
     return train_data, val_data, test_data
