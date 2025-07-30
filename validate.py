@@ -6,9 +6,7 @@ from feat_list import FTR_FUNC
 TRIALS = 300
 TICKER_LIST = ['JPM', 'MSFT', 'NVDA', 'AVGO', 'LLY', 'COST', 'MA', 'XOM', 'UNH', 'AMZN', 'CAT', 'ADBE', 'TSLA']
 
-
 FEAT_LIST = list(FTR_FUNC.keys()) 
-
 
 MACRO_LIST = [  "^GSPC",        # S&P 500
                 "CL=F",         # Crude Oil (WTI)
