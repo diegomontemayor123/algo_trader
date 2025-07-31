@@ -27,9 +27,9 @@ def run_chunk_tune(trial, start_date, end_date, split_date, config_base, study=N
         "THRESH": trial.suggest_int(max(10, math.floor(config_base["THRESH"] * 0.9)),math.ceil(config_base["THRESH"] * 1.1),),
 
         
-        "DECAY": trial.suggest_float(max(1e-8, config_base["DECAY"] * 0.85),config_base["DECAY"] * 1.15,log=True,),
+        "DECAY": trial.suggest_float(max(1e-8, config_base["DECAY"] * 0.85),config_base["DECAY"] * 1.15,log=False,),
         "DROPOUT": trial.suggest_float(max(0.0, config_base["DROPOUT"] * 0.65),min(1.0, config_base["DROPOUT"] * 1.35),),
-        "INIT_LR": trial.suggest_float(config_base["INIT_LR"] * 0.2,config_base["INIT_LR"] * 5,log=True,),
+        "INIT_LR": trial.suggest_float(config_base["INIT_LR"] * 0.25,config_base["INIT_LR"] * 4,log=False,),
         "EXP_PEN": trial.suggest_float(config_base["EXP_PEN"] * 0.85,config_base["EXP_PEN"] * 1.15,),
         "RETURN_PEN": trial.suggest_float(config_base["RETURN_PEN"] * 0.8,config_base["RETURN_PEN"] * 1.2,),
 

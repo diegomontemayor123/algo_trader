@@ -47,5 +47,5 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=confi
 
     if os.path.exists("rf_features.csv"): top_features_log.to_csv("rf_features.csv", mode='a', index=False, header=False)
     else: top_features_log.to_csv("rf_features.csv", index=False)
-    print(f"[Filter] Top 10 feature scores:\n{combined_scores.loc[selected_features].head(10).to_string()}")
+    print(f"[Filter] Top feature score: {combined_scores.loc[selected_features].head(1).to_string()}\n")
     return feat[selected_features]
