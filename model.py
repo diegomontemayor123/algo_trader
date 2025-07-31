@@ -26,7 +26,7 @@ class TransformerTrader(nn.Module):
         encoder_layer = nn.TransformerEncoderLayer(d_model=dimen,nhead=num_heads,dropout=dropout,batch_first=True)
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
         self.mlp_head = nn.Sequential(nn.Linear(dimen, 64),nn.PReLU(),nn.Dropout(dropout),nn.Linear(64, len(TICK)))
-        print(f"Model MLP head output dim: {len(TICK)}")
+        print(f"[Model] MLP head output dim: {len(TICK)}")
     def forward(self, x):
         if self.feat_attent: x = x * self.feat_attention(x.mean(dim=1)).unsqueeze(1) 
         x = x + self.pos_embedding
@@ -42,7 +42,7 @@ def calc_heads(dimen, max_heads):
 
 def create_model(dimen, config):
     heads = calc_heads(dimen, config["MAX_HEADS"])
-    print(f"Creating TransformerTrader with dimen={dimen}, heads={heads}, device={DEVICE}")
+    print(f"[Model] Creating TransformerTrader with dimen={dimen}, heads={heads}, device={DEVICE}")
     return TransformerTrader(dimen=dimen,num_heads=heads,num_layers=config["LAYERS"],dropout=config["DROPOUT"],seq_len=config["LBACK"],TICK=config["TICK"],feat_attent=config["ATTENT"]).to(DEVICE, non_blocking=True)
 
 def split_train_val(sequences, targets, valid_ratio):

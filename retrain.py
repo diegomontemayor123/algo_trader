@@ -25,7 +25,7 @@ def run_retraining_chunks(chunks, feat_df, ret_df, lback, norm_feat, TICK, comp_
     all_bench_metrics = []
     
     for idx, (chunk_start, chunk_end) in enumerate(chunks):
-        print(f"Starting Chunk {idx+1} | Period: {chunk_start.date()} to {chunk_end.date()} ===")
+        print(f"[Retrain] Starting Chunk {idx+1} | Period: {chunk_start.date()} to {chunk_end.date()} ===")
         if idx == 0: current_model = model0
         else:
             orig_train = (chunks[0][0] - pd.to_datetime(start))
@@ -34,7 +34,7 @@ def run_retraining_chunks(chunks, feat_df, ret_df, lback, norm_feat, TICK, comp_
             training_days = (train_end - train_start).days
             if training_days < orig_train.days - 30:
                 print(f"Skipping chunk {idx+1} due to short training window: {training_days} days"); continue
-            print(f"Chunk {idx+1}: Training from {train_start.date()} to {train_end.date()} ({training_days} days)")
+            print(f"[Retrain] Chunk {idx+1}: Training from {train_start.date()} to {train_end.date()} ({training_days} days)")
             chunk_config = copy.deepcopy(config)
             #chunk_config = minitune_for_chunk(chunk_start, config_base=config)
             chunk_config["START"] = str(train_start.date())
@@ -43,7 +43,7 @@ def run_retraining_chunks(chunks, feat_df, ret_df, lback, norm_feat, TICK, comp_
             cached_chunk_data = load_prices(chunk_config["START"], config["END"], macro_keys)
             feat_list = config["FEAT"].split(",") if isinstance(config["FEAT"], str) else config["FEAT"]
             feat_train, ret_train = comp_feat(TICK, feat_list, cached_chunk_data, macro_keys, split_date=chunk_config["SPLIT"], method=config["FILTER"])
-            print(f"Feature train shape: {feat_train.shape}, Return train shape: {ret_train.shape}")
+            print(f"[Retrain] Feature train shape: {feat_train.shape}, Return train shape: {ret_train.shape}")
             train_data, val_data, _ = prep_data(feat_train, ret_train, chunk_config)
             train_loader = DataLoader(train_data, batch_size=config["BATCH"], shuffle=True, num_workers=min(2, multiprocessing.cpu_count()))
             val_loader = DataLoader(val_data, batch_size=config["BATCH"], shuffle=False, num_workers=min(2, multiprocessing.cpu_count()))

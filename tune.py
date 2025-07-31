@@ -4,27 +4,27 @@ from optuna.samplers import TPESampler
 TRIALS = 30
 
 def run_experiment(trial,study=None):
-    config = {"START": trial.suggest_categorical("START", ["2013-01-01"]),#2019 Jan
+    config = {"START": trial.suggest_categorical("START", ["2015-01-01"]),#2019 Jan
         "END": trial.suggest_categorical("END", ["2023-01-01"]),#2025 Jul
-        "SPLIT": trial.suggest_categorical("SPLIT", ["2017-01-01",]),#2023 Jan
+        "SPLIT": trial.suggest_categorical("SPLIT", ["2019-01-01",]),#2023 Jan
         "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
         "MACRO": trial.suggest_categorical("MACRO", ['^FTSE,^GSPC,^TYX,EURUSD=X,GBPUSD=X,GC=F,HYG,NG=F,SI=F,TLT,UUP,USDJPY=X,ZC=F,ZW=F,^IRX,EEM,HG=F',]),#"GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM"
         "FEAT": trial.suggest_categorical("FEAT", ['adx,boll,cmo,cross_corr,cross_rel_strength,cross_ret_rank,cross_vol_z,ema,lags,log_ret,macd,mean_abs_return,price,price_vs_high,range,ret,roll_ret,rsi,sma,stoch,vol_change,vol_ptile,zscore,donchian',]),#"sma,ema,boll,macd,vol_change,donchian"
         "FILTER": trial.suggest_categorical("FILTER", ["rf"]),#"none","mutual","correl","rf"
-        "YWIN": trial.suggest_int("YWIN",20,30),#25
+        "YWIN": trial.suggest_int("YWIN",20,48),#25
         "FILTERWIN": trial.suggest_int("FILTERWIN",24,28),#26
         "THRESH": trial.suggest_int("THRESH",100,150),#117
-        "NESTIM": trial.suggest_int("NESTIM",325,325),#325
+        "NESTIM": trial.suggest_int("NESTIM",300,350),#325
         "BATCH": trial.suggest_int("BATCH",53,53),#53
         "LBACK": trial.suggest_int("LBACK",84,84),#84
         "PRED_DAYS": trial.suggest_int("PRED_DAYS",6,6),#6
-        "DROPOUT": trial.suggest_float("DROPOUT",.028,.0387),#.0387
-        "DECAY": trial.suggest_float("DECAY",.003,.00327,log=True),#.00327
-        "FEAT_PER": trial.suggest_categorical("FEAT_PER",["8,12,24"]),
-        "INIT_LR": trial.suggest_float("INIT_LR",.00135,.006,log=True),#.00135
-        "EXP_PEN": trial.suggest_float("EXP_PEN",.226,.246),#.246
+        "DROPOUT": trial.suggest_float("DROPOUT",.0387,.0387),#.0387
+        "DECAY": trial.suggest_float("DECAY",.00327,.00327,log=True),#.00327
+        "FEAT_PER": trial.suggest_categorical("FEAT_PER",["8,12,24,48"]),
+        "INIT_LR": trial.suggest_float("INIT_LR",.00135,.00135,log=True),#.00135
+        "EXP_PEN": trial.suggest_float("EXP_PEN",.246,.246),#.246
         "EXP_EXP": trial.suggest_float("EXP_EXP",1.8,1.8),#1.8
-        "RETURN_PEN": trial.suggest_float("RETURN_PEN",.064,.07),#.064 
+        "RETURN_PEN": trial.suggest_float("RETURN_PEN",.064,.064),#.064 
         "RETURN_EXP": trial.suggest_float("RETURN_EXP",.28,.28),#.28 
         "SD_PEN": trial.suggest_float("SD_PEN",.17,.17),#.17 
         "SD_EXP": trial.suggest_float("SD_EXP",.74,.74),#.74 
