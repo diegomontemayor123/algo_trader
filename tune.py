@@ -11,23 +11,23 @@ def run_experiment(trial,study=None):
         "MACRO": trial.suggest_categorical("MACRO", ['^FTSE,^GSPC,^TYX,EURUSD=X,GBPUSD=X,GC=F,HYG,NG=F,SI=F,TLT,UUP,USDJPY=X,ZC=F,ZW=F,^IRX,EEM,HG=F',]),#"GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM"
         "FEAT": trial.suggest_categorical("FEAT", ['adx,boll,cmo,cross_corr,cross_rel_strength,cross_ret_rank,cross_vol_z,ema,lags,log_ret,macd,mean_abs_return,price,price_vs_high,range,ret,roll_ret,rsi,sma,stoch,vol_change,vol_ptile,zscore,donchian',]),#"sma,ema,boll,macd,vol_change,donchian"
         "FILTER": trial.suggest_categorical("FILTER", ["rf"]),#"none","mutual","correl","rf"
-        "YWIN": trial.suggest_int("YWIN",22,22),#25
+        "YWIN": trial.suggest_int("YWIN",24,24),#25
         "FILTERWIN": trial.suggest_int("FILTERWIN",26,26),#26
         "THRESH": trial.suggest_int("THRESH",110,140),#113
         "NESTIM": trial.suggest_int("NESTIM",317,340),#323
         "BATCH": trial.suggest_int("BATCH",53,53),#53
         "LBACK": trial.suggest_int("LBACK",84,84),#84
         "PRED_DAYS": trial.suggest_int("PRED_DAYS",6,6),#6
-        "DROPOUT": trial.suggest_float("DROPOUT",.0325,.0325),#.028
-        "DECAY": trial.suggest_float("DECAY",.0031,.0031,log=True),#.003
+        "DROPOUT": trial.suggest_float("DROPOUT",.0325,.039),#.028
+        "DECAY": trial.suggest_float("DECAY",.0032,.0032,log=True),#.003
         "FEAT_PER": trial.suggest_categorical("FEAT_PER",["8,12,24"]),
         "INIT_LR": trial.suggest_float("INIT_LR",.0001,.005,log=True),#.006
-        "EXP_PEN": trial.suggest_float("EXP_PEN",.226,.226),#.226 long macro/feat
+        "EXP_PEN": trial.suggest_float("EXP_PEN",.226,.246),#.226 long macro/feat
         "EXP_EXP": trial.suggest_float("EXP_EXP",1.78,1.78),#1.8
-        "RETURN_PEN": trial.suggest_float("RETURN_PEN",.05,.06),#.07 long macro/feat
-        "RETURN_EXP": trial.suggest_float("RETURN_EXP",.27,.27),#.28 
+        "RETURN_PEN": trial.suggest_float("RETURN_PEN",.05,.064),#.07 long macro/feat
+        "RETURN_EXP": trial.suggest_float("RETURN_EXP",.275,.275),#.28 
         "SD_PEN": trial.suggest_float("SD_PEN",.17,.17),#.17 
-        "SD_EXP": trial.suggest_float("SD_EXP",.76,.76),#.74 
+        "SD_EXP": trial.suggest_float("SD_EXP",.75,.75),#.74 
         "SEED": trial.suggest_categorical("SEED",[42]),#42
         "MAX_HEADS": trial.suggest_categorical("MAX_HEADS",[1]),#1
         "LAYERS": trial.suggest_categorical("LAYERS",[1]),#1
