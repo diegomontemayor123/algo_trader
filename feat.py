@@ -7,8 +7,7 @@ from load import load_config
 from filter import select_features 
 
 config = load_config()
-PRICE_CACHE = "csv/prices.csv"
-TICK = TICKER_LIST
+PRICE_CACHE = "csv/prices.csv"; TICK = TICKER_LIST
 
 def fetch_macro(name, ticker, start, end):
     try:
@@ -18,14 +17,10 @@ def fetch_macro(name, ticker, start, end):
         else:raise ValueError(f"No valid price column found for {ticker}")
         series.name = name
         return series
-    except Exception as e:
-        print(f"[Feat] Failed to fetch {name} ({ticker}): {e}");return pd.Series(dtype='float64')
+    except Exception as e: print(f"[Feat] Failed to fetch {name} ({ticker}): {e}");return pd.Series(dtype='float64')
     
-
 def load_prices(START, END, macro_keys):
-    if os.path.exists(PRICE_CACHE):
-        #print(f"[Feat] Using cache from {pd.to_datetime(START).date()} to {pd.to_datetime(END).date()}")
-        data = pd.read_csv(PRICE_CACHE, index_col=0, parse_dates=True)
+    if os.path.exists(PRICE_CACHE): data = pd.read_csv(PRICE_CACHE, index_col=0, parse_dates=True)
     else:
         print("[Feat] Downloading price and macro data...")
         raw_data = yf.download(" ".join(TICK), start=START, end=END, auto_adjust=False)
@@ -63,20 +58,16 @@ def process_macro_feat(cached_data, index, macro_keys, min_non_na_ratio=0.1):
         macro_feat[col] = pct_series
     return pd.DataFrame(macro_feat, index=index)
 
-
 def comp_feat(TICK, FEAT, cached_data, macro_keys, thresh=config["THRESH"], split_date=None, method=None):
     price_cols = [col for col in cached_data.columns if not col.endswith(("_volume", "_high", "_low")) and col in TICK]
     volume_cols = [f"{ticker}_volume" for ticker in TICK if f"{ticker}_volume" in cached_data.columns]
     high_cols = {ticker: f"{ticker}_high" for ticker in TICK if f"{ticker}_high" in cached_data.columns}
     low_cols = {ticker: f"{ticker}_low" for ticker in TICK if f"{ticker}_low" in cached_data.columns}
-    
     prices = cached_data[price_cols]
     volume = cached_data[volume_cols] if volume_cols else None
     all_feat = {}
-
     for ticker in TICK:
-        if ticker not in prices: 
-            continue
+        if ticker not in prices:  continue
         df = pd.DataFrame(index=prices.index)
         df['close'] = prices[ticker].ffill().dropna()
         if ticker in high_cols: 
@@ -84,14 +75,11 @@ def comp_feat(TICK, FEAT, cached_data, macro_keys, thresh=config["THRESH"], spli
         if ticker in low_cols: 
             df['low'] = cached_data[low_cols[ticker]].reindex(df.index).ffill()
         for feat_name in FEAT:
-            if feat_name.startswith('volume'): 
-                continue
+            if feat_name.startswith('volume'):  continue
             feat_func = FTR_FUNC.get(feat_name)
             if feat_func:
-                if "cross" in feat_name: 
-                    feat_func(df, ticker)
-                else: 
-                    feat_func(df)
+                if "cross" in feat_name:  feat_func(df, ticker)
+                else:  feat_func(df)
         if volume is not None and any(ftr.startswith('volume') for ftr in FEAT):
             vol_col = f"{ticker}_volume"
             if vol_col in volume.columns:
