@@ -208,7 +208,7 @@ def add_trendcombo(data):
 
 # ========================== CROSS-SECTIONAL ==========================
 CROSS_FEAT = {}
-def set_allcrossfeat(cross_feat_dict):
+def setallcrossfeat(cross_feat_dict):
     global CROSS_FEAT
     CROSS_FEAT = {k: df for k, df in cross_feat_dict.items() if 'close' in df.columns}
 
