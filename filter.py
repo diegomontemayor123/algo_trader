@@ -18,6 +18,9 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=confi
 
     y = (portfolio_ret.shift(-window).rolling(window).mean() / (portfolio_ret.shift(-window).rolling(window).std() + 1e-10)).dropna()
 
+    #def max_drawdown(returns): cum = (1 + returns).cumprod();drawdown = (cum - cum.cummax()) / cum.cummax();return drawdown.min() 
+    #FWD RETURN adj. DOWN y = (ret.loc[mask].mean(axis=1).shift(-window).rolling(window).mean() - (ret.loc[mask].mean(axis=1).shift(-window).rolling(window).apply(max_drawdown, raw=False) + 1e-10)).dropna()
+
 
     X = feat.loc[y.index]
     if X.empty or len(X) < 10: print("[Filter] Not enough data for feature selection."); return feat

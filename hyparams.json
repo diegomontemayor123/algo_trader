@@ -8,7 +8,7 @@
     "FILTER": "rf",
     "YWIN":48,
     "FILTERWIN": 26,
-    "THRESH": 117,
+    "THRESH": 40,
     "NESTIM": 325,
     "BATCH": 53,
     "LBACK": 84,
