@@ -3,14 +3,9 @@ from optuna.samplers import TPESampler
 import pandas as pd
 
 TRIALS = 7
-
-BASE_CONFIG_PATH = "hyparams.json"  # your base params
-
-
+BASE_CONFIG_PATH = "hyparams.json" 
 def load_base_config():
-    with open(BASE_CONFIG_PATH, "r") as f:
-        return json.load(f)
-
+    with open(BASE_CONFIG_PATH, "r") as f: return json.load(f)
 
 def is_duplicate_trial(study, params):
     for t in study.trials:
@@ -26,22 +21,26 @@ def run_chunk_tune(trial, start_date, end_date, split_date, config_base, study=N
         "END": str(end_date.date()),
         "SPLIT": str(split_date.date()),
         "SEED": trial.suggest_categorical("SEED", [config_base["SEED"]]),
-
-        "INIT_LR": trial.suggest_float(config_base["INIT_LR"] * 0.8,config_base["INIT_LR"] * 1.2,log=True,),
-        "DECAY": trial.suggest_float(max(1e-8, config_base["DECAY"] * 0.8),config_base["DECAY"] * 1.2,log=True,),
-        "DROPOUT": trial.suggest_float(max(0.0, config_base["DROPOUT"] * 0.8),min(1.0, config_base["DROPOUT"] * 1.2),),
+     
+        "YWIN": trial.suggest_int(max(5, math.floor(config_base["YWIN"] * 0.8)),math.ceil(config_base["YWIN"] * 1.2),),
         "FILTERWIN": trial.suggest_int(max(5, math.floor(config_base["FILTERWIN"] * 0.8)),math.ceil(config_base["FILTERWIN"] * 1.2),),
         "THRESH": trial.suggest_int(max(10, math.floor(config_base["THRESH"] * 0.8)),math.ceil(config_base["THRESH"] * 1.2),),
         "NESTIM": trial.suggest_int(max(10, math.floor(config_base["NESTIM"] * 0.8)),math.ceil(config_base["NESTIM"] * 1.2),),
+        
+        "DECAY": trial.suggest_float(max(1e-8, config_base["DECAY"] * 0.85),config_base["DECAY"] * 1.15,log=True,),
+        "DROPOUT": trial.suggest_float(max(0.0, config_base["DROPOUT"] * 0.65),min(1.0, config_base["DROPOUT"] * 1.35),),
+        "INIT_LR": trial.suggest_float(config_base["INIT_LR"] * 0.2,config_base["INIT_LR"] * 5,log=True,),
+        "EXP_PEN": trial.suggest_float(config_base["EXP_PEN"] * 0.85,config_base["EXP_PEN"] * 1.15,),
+        "RETURN_PEN": trial.suggest_float(config_base["RETURN_PEN"] * 0.8,config_base["RETURN_PEN"] * 1.2,),
+
+
+        "LAYERS": trial.suggest_int(max(1, config_base["LAYERS"] - 1),min(3, config_base["LAYERS"] + 1),),
+        "HEADS": trial.suggest_int(max(1, config_base["HEADS"] - 1),min(3, config_base["HEADS"] + 1),),
+        "EARLY_FAIL": trial.suggest_int(max(1, config_base["EARLY_FAIL"] - 2),min(4, config_base["EARLY_FAIL"] + 2),),
+
         "BATCH": trial.suggest_categorical("BATCH",[max(1, int(config_base["BATCH"] * 1)),config_base["BATCH"],int(config_base["BATCH"] * 1),],),
         "LBACK": trial.suggest_int(max(5, math.floor(config_base["LBACK"] * 1)),math.ceil(config_base["LBACK"] * 1),),
         "PRED_DAYS": trial.suggest_int(max(1, config_base["PRED_DAYS"] - 0),config_base["PRED_DAYS"] + 0,),
-        "FEAT_PER": trial.suggest_categorical("FEAT_PER", [config_base["FEAT_PER"]]),
-        "EXP_PEN": trial.suggest_float(config_base["EXP_PEN"] * 0.8,config_base["EXP_PEN"] * 1.2,),
-        "RETURN_PEN": trial.suggest_float(config_base["RETURN_PEN"] * 0.8,config_base["RETURN_PEN"] * 1.2,),
-        "LAYERS": trial.suggest_int(max(1, config_base["LAYERS"] - 1),min(4, config_base["LAYERS"] + 1),),
-        "HEADS": trial.suggest_int(max(1, config_base["HEADS"] - 1),min(4, config_base["HEADS"] + 1),),
-        "EARLY_FAIL": trial.suggest_int(max(1, config_base["EARLY_FAIL"] - 1),min(4, config_base["EARLY_FAIL"] + 1),),
     })
     dup_value = is_duplicate_trial(study, config)
     if dup_value is not None:return dup_value
