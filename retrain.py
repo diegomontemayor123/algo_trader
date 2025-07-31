@@ -7,6 +7,7 @@ from train import train_model
 from torch.utils.data import DataLoader
 from perf import calc_perf_metrics  
 from prep import prep_data
+from minitune import minitune_for_chunk
 np.seterr(all='raise')
 
 def reset_seeds(seed):
@@ -35,6 +36,7 @@ def run_retraining_chunks(chunks, feat_df, ret_df, lback, norm_feat, TICK, comp_
                 print(f"Skipping chunk {idx+1} due to short training window: {training_days} days"); continue
             print(f"Chunk {idx+1}: Training from {train_start.date()} to {train_end.date()} ({training_days} days)")
             chunk_config = copy.deepcopy(config)
+            #chunk_config = minitune_for_chunk(chunk_start, config_base=config)
             chunk_config["START"] = str(train_start.date())
             chunk_config["END"] = str(train_end.date())
             chunk_config["SPLIT"] = str((train_end + pd.Timedelta(days=1)).date())
