@@ -34,7 +34,7 @@ def run_experiment(trial,study=None):
         "EARLY_FAIL": trial.suggest_categorical("EARLY_FAIL",[4]),#4
         "VAL_SPLIT": trial.suggest_categorical("VAL_SPLIT",[.15]),#.15
         "WARMUP": trial.suggest_categorical("WARMUP",[0]),
-        "TEST_CHUNK": trial.suggest_categorical("TEST_CHUNK",[24]),
+        "TEST_CHUNK": trial.suggest_categorical("TEST_CHUNK",[12]),
         "RETRAIN": trial.suggest_categorical("RETRAIN",[1]),
         "ATTENT": trial.suggest_categorical("ATTENT",[1]),
     }

@@ -22,10 +22,10 @@ def run_chunk_tune(trial, start_date, end_date, split_date, config_base, study=N
         "SPLIT": str(split_date.date()),
         "SEED": trial.suggest_categorical("SEED", [config_base["SEED"]]),
      
-        "YWIN": trial.suggest_int(max(5, math.floor(config_base["YWIN"] * 0.8)),math.ceil(config_base["YWIN"] * 1.2),),
-        "FILTERWIN": trial.suggest_int(max(5, math.floor(config_base["FILTERWIN"] * 0.8)),math.ceil(config_base["FILTERWIN"] * 1.2),),
-        "THRESH": trial.suggest_int(max(10, math.floor(config_base["THRESH"] * 0.8)),math.ceil(config_base["THRESH"] * 1.2),),
-        "NESTIM": trial.suggest_int(max(10, math.floor(config_base["NESTIM"] * 0.8)),math.ceil(config_base["NESTIM"] * 1.2),),
+        "YWIN": trial.suggest_int(max(5, math.floor(config_base["YWIN"] * 0.9)),math.ceil(config_base["YWIN"] * 1.1),),
+        "FILTERWIN": trial.suggest_int(max(5, math.floor(config_base["FILTERWIN"] * 0.9)),math.ceil(config_base["FILTERWIN"] * 1.1),),
+        "THRESH": trial.suggest_int(max(10, math.floor(config_base["THRESH"] * 0.9)),math.ceil(config_base["THRESH"] * 1.1),),
+
         
         "DECAY": trial.suggest_float(max(1e-8, config_base["DECAY"] * 0.85),config_base["DECAY"] * 1.15,log=True,),
         "DROPOUT": trial.suggest_float(max(0.0, config_base["DROPOUT"] * 0.65),min(1.0, config_base["DROPOUT"] * 1.35),),
@@ -38,6 +38,7 @@ def run_chunk_tune(trial, start_date, end_date, split_date, config_base, study=N
         "HEADS": trial.suggest_int(max(1, config_base["HEADS"] - 1),min(3, config_base["HEADS"] + 1),),
         "EARLY_FAIL": trial.suggest_int(max(1, config_base["EARLY_FAIL"] - 2),min(4, config_base["EARLY_FAIL"] + 2),),
 
+        "NESTIM": trial.suggest_int(max(10, math.floor(config_base["NESTIM"] * 1)),math.ceil(config_base["NESTIM"] * 1),),
         "BATCH": trial.suggest_categorical("BATCH",[max(1, int(config_base["BATCH"] * 1)),config_base["BATCH"],int(config_base["BATCH"] * 1),],),
         "LBACK": trial.suggest_int(max(5, math.floor(config_base["LBACK"] * 1)),math.ceil(config_base["LBACK"] * 1),),
         "PRED_DAYS": trial.suggest_int(max(1, config_base["PRED_DAYS"] - 0),config_base["PRED_DAYS"] + 0,),

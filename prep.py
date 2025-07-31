@@ -34,11 +34,11 @@ def create_sequences(feat, ret, lback, pred_days, TICK):
         sequences.append(norm_win)
         targets.append(future_ret)
         indices.append(feat.index[i + lback])
-    print(f"Feature/Return DataFrame shape: {feat.shape} / {ret.shape}, num_seq: {len(sequences)} ")
+    print(f"[Prep] Feature/Return DataFrame shape: {feat.shape} / {ret.shape}, num_seq: {len(sequences)} ")
     return sequences, targets, indices
 
 def prep_data(feat, ret, config):
-    print(f"Feat/Ret date range: {feat.index[0].date()} to {feat.index[-1].date()} / {ret.index[0].date()} to {ret.index[-1].date()}")
+    print(f"[Prep] Feat/Ret date range: {feat.index[0].date()} - {feat.index[-1].date()} / {ret.index[0].date()} - {ret.index[-1].date()}")
     sequences, targets, seq_dates = create_sequences(feat, ret, config["LBACK"], config["PRED_DAYS"], config["TICK"])
     if len(set(seq_dates)) != len(seq_dates): print("[Prep] Duplicate dates found in sequence dates.")
     if any(pd.isna(seq_dates)): print("[Prep] NaN detected in sequence dates.")
@@ -54,7 +54,7 @@ def prep_data(feat, ret, config):
             test_sequences.append(seq)
             test_targets.append(tgt)
             test_dates.append(date)
-    print(f"Train/Test date range: {train_dates[0].date()}-{train_dates[-1].date()} / {test_dates[0].date()}-{test_dates[-1].date()}, train/test_seq: {len(train_sequences)}/{len(test_sequences)}")
+    print(f"[Prep] Train/Test date range: {train_dates[0].date()} - {train_dates[-1].date()} / {test_dates[0].date()} - {test_dates[-1].date()}, train/test_seq: {len(train_sequences)}/{len(test_sequences)}")
     val_split = config["VAL_SPLIT"]
     val_size = int(len(train_sequences) * val_split)
     train_size = len(train_sequences) - val_size
@@ -67,6 +67,6 @@ def prep_data(feat, ret, config):
     val_data = MarketDataset(torch.tensor(np.array(val_seq)), torch.tensor(np.array(val_tgt)))
     test_data = MarketDataset(torch.tensor(np.array(test_sequences)), torch.tensor(np.array(test_targets)))
     print(f"[Prep] Final sample counts - Train/Val/Test: {len(train_data)}/{len(val_data)}/{len(test_data)}")
-    if train_dates:  print(f"[Prep] Adj.training dates: {train_dates[0].date()}-{train_dates[-1].date()}")
+    if train_dates:  print(f"[Prep] Adj.training dates: {train_dates[0].date()} - {train_dates[-1].date()}")
 
     return train_data, val_data, test_data

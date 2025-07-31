@@ -13,8 +13,9 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=confi
     split_date_ts = pd.to_datetime(split_date)
     start = split_date_ts - pd.DateOffset(months=config["FILTERWIN"])
     window = config["YWIN"]
+
     all_scores = []
-    
+
     for asset in ret.columns:
         asset_ret = ret[asset]
         mask = asset_ret.notna()
@@ -22,47 +23,57 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=confi
 
         y = (asset_ret.loc[mask].shift(-window).rolling(window).mean() /
             (asset_ret.loc[mask].shift(-window).rolling(window).std() + 1e-10)).dropna()
-        
         #def max_drawdown(returns): cum = (1 + returns).cumprod();drawdown = (cum - cum.cummax()) / cum.cummax();return drawdown.min()
         #FWD RETURN adj. DOWN y = (ret.loc[mask].mean(axis=1).shift(-window).rolling(window).mean() - (ret.loc[mask].mean(axis=1).shift(-window).rolling(window).apply(max_drawdown, raw=False) + 1e-10)).dropna()
-
+        
         asset_feat_cols = [col for col in feat.columns if col.endswith(f"_{asset}")]
-        if not asset_feat_cols:continue  
+        if not asset_feat_cols:
+            continue
         X = feat.loc[y.index, asset_feat_cols]
-        if X.empty or len(X) < 10:continue  
+        if X.empty or len(X) < 10:
+            continue
+
         if method == "rf":
             model = RandomForestRegressor(n_estimators=config["NESTIM"], random_state=config["SEED"])
             model.fit(X, y)
             scores = pd.Series(model.feature_importances_, index=X.columns)
-        elif method == "mutual":scores = pd.Series(mutual_info_regression(X, y, random_state=config["SEED"]), index=X.columns)
-        elif method == "correl":scores = X.apply(lambda col: col.corr(y)).abs()
-        else:return feat
-        all_scores.append(scores)
-
-        combined_scores = pd.concat(all_scores, axis=1).mean(axis=1).sort_values(ascending=False)
-        
-        if thresh > 1:
-            selected_features = combined_scores.nlargest(int(thresh)).index
-            print(f"[Filter] Selected top {int(thresh)} features by {method} from {start.date()}–{split_date_ts.date()}")
-        elif 0 < thresh <= 1:
-            selected_features = combined_scores[combined_scores > thresh].index
-            print(f"[Filter] Selected {len(selected_features)} features with {method} > {thresh} from {start.date()}–{split_date_ts.date()}")
+        elif method == "mutual":
+            scores = pd.Series(mutual_info_regression(X, y, random_state=config["SEED"]), index=X.columns)
+        elif method == "correl":
+            scores = X.apply(lambda col: col.corr(y)).abs()
         else:
             return feat
+        
+        all_scores.append(scores)
 
-        top_features_log = pd.DataFrame({
-            "feature": selected_features,
-            "avg_score": combined_scores.loc[selected_features].values,
-            "split_date": split_date,
-            "start_date": start.date()
-        })
+    # Combine scores from all assets
+    if not all_scores:
+        # no scores computed, return original features
+        return feat
 
-        if os.path.exists("rf_top_features.csv"):
-            top_features_log.to_csv("rf_top_features.csv", mode='a', index=False, header=False)
-        else:
-            top_features_log.to_csv("rf_top_features.csv", index=False)
+    combined_scores = pd.concat(all_scores, axis=1).mean(axis=1).sort_values(ascending=False)
 
-        print(f"[Filter] Logged {len(selected_features)} top features to rf_top_features.csv")
-        print(f"[Filter] Top 10 feature scores:\n{combined_scores.loc[selected_features].head(10).to_string()}")
+    if thresh > 1:
+        selected_features = combined_scores.nlargest(int(thresh)).index
+        print(f"[Filter] Selected top {int(thresh)} features by {method} from {start.date()}–{split_date_ts.date()}")
+    elif 0 < thresh <= 1:
+        selected_features = combined_scores[combined_scores > thresh].index
+        print(f"[Filter] Selected {len(selected_features)} features with {method} > {thresh} from {start.date()}–{split_date_ts.date()}")
+    else:
+        return feat
 
-        return feat[selected_features]
+    top_features_log = pd.DataFrame({
+        "feature": selected_features,
+        "avg_score": combined_scores.loc[selected_features].values,
+        "split_date": split_date,
+        "start_date": start.date()
+    })
+
+    if os.path.exists("rf_top_features.csv"):
+        top_features_log.to_csv("rf_top_features.csv", mode='a', index=False, header=False)
+    else:
+        top_features_log.to_csv("rf_top_features.csv", index=False)
+
+    print(f"[Filter] Top 10 feature scores:\n{combined_scores.loc[selected_features].head(10).to_string()}")
+
+    return feat[selected_features]
