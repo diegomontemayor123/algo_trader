@@ -77,4 +77,9 @@ def minitune_for_chunk(chunk_start, config_base=None):
     best_config.update({"START": str(start_date.date()),"END": str(end_date.date()),"SPLIT": str(split_date.date())})
     print("\n[MiniTune] Best chunk config:")
     for k, v in best_config.items():print(f"  {k}: {v}")
+
+
+    with open(BASE_CONFIG_PATH, "w") as f:
+        json.dump(best_config, f, indent=4)
+
     return best_config
