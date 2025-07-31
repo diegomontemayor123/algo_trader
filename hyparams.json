@@ -1,5 +1,5 @@
 {
-    "START": "2015-01-01",
+    "START": "2018-01-01",
     "END": "2023-01-01",
     "SPLIT": "2019-01-01",
     "TICK": "JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE",
@@ -8,7 +8,7 @@
     "PRUNE": "rf",
     "YWIN": 27,
     "PRUNEWIN": 24,
-    "THRESH": 110,
+    "THRESH": 220,
     "NESTIM": 300,
     "BATCH": 53,
     "LBACK": 84,
