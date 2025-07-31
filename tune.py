@@ -20,9 +20,9 @@ def run_experiment(trial,study=None):
         "LBACK": trial.suggest_int("LBACK",84,84),#84
         "PRED_DAYS": trial.suggest_int("PRED_DAYS",6,6),#6
         "DROPOUT": trial.suggest_float("DROPOUT",.028,.028),#.028
-        "DECAY": trial.suggest_float("DECAY",.003,.003),#.003
+        "DECAY": trial.suggest_float("DECAY",.003,.003,log=True),#.003
         "FEAT_PER": trial.suggest_categorical("FEAT_PER", ["8,12,24"]),
-        "INIT_LR": trial.suggest_float("INIT_LR",.006,.006),#.006
+        "INIT_LR": trial.suggest_float("INIT_LR",.006,.006,log=True),#.006
         "EXP_PEN": trial.suggest_float("EXP_PEN",.226,.226),#.226 long macro/feat
         "EXP_EXP": trial.suggest_float("EXP_EXP",1.8,1.8),#1.8
         "RETURN_PEN": trial.suggest_float("RETURN_PEN",.07,.07),#.07 long macro/feat

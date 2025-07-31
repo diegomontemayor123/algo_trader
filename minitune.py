@@ -1,7 +1,8 @@
-import os, json, re, copy, optuna, subprocess, tempfile
+import os, json, re, copy, optuna, subprocess, math
 from optuna.samplers import TPESampler
+import pandas as pd
 
-TRIALS = 5
+TRIALS = 7
 
 BASE_CONFIG_PATH = "hyparams.json"  # your base params
 
@@ -13,16 +14,11 @@ def load_base_config():
 
 def is_duplicate_trial(study, params):
     for t in study.trials:
-        if t.state != optuna.trial.TrialState.COMPLETE:
-            continue
-        if t.params == params:
-            print(f"[DUPLICATE] Trial #{t.number} already ran. Skipping.")
-            return t.value
+        if t.state != optuna.trial.TrialState.COMPLETE: continue
+        if t.params == params:print(f"[DUPLICATE] Trial #{t.number} already ran. Skipping.");return t.value
     return None
 
-
 def run_chunk_tune(trial, start_date, end_date, split_date, config_base, study=None):
-    import math
 
     config = copy.deepcopy(config_base)
     config.update({
@@ -31,148 +27,54 @@ def run_chunk_tune(trial, start_date, end_date, split_date, config_base, study=N
         "SPLIT": str(split_date.date()),
         "SEED": trial.suggest_categorical("SEED", [config_base["SEED"]]),
 
-        # Floats — clip to valid ranges (e.g., dropout [0,1])
-        "INIT_LR": trial.suggest_float(
-            config_base["INIT_LR"] * 0.5,
-            config_base["INIT_LR"] * 1.5,
-            log=True,  # log scale often good for learning rates
-        ),
-        "DECAY": trial.suggest_float(
-            max(1e-8, config_base["DECAY"] * 0.5),
-            config_base["DECAY"] * 1.5,
-            log=True,
-        ),
-        "DROPOUT": trial.suggest_float(
-            max(0.0, config_base["DROPOUT"] * 0.5),
-            min(1.0, config_base["DROPOUT"] * 1.5),
-        ),
-
-        # Ints with sensible min/max margins
-        "FILTERWIN": trial.suggest_int(
-            max(5, math.floor(config_base["FILTERWIN"] * 0.8)),
-            math.ceil(config_base["FILTERWIN"] * 1.2),
-        ),
-        "THRESH": trial.suggest_int(
-            max(10, math.floor(config_base["THRESH"] * 0.8)),
-            math.ceil(config_base["THRESH"] * 1.2),
-        ),
-        "NESTIM": trial.suggest_int(
-            max(10, math.floor(config_base["NESTIM"] * 0.8)),
-            math.ceil(config_base["NESTIM"] * 1.2),
-        ),
-        "BATCH": trial.suggest_categorical(
-            "BATCH",
-            [
-                max(1, int(config_base["BATCH"] * 0.5)),
-                config_base["BATCH"],
-                int(config_base["BATCH"] * 1.5),
-            ],
-        ),
-        "LBACK": trial.suggest_int(
-            max(5, math.floor(config_base["LBACK"] * 0.8)),
-            math.ceil(config_base["LBACK"] * 1.2),
-        ),
-        "PRED_DAYS": trial.suggest_int(
-            max(1, config_base["PRED_DAYS"] - 1),
-            config_base["PRED_DAYS"] + 1,
-        ),
-
-        # Categorical — keep as fixed or add more options if you want
+        "INIT_LR": trial.suggest_float(config_base["INIT_LR"] * 0.8,config_base["INIT_LR"] * 1.2,log=True,),
+        "DECAY": trial.suggest_float(max(1e-8, config_base["DECAY"] * 0.8),config_base["DECAY"] * 1.2,log=True,),
+        "DROPOUT": trial.suggest_float(max(0.0, config_base["DROPOUT"] * 0.8),min(1.0, config_base["DROPOUT"] * 1.2),),
+        "FILTERWIN": trial.suggest_int(max(5, math.floor(config_base["FILTERWIN"] * 0.8)),math.ceil(config_base["FILTERWIN"] * 1.2),),
+        "THRESH": trial.suggest_int(max(10, math.floor(config_base["THRESH"] * 0.8)),math.ceil(config_base["THRESH"] * 1.2),),
+        "NESTIM": trial.suggest_int(max(10, math.floor(config_base["NESTIM"] * 0.8)),math.ceil(config_base["NESTIM"] * 1.2),),
+        "BATCH": trial.suggest_categorical("BATCH",[max(1, int(config_base["BATCH"] * 0.8)),config_base["BATCH"],int(config_base["BATCH"] * 1.2),],),
+        "LBACK": trial.suggest_int(max(5, math.floor(config_base["LBACK"] * 0.8)),math.ceil(config_base["LBACK"] * 1.2),),
+        "PRED_DAYS": trial.suggest_int(max(1, config_base["PRED_DAYS"] - 1),config_base["PRED_DAYS"] + 1,),
         "FEAT_PER": trial.suggest_categorical("FEAT_PER", [config_base["FEAT_PER"]]),
-
-        # Float penalties
-        "EXP_PEN": trial.suggest_float(
-            config_base["EXP_PEN"] * 0.5,
-            config_base["EXP_PEN"] * 1.5,
-        ),
-        "RETURN_PEN": trial.suggest_float(
-            config_base["RETURN_PEN"] * 0.5,
-            config_base["RETURN_PEN"] * 1.5,
-        ),
-
-        # Small int, keep min 1 max 4 layers
-        "LAYERS": trial.suggest_int(
-            max(1, config_base["LAYERS"] - 1),
-            min(4, config_base["LAYERS"] + 1),
-        ),
+        "EXP_PEN": trial.suggest_float(config_base["EXP_PEN"] * 0.8,config_base["EXP_PEN"] * 1.2,),
+        "RETURN_PEN": trial.suggest_float(config_base["RETURN_PEN"] * 0.8,config_base["RETURN_PEN"] * 1.2,),
+        "LAYERS": trial.suggest_int(max(1, config_base["LAYERS"] - 1),min(4, config_base["LAYERS"] + 1),),
+        "HEADS": trial.suggest_int(max(1, config_base["HEADS"] - 1),min(4, config_base["HEADS"] + 1),),
+        "EARLY_FAIL": trial.suggest_int(max(1, config_base["EARLY_FAIL"] - 1),min(4, config_base["EARLY_FAIL"] + 1),),
     })
-
     dup_value = is_duplicate_trial(study, config)
-    if dup_value is not None:
-        return dup_value
-
+    if dup_value is not None:return dup_value
     try:
         env = os.environ.copy()
-        for k, v in config.items():
-            env[k] = str(v)
-
-        result = subprocess.run(
-            ["python", "model.py"],
-            capture_output=True,
-            text=True,
-            env=env,
-            timeout=900,
-        )
+        for k, v in config.items():env[k] = str(v)
+        result = subprocess.run(["python", "model.py"],capture_output=True,text=True,env=env,timeout=900,)
         output = result.stdout + result.stderr
-
-        if "KILLRUN" in output or not output.strip():
-            print("[KILLRUN] or empty output — skipping.")
-            return -float("inf")
-
+        if "KILLRUN" in output or not output.strip(): print("[KILLRUN] or empty output — skipping.");return -float("inf")
         def extract_metric(label):
             pattern = rf"{re.escape(label)}:\s*Strat:\s*([-+]?\d+(?:\.\d+)?)%"
             match = re.search(pattern, output)
             return float(match.group(1)) / 100 if match else None
-
-        sharpe = extract_metric("Sharpe Ratio")
-        down = extract_metric("Max Down")
-        cagr = extract_metric("CAGR")
-
-        if None in (sharpe, down, cagr):
-            print("[Tune] Missing metrics, skipping.")
-            return -float("inf")
-
+        sharpe = extract_metric("Sharpe Ratio");down = extract_metric("Max Down");cagr = extract_metric("CAGR")
+        if None in (sharpe, down, cagr): print("[Tune] Missing metrics, skipping.");return -float("inf")
         score = 1.0 * sharpe - 6.0 * abs(down) + 1.0 * cagr
-        print(
-            f"[Tune] Trial score: {score:.4f} | Sharpe: {sharpe:.3f}, Down: {down:.3f}, CAGR: {cagr:.3f}"
-        )
+        print(f"[Tune] Trial score: {score:.4f} | Sharpe: {sharpe:.3f}, Down: {down:.3f}, CAGR: {cagr:.3f}")
         trial.set_user_attr("score", score)
         return score
-
-    except subprocess.TimeoutExpired:
-        print("[Tune] Timeout — skipping trial.")
-        return -float("inf")
-    except Exception as e:
-        print(f"[Tune] Exception: {e}")
-        return -float("inf")
-
+    except subprocess.TimeoutExpired:print("[Tune] Timeout — skipping trial.");return -float("inf")
+    except Exception as e:print(f"[Tune] Exception: {e}");return -float("inf")
 
 def minitune_for_chunk(chunk_start, config_base=None):
-    import pandas as pd
-
     config_base = config_base or load_base_config()
     split_date = pd.to_datetime(chunk_start)
     end_date = split_date - pd.Timedelta(days=1)
     start_date = end_date - pd.DateOffset(years=1)
-
     sampler = TPESampler(seed=config_base["SEED"])
     study = optuna.create_study(direction="maximize", sampler=sampler)
-    study.optimize(
-        lambda trial: run_chunk_tune(trial, start_date, end_date, split_date, config_base, study),
-        n_trials=TRIALS,
-        n_jobs=1
-    )
-
+    study.optimize(lambda trial: run_chunk_tune(trial, start_date, end_date, split_date, config_base, study),n_trials=TRIALS,n_jobs=1)
     best_config = copy.deepcopy(config_base)
     best_config.update(study.best_params)
-    best_config.update({
-        "START": str(start_date.date()),
-        "END": str(end_date.date()),
-        "SPLIT": str(split_date.date())
-    })
-
+    best_config.update({"START": str(start_date.date()),"END": str(end_date.date()),"SPLIT": str(split_date.date())})
     print("\n[MiniTune] Best chunk config:")
-    for k, v in best_config.items():
-        print(f"  {k}: {v}")
-
+    for k, v in best_config.items():print(f"  {k}: {v}")
     return best_config
