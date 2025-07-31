@@ -59,7 +59,7 @@ class DifferentiableSharpeLoss(nn.Module):
         ret = (pfo_weight * target_ret).sum(dim=1);mean_ret = torch.mean(ret)
         if ret.numel() > 1 and not torch.isnan(ret).all():
             sd_ret = torch.std(ret, unbiased=False) + 1e-10
-            if sd_ret < 1e-4:print("SD - ret too low (<1e-4), skip batch.");return None  
+            if sd_ret < 1e-6:print("SD - ret too low (<1e-6), skip batch.");return None  
         else:print("ret invalid, skip batch.");return None 
         loss = -(self.return_pen * torch.sign(mean_ret) * mean_ret.abs().pow(self.return_exp))
         loss += self.sd_pen*sd_ret.pow(self.sd_exp) 
