@@ -165,7 +165,7 @@ def add_entropy(data):
             return -np.sum([p * np.log2(p + 1e-10) for p in probs if p > 0])
         data[f'entropy_{p}'] = ret.rolling(p).apply(shannon_entropy, raw=True)
 
-def add_mean_abs_return(data):
+def add_mean_abs_ret(data):
     if 'ret' not in data.columns:
         data['ret'] = data['close'].pct_change()
     for p in per:
@@ -195,9 +195,9 @@ def add_volume(volume_df):
     return volume_feat
 
 # ========================== LAG / TIME FEATURES ==========================
-def add_lags(data):
+def add_lag(data):
     for p in per:
-        data[f'lag_close_{p}'] = data['close'].shift(p)
+        data[f'lag_{p}'] = data['close'].shift(p)
 
 def add_trend_combo(data):
     for fast, med, slow in [(5, 20, 100), (10, 30, 200)]:
@@ -312,13 +312,13 @@ FTR_FUNC = {
     # Structure / Regime
      "price_ptile": add_price_ptiles,
      "adx":add_adx, "entropy":add_entropy, 
-     "mean_abs_return":add_mean_abs_return,
+     "mean_abs_ret":add_mean_abs_ret,
     # Bands
     "boll": add_boll, "donchian": add_donchian,
     # Volume
     "volume": add_volume,
     # Lag/Time
-    "lags": add_lags,
+    "lag": add_lag,
     "trend_combo":add_trend_combo,
     # Cross-sectional
     "ret_cross_z": add_ret_cross_z, "cross_momentum_z": add_cross_momentum,
