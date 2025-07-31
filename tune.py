@@ -18,13 +18,13 @@ def run_experiment(trial,study=None):
         "BATCH": trial.suggest_int("BATCH",53,53),#53
         "LBACK": trial.suggest_int("LBACK",84,84),#84
         "PRED_DAYS": trial.suggest_int("PRED_DAYS",6,6),#6
-        "DROPOUT": trial.suggest_float("DROPOUT",.0325,.039),#.028
+        "DROPOUT": trial.suggest_float("DROPOUT",.0325,.04),#.028
         "DECAY": trial.suggest_float("DECAY",.0032,.0032,log=True),#.003
         "FEAT_PER": trial.suggest_categorical("FEAT_PER",["8,12,24"]),
-        "INIT_LR": trial.suggest_float("INIT_LR",.0001,.005,log=True),#.006
-        "EXP_PEN": trial.suggest_float("EXP_PEN",.226,.246),#.226 long macro/feat
+        "INIT_LR": trial.suggest_float("INIT_LR",.0006,.005,log=True),#.006
+        "EXP_PEN": trial.suggest_float("EXP_PEN",.226,.25),#.226 long macro/feat
         "EXP_EXP": trial.suggest_float("EXP_EXP",1.78,1.78),#1.8
-        "RETURN_PEN": trial.suggest_float("RETURN_PEN",.05,.064),#.07 long macro/feat
+        "RETURN_PEN": trial.suggest_float("RETURN_PEN",.05,.067),#.07 long macro/feat
         "RETURN_EXP": trial.suggest_float("RETURN_EXP",.275,.275),#.28 
         "SD_PEN": trial.suggest_float("SD_PEN",.17,.17),#.17 
         "SD_EXP": trial.suggest_float("SD_EXP",.75,.75),#.74 
