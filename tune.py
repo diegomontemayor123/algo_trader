@@ -1,23 +1,23 @@
 import os, subprocess, re, optuna, json, csv
 from optuna.samplers import TPESampler
 
-TRIALS = 50
+TRIALS = 30
 
 def run_experiment(trial,study=None):
-    config = {"START": trial.suggest_categorical("START", ["2013-01-01"]),#2019 Jan
+    config = {"START": trial.suggest_categorical("START", ["2015-01-01"]),#2019 Jan
         "END": trial.suggest_categorical("END", ["2023-01-01"]),#2025 Jul
-        "SPLIT": trial.suggest_categorical("SPLIT", ["2017-01-01",]),#2023 Jan
+        "SPLIT": trial.suggest_categorical("SPLIT", ["2019-01-01",]),#2023 Jan
         "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
         "MACRO": trial.suggest_categorical("MACRO", ['^FTSE,^GSPC,^TYX,EURUSD=X,GBPUSD=X,GC=F,HYG,NG=F,SI=F,TLT,UUP,USDJPY=X,ZC=F,ZW=F,^IRX,EEM,HG=F',]),#"GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM"
         "FEAT": trial.suggest_categorical("FEAT", ['adx,boll,cmo,cross_corr,cross_rel_strength,cross_ret_rank,cross_vol_z,ema,lags,log_ret,macd,mean_abs_return,price,price_vs_high,range,ret,roll_ret,rsi,sma,stoch,vol_change,vol_ptile,zscore,donchian',]),#"sma,ema,boll,macd,vol_change,donchian"
         "FILTER": trial.suggest_categorical("FILTER", ["rf"]),#"none","mutual","correl","rf"
         "YWIN": trial.suggest_int("YWIN",10,30),#25
         "FILTERWIN": trial.suggest_int("FILTERWIN",23,29),#26
-        "THRESH": trial.suggest_int("THRESH",100,125),#113
-        "NESTIM": trial.suggest_int("NESTIM",390,420),#406
-        "BATCH": trial.suggest_int("BATCH",49,57),#53
-        "LBACK": trial.suggest_int("LBACK",80,90),#84
-        "PRED_DAYS": trial.suggest_int("PRED_DAYS",5,7),#6
+        "THRESH": trial.suggest_int("THRESH",100,113),#113
+        "NESTIM": trial.suggest_int("NESTIM",300,406),#406
+        "BATCH": trial.suggest_int("BATCH",53,53),#53
+        "LBACK": trial.suggest_int("LBACK",84,84),#84
+        "PRED_DAYS": trial.suggest_int("PRED_DAYS",6,6),#6
         "DROPOUT": trial.suggest_float("DROPOUT",.024,.032),#.028
         "DECAY": trial.suggest_float("DECAY",.001,.008,log=True),#.003
         "FEAT_PER": trial.suggest_categorical("FEAT_PER", ["8,12,24"]),
