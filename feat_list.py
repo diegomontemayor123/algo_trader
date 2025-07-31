@@ -61,11 +61,11 @@ def pricevshigh(data):
     for p in per:
         data[f'pricevshigh_{p}'] = data['close'] / (data['close'].rolling(p).max() + 1e-10)
 
-def updownratio(data):
-    for p in per:
-        up = (data['close'].diff() > 0).rolling(p).sum()
-        down = (data['close'].diff() < 0).rolling(p).sum()
-        data[f'updownratio_{p}'] = up / (down + 1e-10)
+#def updownratio(data):
+   # for p in per:
+       # up = (data['close'].diff() > 0).rolling(p).sum()
+        #down = (data['close'].diff() < 0).rolling(p).sum()
+        #data[f'updownratio_{p}'] = up / (down + 1e-10)
 
 # ========================== vol ==========================
 def vol(data):
@@ -301,7 +301,7 @@ FTR_FUNC = {
     "macd": macd,
     "acceleration":acceleration,
     "pricevshigh":pricevshigh,
-    "updownratio":updownratio,
+    #"updownratio":updownratio,
     # vol
     "vol": vol, "atr": atr,
     "range":range,"volchange":volchange,
