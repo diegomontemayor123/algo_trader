@@ -4,12 +4,12 @@ import pandas as pd
 
 keys = ["SPLIT", "VAL_SPLIT", "PRED_DAYS", "LBACK", "SEED","MAX_HEADS", "BATCH", "FEAT","LAYERS", "YWIN",
         "DROPOUT", "DECAY", "ATTENT", "EXP_PEN","RETURN_PEN","RETURN_EXP","INIT_LR", "EXP_EXP","WARMUP", "EARLY_FAIL",
-        "SD_PEN","SD_EXP", "TICK","START", "END", "TEST_CHUNK", "RETRAIN","MACRO", "FEAT_PER","FILTERWIN","THRESH","FILTER","NESTIM"]
+        "SD_PEN","SD_EXP", "TICK","START", "END", "TEST_CHUNK", "RETRAIN","MACRO", "FEAT_PER","PRUNEWIN","THRESH","PRUNE","NESTIM"]
 
 def load_config():
     float_keys = {"VAL_SPLIT", "DROPOUT", "DECAY", "RETURN_PEN","RETURN_EXP", "EXP_EXP", "WARMUP", "SD_PEN","SD_EXP","EXP_PEN","INIT_LR","THRESH",}
-    int_keys = {"PRED_DAYS", "LBACK", "SEED", "MAX_HEADS", "BATCH","LAYERS", "EARLY_FAIL", "TEST_CHUNK", "RETRAIN","ATTENT","FILTERWIN","NESTIM","YWIN"}
-    list_keys = {"FEAT", "TICK", "FEAT_PER","FILTER"} 
+    int_keys = {"PRED_DAYS", "LBACK", "SEED", "MAX_HEADS", "BATCH","LAYERS", "EARLY_FAIL", "TEST_CHUNK", "RETRAIN","ATTENT","PRUNEWIN","NESTIM","YWIN"}
+    list_keys = {"FEAT", "TICK", "FEAT_PER","PRUNE"} 
     date_keys = {"SPLIT", "START", "END"}
 
     def parse_value(key, val):

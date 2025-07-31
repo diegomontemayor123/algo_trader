@@ -4,7 +4,7 @@ import yfinance as yf
 from feat_list import FTR_FUNC, add_volume, set_all_cross_feat
 from validate import TICKER_LIST
 from load import load_config
-from filter import select_features 
+from prune import select_features 
 
 config = load_config()
 PRICE_CACHE = "csv/prices.csv"; TICK = TICKER_LIST

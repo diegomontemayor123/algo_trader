@@ -6,10 +6,10 @@ from feat_list import FTR_FUNC
 TRIALS = 40
 TICKER_LIST = ['JPM', 'MSFT', 'NVDA', 'AVGO', 'LLY', 'COST', 'MA', 'XOM', 'UNH', 'AMZN', 'CAT', 'ADBE', 'TSLA']
 
-FEAT_LONG = list(FTR_FUNC.keys()) 
-FEAT_LIST = ['adx','boll','cmo','cross_corr','cross_rel_strength','cross_ret_rank','cross_vol_z','ema','lags','log_ret','macd','mean_abs_return','price','price_vs_high','range','ret','roll_ret','rsi','sma','stoch','vol_change','vol_ptile','zscore','donchian']
-MACRO_LIST = ['^FTSE','^GSPC','^TYX','EURUSD=X','GBPUSD=X','GC=F','HYG','NG=F','SI=F','TLT','UUP','USDJPY=X','ZC=F','ZW=F','^IRX','EEM','HG=F']
-MACRO_LONG = [  "^GSPC",        # S&P 500
+FEAT_LIST = list(FTR_FUNC.keys()) 
+FEAT_OLD = ['adx','boll','cmo','cross_corr','cross_rel_strength','cross_ret_rank','cross_vol_z','ema','lags','log_ret','macd','mean_abs_return','price','price_vs_high','range','ret','roll_ret','rsi','sma','stoch','vol_change','vol_ptile','zscore','donchian']
+MACRO_OLD = ['^FTSE','^GSPC','^TYX','EURUSD=X','GBPUSD=X','GC=F','HYG','NG=F','SI=F','TLT','UUP','USDJPY=X','ZC=F','ZW=F','^IRX','EEM','HG=F']
+MACRO_LIST = [  "^GSPC",        # S&P 500
                 "CL=F",         # Crude Oil (WTI)
                 "SI=F",         # Silver
                 "NG=F",         # Natural Gas

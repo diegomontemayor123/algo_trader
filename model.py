@@ -93,7 +93,7 @@ if __name__ == "__main__":
     macro_keys = config.get("MACRO", [])
     if isinstance(macro_keys, str): macro_keys = [k.strip() for k in macro_keys.split(",") if k.strip()]
     cached_data = load_prices(config["START"], config["END"], MACRO_LIST)
-    feat, ret = comp_feat(TICK, feat_list, cached_data, macro_keys, split_date=config["SPLIT"], method=config["FILTER"])
+    feat, ret = comp_feat(TICK, feat_list, cached_data, macro_keys, split_date=config["SPLIT"], method=config["PRUNE"])
     print(f"[Model] Feat/Ret Shape: {feat.shape}/{ret.shape}, Columns: {feat.columns[:2].tolist()}... / {ret.columns[:2].tolist()}...")
     _, _, test_data = prep_data(feat, ret, config)
     if LOAD_MODEL and os.path.exists(MODEL_PATH):model0 = load_model(test_data[0][0].shape[1], config)

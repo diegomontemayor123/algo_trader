@@ -85,7 +85,7 @@ def run_btest(  device, initial_capital, split, lback,comp_feat, norm_feat, TICK
         f.write("\n=Per-Chunk Metrics=\n")
         for i, (pm, bm) in enumerate(zip(all_pfo_metrics, all_bench_metrics)):
             chunk_start, chunk_end = chunks[i]
-            f.write(f"-Chunk {i+1} ({chunk_start.date()} to {chunk_end.date()})-\n")
+            f.write(f"\n-Chunk {i+1} ({chunk_start.date()} to {chunk_end.date()})-\n")
             for key in pm:f.write(f"{key.title()}: Strat {pm[key]:.2%}, Bench {bm[key]:.2%}\n")
         f.write("\n=SD - Metrics Across Chunks=\n")
         metrics_df = pd.DataFrame(all_pfo_metrics) ; metrics_std = metrics_df.std()

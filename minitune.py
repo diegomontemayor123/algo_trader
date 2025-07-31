@@ -23,7 +23,7 @@ def run_chunk_tune(trial, start_date, end_date, split_date, config_base, study=N
         "SEED": trial.suggest_categorical("SEED", [config_base["SEED"]]),
      
         "YWIN": trial.suggest_int(max(5, math.floor(config_base["YWIN"] * 0.9)),math.ceil(config_base["YWIN"] * 1.1),),
-        "FILTERWIN": trial.suggest_int(max(5, math.floor(config_base["FILTERWIN"] * 0.9)),math.ceil(config_base["FILTERWIN"] * 1.1),),
+        "PRUNEWIN": trial.suggest_int(max(5, math.floor(config_base["PRUNEWIN"] * 0.9)),math.ceil(config_base["PRUNEWIN"] * 1.1),),
         "THRESH": trial.suggest_int(max(10, math.floor(config_base["THRESH"] * 0.9)),math.ceil(config_base["THRESH"] * 1.1),),
 
         

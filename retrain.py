@@ -42,7 +42,7 @@ def run_retraining_chunks(chunks, feat_df, ret_df, lback, norm_feat, TICK, comp_
             chunk_config["SPLIT"] = str((train_end + pd.Timedelta(days=1)).date())
             cached_chunk_data = load_prices(chunk_config["START"], config["END"], macro_keys)
             feat_list = config["FEAT"].split(",") if isinstance(config["FEAT"], str) else config["FEAT"]
-            feat_train, ret_train = comp_feat(TICK, feat_list, cached_chunk_data, macro_keys, split_date=chunk_config["SPLIT"], method=config["FILTER"])
+            feat_train, ret_train = comp_feat(TICK, feat_list, cached_chunk_data, macro_keys, split_date=chunk_config["SPLIT"], method=config["PRUNE"])
             print(f"[Retrain] Feature train shape: {feat_train.shape}, Return train shape: {ret_train.shape}")
             train_data, val_data, _ = prep_data(feat_train, ret_train, chunk_config)
             train_loader = DataLoader(train_data, batch_size=config["BATCH"], shuffle=True, num_workers=min(2, multiprocessing.cpu_count()))
@@ -82,7 +82,7 @@ def run_retraining_chunks(chunks, feat_df, ret_df, lback, norm_feat, TICK, comp_
         all_bench_metrics.append(bench_metrics)
         print(f"[Retrain] Chunk {idx+1}: Number of daily weights so far: {len(daily_weight)}")
         print(f"[Retrain] Chunk {idx+1}: Performance Metrics: {pfo_metrics} Bench: {bench_metrics}\n")
-        if pfo_metrics["max_down"] < - 0.6 and (idx + 1) < 3 : print("KILLRUN - pfo sharpe below threshold.")
+        if pfo_metrics["max_down"] < - 0.45 and (idx + 1) < 2 : print("KILLRUN - pfo sharpe below threshold.")
     avg_outperf = {}
     if all_pfo_metrics and all_bench_metrics:
         metrics_keys = all_pfo_metrics[0].keys()

@@ -6,12 +6,12 @@ from load import load_config
 
 config = load_config()
 
-def select_features(feat, ret, split_date, thresh=config["THRESH"], method=config["FILTER"]):
+def select_features(feat, ret, split_date, thresh=config["THRESH"], method=config["PRUNE"]):
     if method is None:
         return feat
     method = method[0]
     split_date_ts = pd.to_datetime(split_date)
-    start = split_date_ts - pd.DateOffset(months=config["FILTERWIN"])
+    start = split_date_ts - pd.DateOffset(months=config["PRUNEWIN"])
     window = config["YWIN"]
     mask = (ret.index >= start) & (ret.index < split_date_ts)
     portfolio_ret = ret.loc[mask].mean(axis=1, skipna=True)
@@ -23,7 +23,7 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=confi
 
 
     X = feat.loc[y.index]
-    if X.empty or len(X) < 10: print("[Filter] Not enough data for feature selection."); return feat
+    if X.empty or len(X) < 10: print("[Prune] Not enough data for feature selection."); return feat
 
     if method == "rf":
         model = RandomForestRegressor(n_estimators=config["NESTIM"], random_state=config["SEED"])
@@ -37,15 +37,16 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=confi
 
     if thresh > 1:
         selected_features = combined_scores.nlargest(int(thresh)).index
-        print(f"[Filter] Selected top {int(thresh)} features by {method} from {start.date()}–{split_date_ts.date()}")
+        print(f"[Prune] Selected top {int(thresh)} features by {method} from {start.date()}–{split_date_ts.date()}")
     elif 0 < thresh <= 1:
         selected_features = combined_scores[combined_scores > thresh].index
-        print(f"[Filter] Selected {len(selected_features)} features with {method} > {thresh} from {start.date()}–{split_date_ts.date()}")
+        print(f"[Prune] Selected {len(selected_features)} features with {method} > {thresh} from {start.date()}–{split_date_ts.date()}")
     else: return feat
 
+    #PRUNE RF
     top_features_log = pd.DataFrame({"feature": selected_features,"avg_score": combined_scores.loc[selected_features].values,"split_date": split_date,"start_date": start.date()})
+    if os.path.exists("rf_prune.csv"): top_features_log.to_csv("rf_prune.csv", mode='a', index=False, header=False)
+    else: top_features_log.to_csv("rf_prune.csv", index=False)
 
-    if os.path.exists("rf_features.csv"): top_features_log.to_csv("rf_features.csv", mode='a', index=False, header=False)
-    else: top_features_log.to_csv("rf_features.csv", index=False)
-    print(f"[Filter] Top feature score: {combined_scores.loc[selected_features].head(1).to_string()}\n")
+    print(f"[Prune] Top feature score: {combined_scores.loc[selected_features].head(1).to_string()}\n")
     return feat[selected_features]
