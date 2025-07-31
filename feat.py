@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 import yfinance as yf
-from feat_list import FTR_FUNC, add_volume, set_all_cross_feat
+from feat_list import FTR_FUNC, addvolume, setallcrossfeat
 from validate import TICKER_LIST
 from load import load_config
 from prune import select_features 
@@ -85,13 +85,13 @@ def comp_feat(TICK, FEAT, cached_data, macro_keys, thresh=config["THRESH"], spli
             if vol_col in volume.columns:
                 vol_series = volume[vol_col].reindex(df.index).ffill().dropna()
                 if len(vol_series) == len(df):
-                    vol_feat = add_volume(pd.DataFrame({vol_col: vol_series}))
+                    vol_feat = addvolume(pd.DataFrame({vol_col: vol_series}))
                     df = pd.concat([df, vol_feat], axis=1)
         df = df.drop(columns=['close', 'high', 'low'], errors='ignore')
         df.columns = [f"{col}_{ticker}" for col in df.columns]
         all_feat[ticker] = df
     
-    set_all_cross_feat(all_feat)
+    setallcrossfeat(all_feat)
     feat = pd.concat(all_feat.values(), axis=1).dropna()
     ret = prices.pct_change().shift(-1).reindex(feat.index)
     if ret.iloc[-1].isna().all():
