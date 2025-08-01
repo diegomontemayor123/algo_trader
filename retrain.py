@@ -48,6 +48,7 @@ def run_retraining_chunks(chunks, feat_df, ret_df, lback, norm_feat, TICK, comp_
             train_loader = DataLoader(train_data, batch_size=config["BATCH"], shuffle=True, num_workers=min(2, multiprocessing.cpu_count()),pin_memory=True, persistent_workers=True)
             val_loader = DataLoader(val_data, batch_size=config["BATCH"], shuffle=False, num_workers=min(2, multiprocessing.cpu_count()),pin_memory=True, persistent_workers=True)
             current_model = create_model(train_data[0][0].shape[1], config)
+            current_model = torch.compile(current_model)
             asset_sd = torch.tensor(ret_train.std(axis=0).values.astype(np.float32), device=device)
             reset_seeds(config["SEED"])
             current_model = train_model(current_model, train_loader, val_loader, config, asset_sd=asset_sd)

@@ -75,7 +75,7 @@ def run_experiment(trial,study=None):
         if result.returncode != 0:print(f"  Subprocess failed: {result.stdout} / {result.stderr}")
         output = result.stdout + result.stderr
         if not output.strip():print("[error] Empty subprocess output.");return -float("inf")
-        if "KILLRUN" in output:print("[KILLRUN] Portfolio Sharpe below benchmark Sharpe — aborting trial.");return -float("inf")
+        if "KILLRUN" in output:print("[KILLRUN] — aborting trial.");return -float("inf")
         def extract_metric(label, out):
             match = re.search(rf"{label}:\s*Strat:\s*([-+]?\d+(?:\.\d+)?)%", out, re.IGNORECASE)
             return float(match.group(1)) / 100 if match else None

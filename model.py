@@ -94,10 +94,13 @@ if __name__ == "__main__":
     if isinstance(macro_keys, str): macro_keys = [k.strip() for k in macro_keys.split(",") if k.strip()]
     cached_data = load_prices(config["START"], config["END"], MACRO_LIST)
     feat, ret = comp_feat(TICK, feat_list, cached_data, macro_keys, split_date=config["SPLIT"], method=config["PRUNE"])
+    
     print(f"[Model] Feat/Ret Shape: {feat.shape}/{ret.shape}, Columns: {feat.columns[:2].tolist()}... / {ret.columns[:2].tolist()}...")
     _, _, test_data = prep_data(feat, ret, config)
     if LOAD_MODEL and os.path.exists(MODEL_PATH):model0 = load_model(test_data[0][0].shape[1], config)
-    else:model0 = train(config, feat, ret);torch.save(model0.state_dict(), MODEL_PATH)
+    else:
+        model0 = train(config, feat, ret)
+        if not LOAD_MODEL: torch.save(model0.state_dict(), MODEL_PATH)
     results = run_btest(device=DEVICE,initial_capital=INITIAL_CAPITAL, split=config["SPLIT"],lback=config["LBACK"],comp_feat=comp_feat,
                         norm_feat=norm_feat,TICK=TICK,start=config["START"],end=config["END"], feat=feat_list,macro_keys=macro_keys,test_chunk=config["TEST_CHUNK"],
                         model=model0,plot=True,config=config,RETRAIN=config["RETRAIN"], selected_feat=feat.columns)

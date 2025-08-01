@@ -17,7 +17,7 @@
     "DECAY": 0.003,
     "SHORT_PER": 8,
     "MED_PER": 12,
-    "LONG_PER": 60,
+    "LONG_PER": 24,
     "INIT_LR": 0.006,
     "EXP_PEN": 0.226,
     "EXP_EXP": 1.82,
