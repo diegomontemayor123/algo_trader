@@ -12,20 +12,18 @@ def run_experiment(trial,study=None):
         "MACRO": trial.suggest_categorical("MACRO", ["^GSPC,CL=F,SI=F,NG=F,HG=F,ZC=F,^IRX,TLT,IEF,UUP,HYG,EEM,VEA,FXI,^RUT,^FTSE,^TYX,AUDUSD=X,USDJPY=X,EURUSD=X,GBPUSD=X,ZW=F,GC=F",]),#"GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM"
         "FEAT": trial.suggest_categorical("FEAT", ["'ret,price,logret,rollret,sma,ema,momentum,macd,pricevshigh,vol,atr,range,volchange,volptile,zscore,rsi,cmo,williams,stoch,priceptile,adx,meanabsret,boll,donchian,volume,lag,retcrossz,crossmomentumz,crossvolz,crossretrank",]),#"sma,ema,boll,macd,volchange,donchian"
         "PRUNE": trial.suggest_categorical("PRUNE", ["rf"]),
-        "YWIN": trial.suggest_int("YWIN",29,29),#29,27
-        "PRUNEWIN": trial.suggest_int("PRUNEWIN",31,31),#31,25
+        "YWIN": trial.suggest_int("YWIN",29,29),#29,28
+        "PRUNEWIN": trial.suggest_int("PRUNEWIN",31,31),#31,28
         "THRESH": trial.suggest_int("THRESH",175,175),#175
-        "NESTIM": trial.suggest_int("NESTIM",200,200),#180
+        "NESTIM": trial.suggest_int("NESTIM",200,200),#200
         "BATCH": trial.suggest_int("BATCH",53,53),#53
         "LBACK": trial.suggest_int("LBACK",84,84),#84
         "PRED_DAYS": trial.suggest_int("PRED_DAYS",6,6),#6
         "DROPOUT": trial.suggest_float("DROPOUT",.035,.035),#.035
         "DECAY": trial.suggest_float("DECAY",.003,.003,log=False),#.003
-
         "SHORT_PER": trial.suggest_int("SHORT_PER",12,12),#12
         "MED_PER": trial.suggest_int("MED_PER",17,17),#17
         "LONG_PER": trial.suggest_int("LONG_PER",58,58),#58
-
         "INIT_LR": trial.suggest_float("INIT_LR",.001,.001,log=True),#.001
         "EXP_PEN": trial.suggest_float("EXP_PEN",.24,.24),#.24
         "EXP_EXP": trial.suggest_float("EXP_EXP",1.8,1.8),#1.8
@@ -34,9 +32,9 @@ def run_experiment(trial,study=None):
         "SD_PEN": trial.suggest_float("SD_PEN",.17,.17),#.17 
         "SD_EXP": trial.suggest_float("SD_EXP",.74,.74),#.74 
         "SEED": trial.suggest_categorical("SEED",[42]),#42
-        "MAX_HEADS": trial.suggest_categorical("MAX_HEADS",[1,2]),#1
-        "LAYERS": trial.suggest_categorical("LAYERS",[1,2]),#2
-        "EARLY_FAIL": trial.suggest_categorical("EARLY_FAIL",[2,3,4,5]),#4
+        "MAX_HEADS": trial.suggest_categorical("MAX_HEADS",[1]),#1
+        "LAYERS": trial.suggest_categorical("LAYERS",[1]),#2
+        "EARLY_FAIL": trial.suggest_categorical("EARLY_FAIL",[2]),#2
         "VAL_SPLIT": trial.suggest_categorical("VAL_SPLIT",[.15]),#.15
         "WARMUP": trial.suggest_categorical("WARMUP",[0]),
         "TEST_CHUNK": trial.suggest_categorical("TEST_CHUNK",[12]),
