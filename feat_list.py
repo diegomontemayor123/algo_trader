@@ -5,15 +5,7 @@ from load import load_config
 np.seterr(all='raise')
 
 config = load_config()
-
-raw_pers = config["FEAT_PER"]
-
-if isinstance(raw_pers, str):
-    per = list(map(int, raw_pers.split(",")))
-elif isinstance(raw_pers, list):
-    per = list(map(int, raw_pers))
-else:
-    raise TypeError(f"Invalid type for FEAT_PER: {type(raw_pers)}")
+per = [int(config["SHORT_PER"]), int(config["MED_PER"]), int(config["LONG_PER"])]
 
 # ========================== BASIC FEATURES ==========================
 def add_ret(data): data['ret'] = data['close'].pct_change()
