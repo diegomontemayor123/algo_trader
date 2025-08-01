@@ -23,7 +23,7 @@ def run_retraining_chunks(chunks, feat_df, ret_df, lback, norm_feat, TICK, comp_
 
     all_pfo_metrics = []
     all_bench_metrics = []
-    
+    global_cached_prices = load_prices(config["START"], config["END"], macro_keys)
     for idx, (chunk_start, chunk_end) in enumerate(chunks):
         print(f"[Retrain] Starting Chunk {idx+1} | Period: {chunk_start.date()} to {chunk_end.date()} ===")
         if idx == 0: current_model = model0
@@ -40,13 +40,13 @@ def run_retraining_chunks(chunks, feat_df, ret_df, lback, norm_feat, TICK, comp_
             chunk_config["START"] = str(train_start.date())
             chunk_config["END"] = str(train_end.date())
             chunk_config["SPLIT"] = str((train_end + pd.Timedelta(days=1)).date())
-            cached_chunk_data = load_prices(chunk_config["START"], config["END"], macro_keys)
+            cached_chunk_data = global_cached_prices[train_start - pd.Timedelta(days=30):chunk_end + pd.Timedelta(days=30)]
             feat_list = config["FEAT"].split(",") if isinstance(config["FEAT"], str) else config["FEAT"]
             feat_train, ret_train = comp_feat(TICK, feat_list, cached_chunk_data, macro_keys, split_date=chunk_config["SPLIT"], method=config["PRUNE"])
             print(f"[Retrain] Feature train shape: {feat_train.shape}, Return train shape: {ret_train.shape}")
             train_data, val_data, _ = prep_data(feat_train, ret_train, chunk_config)
-            train_loader = DataLoader(train_data, batch_size=config["BATCH"], shuffle=True, num_workers=min(2, multiprocessing.cpu_count()))
-            val_loader = DataLoader(val_data, batch_size=config["BATCH"], shuffle=False, num_workers=min(2, multiprocessing.cpu_count()))
+            train_loader = DataLoader(train_data, batch_size=config["BATCH"], shuffle=True, num_workers=min(2, multiprocessing.cpu_count()),pin_memory=True, persistent_workers=True)
+            val_loader = DataLoader(val_data, batch_size=config["BATCH"], shuffle=False, num_workers=min(2, multiprocessing.cpu_count()),pin_memory=True, persistent_workers=True)
             current_model = create_model(train_data[0][0].shape[1], config)
             asset_sd = torch.tensor(ret_train.std(axis=0).values.astype(np.float32), device=device)
             reset_seeds(config["SEED"])

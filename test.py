@@ -78,7 +78,7 @@ def run_btest(  device, initial_capital, split, lback,comp_feat, norm_feat, TICK
         save_to_csv(daily_weight, weight_csv_path);weight_df = pd.read_csv(weight_csv_path, index_col="Date", parse_dates=True)
         pfo_series = pd.Series(pfo_values[1:], index=weight_df.index);  bench_series = pd.Series(bench_values[1:], index=weight_df.index)
     comb_pfo_metrics = calc_perf_metrics(pfo_series) ;  comb_bench_metrics = calc_perf_metrics(bench_series)
-    report_path = "img/btest_report.txt"
+    report_path = "img/test.txt"
     with open(report_path, "w") as f:
         f.write("=Combined Perf Over Full Per=\n")
         for key in comb_pfo_metrics:f.write(f"{key.title()}: Strat {comb_pfo_metrics[key]:.2%}, Bench {comb_bench_metrics[key]:.2%}\n")

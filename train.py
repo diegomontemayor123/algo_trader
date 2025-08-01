@@ -70,8 +70,8 @@ def train(config, feat, ret):
     from prep import prep_data
     train_data, val_data, _ = prep_data(feat, ret, config)
     num_workers = min(2, multiprocessing.cpu_count())
-    train_loader = DataLoader(train_data, batch_size=config["BATCH"], shuffle=True, num_workers=num_workers)
-    val_loader = DataLoader(val_data, batch_size=config["BATCH"], shuffle=False, num_workers=num_workers)
+    train_loader = DataLoader(train_data, batch_size=config["BATCH"], shuffle=True, num_workers=num_workers,pin_memory=True, persistent_workers=True)
+    val_loader = DataLoader(val_data, batch_size=config["BATCH"], shuffle=False, num_workers=num_workers,pin_memory=True, persistent_workers=True)
     model = create_model(train_data[0][0].shape[1], config)
     asset_sd = torch.tensor(train_data.ret.std(dim=0).cpu().numpy().astype(np.float32), device=DEVICE)
     model0 = train_model(model, train_loader, val_loader, config, asset_sd=asset_sd)

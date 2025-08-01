@@ -4,11 +4,11 @@ import pandas as pd
 
 keys = ["SPLIT", "VAL_SPLIT", "PRED_DAYS", "LBACK", "SEED","MAX_HEADS", "BATCH", "FEAT","LAYERS", "YWIN",
         "DROPOUT", "DECAY", "ATTENT", "EXP_PEN","RETURN_PEN","RETURN_EXP","INIT_LR", "EXP_EXP","WARMUP", "EARLY_FAIL",
-        "SD_PEN","SD_EXP", "TICK","START", "END", "TEST_CHUNK", "RETRAIN","MACRO", "FEAT_PER","PRUNEWIN","THRESH","PRUNE","NESTIM"]
+        "SD_PEN","SD_EXP", "TICK","START", "END", "TEST_CHUNK", "RETRAIN","MACRO", "FEAT_PER","PRUNEWIN","THRESH","PRUNE","NESTIM","SHORT_PER", "MED_PER", "LONG_PER"]
 
 def load_config():
     float_keys = {"VAL_SPLIT", "DROPOUT", "DECAY", "RETURN_PEN","RETURN_EXP", "EXP_EXP", "WARMUP", "SD_PEN","SD_EXP","EXP_PEN","INIT_LR","THRESH",}
-    int_keys = {"PRED_DAYS", "LBACK", "SEED", "MAX_HEADS", "BATCH","LAYERS", "EARLY_FAIL", "TEST_CHUNK", "RETRAIN","ATTENT","PRUNEWIN","NESTIM","YWIN"}
+    int_keys = {"PRED_DAYS", "LBACK", "SEED", "MAX_HEADS", "BATCH","LAYERS", "EARLY_FAIL", "TEST_CHUNK", "RETRAIN","ATTENT","PRUNEWIN","NESTIM","YWIN","SHORT_PER", "MED_PER", "LONG_PER"}
     list_keys = {"FEAT", "TICK", "FEAT_PER","PRUNE"} 
     date_keys = {"SPLIT", "START", "END"}
 
@@ -42,4 +42,8 @@ def load_config():
     for key in keys:
         val = os.environ.get(key, config_raw[key])
         config[key] = parse_value(key, val)
+
+    if all(k in config for k in ("SHORT_PER", "MED_PER", "LONG_PER")):
+        config["FEAT_PER"] = [config["SHORT_PER"], config["MED_PER"], config["LONG_PER"]]
+
     return config
