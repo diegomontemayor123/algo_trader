@@ -22,8 +22,8 @@ def run_experiment(trial,study=None):
         "DROPOUT": trial.suggest_float("DROPOUT",.036,.036),#.038/.035
         "DECAY": trial.suggest_float("DECAY",.003,.003,log=False),#.003
         "SHORT_PER": trial.suggest_int("SHORT_PER",8,8),#8
-        "MED_PER": trial.suggest_int("MED_PER",16,30),#16
-        "LONG_PER": trial.suggest_int("LONG_PER",61,75),#61
+        "MED_PER": trial.suggest_int("MED_PER",12,30),#16
+        "LONG_PER": trial.suggest_int("LONG_PER",60,75),#61
         "INIT_LR": trial.suggest_float("INIT_LR",.0012,.0012,log=True),#.0025/.001
         "EXP_PEN": trial.suggest_float("EXP_PEN",.24,.24),#.24/.25
         "EXP_EXP": trial.suggest_float("EXP_EXP",1.8,1.8),#1.8

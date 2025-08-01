@@ -1,26 +1,21 @@
 =Combined Perf Over Full Per=
-Cagr: Strat 22.99%, Bench 26.21%
-Sharpe: Strat 67.70%, Bench 104.73%
-Max_Down: Strat -62.06%, Bench -30.07%
+Cagr: Strat 80.00%, Bench 39.59%
+Sharpe: Strat 138.11%, Bench 132.72%
+Max_Down: Strat -50.71%, Bench -30.07%
 
 =Per-Chunk Metrics=
 
 -Chunk 1 (2019-01-01 to 2020-12-31)-
-Cagr: Strat 106.48%, Bench 38.75%
-Sharpe: Strat 167.65%, Bench 130.63%
-Max_Down: Strat -44.50%, Bench -30.07%
-
--Chunk 2 (2021-01-01 to 2022-12-31)-
-Cagr: Strat -26.06%, Bench 14.46%
-Sharpe: Strat -51.90%, Bench 72.07%
-Max_Down: Strat -62.06%, Bench -22.34%
+Cagr: Strat 80.00%, Bench 39.59%
+Sharpe: Strat 138.11%, Bench 132.72%
+Max_Down: Strat -50.71%, Bench -30.07%
 
 =SD - Metrics Across Chunks=
-Cagr: ±93.72%
-Sharpe: ±155.25%
-Max_Down: ±12.41%
+Cagr: ±nan%
+Sharpe: ±nan%
+Max_Down: ±nan%
 
 =Average Outperf Across Chunks (Strat - Bench)=
-Cagr: 13.61%
-Sharpe: -43.47%
-Max_Down: -27.07%
+Cagr: 40.41%
+Sharpe: 5.39%
+Max_Down: -20.64%

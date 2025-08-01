@@ -48,7 +48,7 @@ def run_retraining_chunks(chunks, feat_df, ret_df, lback, norm_feat, TICK, comp_
             train_loader = DataLoader(train_data, batch_size=config["BATCH"], shuffle=True, num_workers=min(2, multiprocessing.cpu_count()),pin_memory=True, persistent_workers=True)
             val_loader = DataLoader(val_data, batch_size=config["BATCH"], shuffle=False, num_workers=min(2, multiprocessing.cpu_count()),pin_memory=True, persistent_workers=True)
             current_model = create_model(train_data[0][0].shape[1], config)
-            if torch.cuda.is_available(): current_model = torch.compile(current_model)
+            #if torch.cuda.is_available(): current_model = torch.compile(current_model)
             asset_sd = torch.tensor(ret_train.std(axis=0).values.astype(np.float32), device=device)
             reset_seeds(config["SEED"])
             current_model = train_model(current_model, train_loader, val_loader, config, asset_sd=asset_sd)
@@ -83,7 +83,7 @@ def run_retraining_chunks(chunks, feat_df, ret_df, lback, norm_feat, TICK, comp_
         all_bench_metrics.append(bench_metrics)
         print(f"[Retrain] Chunk {idx+1}: Number of daily weights so far: {len(daily_weight)}")
         print(f"[Retrain] Chunk {idx+1}: Performance Metrics: {pfo_metrics} Bench: {bench_metrics}\n")
-        if pfo_metrics["max_down"] < - 0.4 and (idx + 1) < 4 : print("KILLRUN - pfo sharpe below threshold.")
+        #if pfo_metrics["max_down"] < - 0.4 and (idx + 1) < 4 : print("KILLRUN - pfo sharpe below threshold.")
     avg_outperf = {}
     if all_pfo_metrics and all_bench_metrics:
         metrics_keys = all_pfo_metrics[0].keys()
