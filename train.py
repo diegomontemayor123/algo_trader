@@ -73,7 +73,7 @@ def train(config, feat, ret):
     train_loader = DataLoader(train_data, batch_size=config["BATCH"], shuffle=True, num_workers=num_workers,pin_memory=True, persistent_workers=True)
     val_loader = DataLoader(val_data, batch_size=config["BATCH"], shuffle=False, num_workers=num_workers,pin_memory=True, persistent_workers=True)
     model = create_model(train_data[0][0].shape[1], config)
-    model = torch.compile(model) 
+    if torch.cuda.is_available(): model = torch.compile(model) 
     asset_sd = torch.tensor(train_data.ret.std(dim=0).cpu().numpy().astype(np.float32), device=DEVICE)
     model0 = train_model(model, train_loader, val_loader, config, asset_sd=asset_sd)
     return model0

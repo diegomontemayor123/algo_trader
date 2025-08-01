@@ -1,29 +1,29 @@
 import os, subprocess, re, optuna, json, csv
 from optuna.samplers import TPESampler
 
-TRIALS = 40
+TRIALS = 20
 
 
 def run_experiment(trial,study=None):
     config = {"START": trial.suggest_categorical("START", ["2015-01-01"]),#2019 Jan
-        "END": trial.suggest_categorical("END", ["2021-01-01"]),#2025 Jul
+        "END": trial.suggest_categorical("END", ["2023-01-01"]),#2025 Jul
         "SPLIT": trial.suggest_categorical("SPLIT", ["2019-01-01",]),#2023 Jan
         "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
         "MACRO": trial.suggest_categorical("MACRO", ["^GSPC,CL=F,SI=F,NG=F,HG=F,ZC=F,^IRX,TLT,IEF,UUP,HYG,EEM,VEA,FXI,^RUT,^FTSE,^TYX,AUDUSD=X,USDJPY=X,EURUSD=X,GBPUSD=X,ZW=F,GC=F",]),#"GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM"
         "FEAT": trial.suggest_categorical("FEAT", ["'ret,price,logret,rollret,sma,ema,momentum,macd,pricevshigh,vol,atr,range,volchange,volptile,zscore,rsi,cmo,williams,stoch,priceptile,adx,meanabsret,boll,donchian,volume,lag,retcrossz,crossmomentumz,crossvolz,crossretrank",]),#"sma,ema,boll,macd,volchange,donchian"
-        "PRUNE": trial.suggest_categorical("PRUNE", ["rf"]),#"none,mutual","correl","rf"
-        "YWIN": trial.suggest_int("YWIN",25,35),#27/30
-        "PRUNEWIN": trial.suggest_int("PRUNEWIN",29,33),#24/30
-        "THRESH": trial.suggest_int("THRESH",150,200),#110/175
-        "NESTIM": trial.suggest_int("NESTIM",300,350),#300/320
+        "PRUNE": trial.suggest_categorical("PRUNE", ["rf"]),
+        "YWIN": trial.suggest_int("YWIN",20,29),#27/30
+        "PRUNEWIN": trial.suggest_int("PRUNEWIN",20,35),#24/30
+        "THRESH": trial.suggest_int("THRESH",175,175),#110/175
+        "NESTIM": trial.suggest_int("NESTIM",320,320),#300/320
         "BATCH": trial.suggest_int("BATCH",53,53),#53
         "LBACK": trial.suggest_int("LBACK",84,84),#84
         "PRED_DAYS": trial.suggest_int("PRED_DAYS",6,6),#6
         "DROPOUT": trial.suggest_float("DROPOUT",.036,.036),#.038/.035
         "DECAY": trial.suggest_float("DECAY",.003,.003,log=False),#.003
-        "SHORT_PER": trial.suggest_int("SHORT_PER",7,12),
-        "MED_PER": trial.suggest_int("MED_PER",16,48),
-        "LONG_PER": trial.suggest_int("LONG_PER",60,100),
+        "SHORT_PER": trial.suggest_int("SHORT_PER",8,8),#8
+        "MED_PER": trial.suggest_int("MED_PER",16,30),#16
+        "LONG_PER": trial.suggest_int("LONG_PER",61,75),#61
         "INIT_LR": trial.suggest_float("INIT_LR",.0012,.0012,log=True),#.0025/.001
         "EXP_PEN": trial.suggest_float("EXP_PEN",.24,.24),#.24/.25
         "EXP_EXP": trial.suggest_float("EXP_EXP",1.8,1.8),#1.8
@@ -37,7 +37,7 @@ def run_experiment(trial,study=None):
         "EARLY_FAIL": trial.suggest_categorical("EARLY_FAIL",[2]),#4
         "VAL_SPLIT": trial.suggest_categorical("VAL_SPLIT",[.15]),#.15
         "WARMUP": trial.suggest_categorical("WARMUP",[0]),
-        "TEST_CHUNK": trial.suggest_categorical("TEST_CHUNK",[24]),
+        "TEST_CHUNK": trial.suggest_categorical("TEST_CHUNK",[12]),
         "RETRAIN": trial.suggest_categorical("RETRAIN",[1]),
         "ATTENT": trial.suggest_categorical("ATTENT",[1]),
     }
