@@ -18,7 +18,7 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=confi
     #y = (portfolio_ret.shift(-window).rolling(window).mean() / (portfolio_ret.shift(-window).rolling(window).std() + 1e-10)).dropna()
 
     def max_drawdown(returns): cum = (1 + returns).cumprod();drawdown = (cum - cum.cummax()) / cum.cummax();return drawdown.min() 
-    y = (ret.loc[mask].mean(axis=1).shift(-window).rolling(window).mean() - 1(ret.loc[mask].mean(axis=1).shift(-window).rolling(window).apply(max_drawdown, raw=False) + 1e-10)).dropna()
+    y = (ret.loc[mask].mean(axis=1).shift(-window).rolling(window).mean() - (ret.loc[mask].mean(axis=1).shift(-window).rolling(window).apply(max_drawdown, raw=False) + 1e-10)).dropna()
 
     X = feat.loc[y.index]
     constant_features = X.nunique(dropna=True)[X.nunique(dropna=True) <= 1].index.tolist(); sparse_features = X.columns[X.isna().sum() > (len(X) - int(0.9 * len(X)))].tolist()
