@@ -14,7 +14,7 @@ def run_experiment(trial,study=None):
         "PRUNE": trial.suggest_categorical("PRUNE", ["rf"]),
         "YWIN": trial.suggest_int("YWIN",29,29),#29,28
         "PRUNEWIN": trial.suggest_int("PRUNEWIN",31,31),#31,28
-        "THRESH": trial.suggest_int("THRESH",150,200),#175
+        "THRESH": trial.suggest_int("THRESH",175,175),#175
         "NESTIM": trial.suggest_int("NESTIM",200,200),#200
         "BATCH": trial.suggest_int("BATCH",53,53),#53
         "LBACK": trial.suggest_int("LBACK",84,84),#84
