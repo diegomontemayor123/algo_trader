@@ -71,7 +71,8 @@ def run_experiment(trial,study=None):
     dup_value = is_duplicate_trial(study, {k: str(v) for k, v in config.items()})
     if dup_value is not None: return dup_value 
     try:
-        result = subprocess.run(["python", "model.py"], capture_output=True, text=True, env=env, timeout=1800)
+        result = subprocess.run([os.path.join(env["VIRTUAL_ENV"], "Scripts", "python.exe"), "model.py"], capture_output=True, text=True, env=env, timeout=1800)
+
         if result.returncode != 0:print(f"  Subprocess failed: {result.stdout} / {result.stderr}")
         output = result.stdout + result.stderr
         if not output.strip():print("[error] Empty subprocess output.");return -float("inf")

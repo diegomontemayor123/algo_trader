@@ -6,7 +6,7 @@ from load import load_config
 np.seterr(all='raise')
 
 
-DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
+DEVICE = 'cpu'
 MODEL_PATH = "0model.pth"
 INITIAL_CAPITAL = 100 
 LOAD_MODEL = False
@@ -15,7 +15,7 @@ config = load_config()
 SEED = config["SEED"]
 torch.manual_seed(SEED)
 np.random.seed(SEED)
-if torch.cuda.is_available(): torch.cuda.manual_seed_all(SEED)
+if torch.cuda.is_available(): torch.cuda.manual_seed_all(SEED); DEVICE = 'cuda'
 
 class TransformerTrader(nn.Module):
     def __init__(self, dimen, num_heads, num_layers, dropout, seq_len, TICK, feat_attent):

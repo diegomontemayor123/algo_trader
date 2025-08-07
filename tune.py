@@ -1,20 +1,20 @@
 import os, subprocess, re, optuna, json, csv
 from optuna.samplers import TPESampler
 
-TRIALS = 5
+TRIALS = 15
 
 
 def run_experiment(trial,study=None):
-    config = {"START": trial.suggest_categorical("START", ["2018-01-01"]),#2019 Jan
+    config = {"START": trial.suggest_categorical("START", ["2016-01-01"]),#2019 Jan
         "END": trial.suggest_categorical("END", ["2023-01-01"]),#2025 Jul
-        "SPLIT": trial.suggest_categorical("SPLIT", ["2022-01-01",]),#2023 Jan
+        "SPLIT": trial.suggest_categorical("SPLIT", ["2020-01-01",]),#2023 Jan
         "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
         "MACRO": trial.suggest_categorical("MACRO", ["^GSPC,CL=F,SI=F,NG=F,HG=F,ZC=F,^IRX,TLT,IEF,UUP,HYG,EEM,VEA,FXI,^RUT,^FTSE,^TYX,AUDUSD=X,USDJPY=X,EURUSD=X,GBPUSD=X,ZW=F,GC=F",]),#"GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM"
         "FEAT": trial.suggest_categorical("FEAT", ["'ret,price,logret,rollret,sma,ema,momentum,macd,pricevshigh,vol,atr,range,volchange,volptile,zscore,rsi,cmo,williams,stoch,priceptile,adx,meanabsret,boll,donchian,volume,lag,retcrossz,crossmomentumz,crossvolz,crossretrank",]),#"sma,ema,boll,macd,volchange,donchian"
         "PRUNE": trial.suggest_categorical("PRUNE", ["rf"]),
         "YWIN": trial.suggest_int("YWIN",29,29),#29,28
         "PRUNEWIN": trial.suggest_int("PRUNEWIN",31,31),#31,28
-        "THRESH": trial.suggest_int("THRESH",175,175),#175
+        "THRESH": trial.suggest_int("THRESH",150,200),#175
         "NESTIM": trial.suggest_int("NESTIM",200,200),#200
         "BATCH": trial.suggest_int("BATCH",53,53),#53
         "LBACK": trial.suggest_int("LBACK",84,84),#84
@@ -47,7 +47,8 @@ def run_experiment(trial,study=None):
     dup_value = is_duplicate_trial(study, {k: str(v) for k, v in config.items()})
     if dup_value is not None: return dup_value 
     try:
-        result = subprocess.run(["python", "model.py"], capture_output=True, text=True, env=env, timeout=1800)
+        result = subprocess.run([os.path.join(env["VIRTUAL_ENV"], "Scripts", "python.exe"), "model.py"], capture_output=True, text=True, env=env, timeout=1800)
+
         if result.returncode != 0:print(f"  Subprocess failed: {result.stdout} / {result.stderr}")
         output = result.stdout + result.stderr
         if not output.strip():print("[error] Empty subprocess output.");return -float("inf")
