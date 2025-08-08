@@ -52,6 +52,7 @@ def run_training_chunks(chunks, lback, norm_feat, TICK, feat, comp_feat, macro_k
             chunk_pfo_values.append(chunk_pfo_values[-1] * (1 + pfo_ret))
             chunk_bench_values.append(chunk_bench_values[-1] * (1 + bench_ret))
             daily_weight.append(pd.Series(weight, index=assets, name=current_date))
+
         chunk_pfo_series = pd.Series(chunk_pfo_values[1:], index=ret_train.loc[chunk_start:chunk_end].index)
         chunk_bench_series = pd.Series(chunk_bench_values[1:], index=ret_train.loc[chunk_start:chunk_end].index)
         pfo_metrics = calc_perf_metrics(chunk_pfo_series)
@@ -60,6 +61,7 @@ def run_training_chunks(chunks, lback, norm_feat, TICK, feat, comp_feat, macro_k
         all_bench_metrics.append(bench_metrics)
         print(f"[Train] Chunk {idx+1}: Performance Metrics: {pfo_metrics} Bench: {bench_metrics}\n")
         #if pfo_metrics["max_down"] < - 0.4 and (idx + 1) < 4 : print("KILLRUN - pfo sharpe below threshold.")
+
     avg_outperf = {}
     if all_pfo_metrics and all_bench_metrics:
         metrics_keys = all_pfo_metrics[0].keys()
@@ -68,4 +70,5 @@ def run_training_chunks(chunks, lback, norm_feat, TICK, feat, comp_feat, macro_k
             bench_vals = [m[key] for m in all_bench_metrics]
             diffs = [p - b for p, b in zip(port_vals, bench_vals)]
             avg_outperf[key] = np.mean(diffs)
+            
     return pfo_values, bench_values, daily_weight, all_pfo_metrics, all_bench_metrics, avg_outperf
