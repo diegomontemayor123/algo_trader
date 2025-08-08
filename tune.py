@@ -1,7 +1,7 @@
 import os, subprocess, re, optuna, json, csv
 from optuna.samplers import TPESampler
 
-TRIALS = 150
+TRIALS = 300
 
 
 def run_experiment(trial,study=None):
