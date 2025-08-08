@@ -1,16 +1,17 @@
-import os
 import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from load import load_config
 
 config = load_config()
 
-def select_features(feat, ret, split_date, thresh=config["THRESH"], method=["rf"]):
+def select_features(feat, ret, split_date, thresh=config["THRESH"], method=["rf"], train_end_date=None):
     if method is None: return feat
-    split_date_ts = pd.to_datetime(split_date)
-    start = split_date_ts - pd.DateOffset(months=config["PRUNEWIN"])
-    window = config["YWIN"]
-    mask = (ret.index >= start) & (ret.index < split_date_ts)
+    
+    # Use train_end_date if provided, otherwise fall back to split_date
+    effective_split = pd.to_datetime(train_end_date) if train_end_date else pd.to_datetime(split_date)
+    start = effective_split - pd.DateOffset(months=config["PRUNEWIN"])
+    mask = (ret.index >= start) & (ret.index < effective_split)
+    window= config["YWIN"]
 
     portfolio_ret = ret.loc[mask].mean(axis=1, skipna=True)
     #y = (portfolio_ret.shift(-window).rolling(window).mean() / (portfolio_ret.shift(-window).rolling(window).std() + 1e-10)).dropna()
@@ -35,10 +36,10 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=["rf"
     combined_scores = scores.sort_values(ascending=False)
     if thresh > 1:
         selected_features = combined_scores.nlargest(int(thresh)).index
-        print(f"[Prune] Selected top {int(thresh)} features by {method[0]} from {start.date()}–{split_date_ts.date()}")
+        print(f"[Prune] Selected top {int(thresh)} features by {method[0]} from {start.date()}–{effective_split.date()}")
     elif 0 < thresh <= 1:
         selected_features = combined_scores[combined_scores > thresh].index
-        print(f"[Prune] Selected {len(selected_features)} features with {method[0]} > {thresh} from {start.date()}–{split_date_ts.date()}")
+        print(f"[Prune] Selected {len(selected_features)} features with {method[0]} > {thresh} from {start.date()}–{effective_split.date()}")
     else: return feat
 
     #PRUNE RF
@@ -47,4 +48,5 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=["rf"
     #else: top_features_log.to_csv("rf_prune.csv", index=False)
 
     print(f"[Prune] Top feature score: {combined_scores.loc[selected_features].head(1).to_string()}")
+    
     return feat[selected_features]

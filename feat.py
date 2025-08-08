@@ -2,12 +2,11 @@ import os
 import pandas as pd
 import yfinance as yf
 from feat_list import FTR_FUNC, add_volume, setallcrossfeat
-from validate import TICKER_LIST
 from load import load_config
 from prune import select_features 
 
 config = load_config()
-PRICE_CACHE = "csv/prices.csv"; TICK = TICKER_LIST
+PRICE_CACHE = "csv/prices.csv"; TICK = ['JPM', 'MSFT', 'NVDA', 'AVGO', 'LLY', 'COST', 'MA', 'XOM', 'UNH', 'AMZN', 'CAT', 'ADBE', 'TSLA']
 
 def fetch_macro(name, ticker, start, end):
     try:
@@ -58,7 +57,7 @@ def process_macro_feat(cached_data, index, macro_keys, min_non_na_ratio=0.1):
         macro_feat[col] = pct_series
     return pd.DataFrame(macro_feat, index=index)
 
-def comp_feat(TICK, FEAT, cached_data, macro_keys, thresh=config["THRESH"], split_date=None, method=None):
+def comp_feat(TICK, FEAT, cached_data, macro_keys, thresh=config["THRESH"], split_date=None, method=None,train_end_date=None):
     price_cols = [col for col in cached_data.columns if not col.endswith(("_volume", "_high", "_low")) and col in TICK]
     volume_cols = [f"{ticker}_volume" for ticker in TICK if f"{ticker}_volume" in cached_data.columns]
     high_cols = {ticker: f"{ticker}_high" for ticker in TICK if f"{ticker}_high" in cached_data.columns}
@@ -102,9 +101,10 @@ def comp_feat(TICK, FEAT, cached_data, macro_keys, thresh=config["THRESH"], spli
     feat = pd.concat([feat, macro_df], axis=1)
     feat['day_of_week'] = feat.index.dayofweek
     feat['month'] = feat.index.month - 1
-    feat = norm_feat(feat)
-    feat = select_features(feat, ret, split_date, thresh=thresh, method=method)
+    #feat = norm_feat(feat)
+    feat = select_features(feat, ret, split_date, thresh=thresh, method=method, train_end_date=train_end_date)
     feat.to_csv("csv/feat_all.csv")
+    
     return feat, ret
 
 def norm_feat(feat_win):
