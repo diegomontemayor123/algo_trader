@@ -23,22 +23,22 @@ def run_chunk_tune(trial, start_date, end_date, split_date, config_base, study=N
 "SPLIT": str(split_date.date()),
 "SEED": trial.suggest_categorical("SEED", [config_base["SEED"]]),
 
-"YWIN": trial.suggest_int("YWIN", low=max(5, math.floor(config_base["YWIN"] * 0.9)),high=math.ceil(config_base["YWIN"] * 1.1)),
-"PRUNEWIN": trial.suggest_int("PRUNEWIN", low=max(5, math.floor(config_base["PRUNEWIN"] * 0.9)),high=math.ceil(config_base["PRUNEWIN"] * 1.1)),
-"PRUNEDOWN": trial.suggest_float("PRUNEDOWN", low=max(5, math.floor(config_base["PRUNEDOWN"] * 0.9)),high=math.ceil(config_base["PRUNEDOWN"] * 1.1)),
-"THRESH": trial.suggest_int("THRESH", low=max(10, math.floor(config_base["THRESH"] * 0.9)),high=math.ceil(config_base["THRESH"] * 1.1)),
-"DECAY": trial.suggest_float("DECAY", low=max(1e-8, config_base["DECAY"] * 0.85),high=config_base["DECAY"] * 1.15,log=False),
-"DROPOUT": trial.suggest_float("DROPOUT", low=max(0.0, config_base["DROPOUT"] * 0.65),high=min(1.0, config_base["DROPOUT"] * 1.35)),
-"INIT_LR": trial.suggest_float("INIT_LR", low=config_base["INIT_LR"] * 0.25, high=config_base["INIT_LR"] * 4,log=False),
-"EXP_PEN": trial.suggest_float("EXP_PEN", low=config_base["EXP_PEN"] * 0.85,high=config_base["EXP_PEN"] * 1.15),
-"RETURN_PEN": trial.suggest_float("RETURN_PEN", low=config_base["RETURN_PEN"] * 0.8, high=config_base["RETURN_PEN"] * 1.2),
-"LAYERS": trial.suggest_int("LAYERS", low=max(1, config_base["LAYERS"] - 1),high=min(3, config_base["LAYERS"] + 1)),
-"MAX_HEADS": trial.suggest_int("MAX_HEADS", low=max(1, config_base["MAX_HEADS"] - 1),high=min(3, config_base["MAX_HEADS"] + 1)),
-"EARLY_FAIL": trial.suggest_int("EARLY_FAIL", low=max(1, config_base["EARLY_FAIL"] - 2),high=min(4, config_base["EARLY_FAIL"] + 2)),
-"NESTIM": trial.suggest_int("NESTIM", low=max(10, math.floor(config_base["NESTIM"] * 1)),high=math.ceil(config_base["NESTIM"] * 1)),
+"YWIN": trial.suggest_int("YWIN", max(5, math.floor(config_base["YWIN"] * 0.9)),math.ceil(config_base["YWIN"] * 1.1)),
+"PRUNEWIN": trial.suggest_int("PRUNEWIN", max(5, math.floor(config_base["PRUNEWIN"] * 0.9)),math.ceil(config_base["PRUNEWIN"] * 1.1)),
+"PRUNEDOWN": trial.suggest_float("PRUNEDOWN", math.floor(config_base["PRUNEDOWN"] * 0.9),math.ceil(config_base["PRUNEDOWN"] * 1.1)),
+"THRESH": trial.suggest_int("THRESH", max(10, math.floor(config_base["THRESH"] * 0.9)),math.ceil(config_base["THRESH"] * 1.1)),
+"DECAY": trial.suggest_float("DECAY", max(1e-8, config_base["DECAY"] * 0.85),config_base["DECAY"] * 1.15,log=False),
+"DROPOUT": trial.suggest_float("DROPOUT", max(0.0, config_base["DROPOUT"] * 0.65),min(1.0, config_base["DROPOUT"] * 1.35)),
+"INIT_LR": trial.suggest_float("INIT_LR", config_base["INIT_LR"] * 0.25, config_base["INIT_LR"] * 4,log=False),
+"EXP_PEN": trial.suggest_float("EXP_PEN", config_base["EXP_PEN"] * 0.85,config_base["EXP_PEN"] * 1.15),
+"RETURN_PEN": trial.suggest_float("RETURN_PEN", config_base["RETURN_PEN"] * 0.8, config_base["RETURN_PEN"] * 1.2),
+"LAYERS": trial.suggest_int("LAYERS", max(1, config_base["LAYERS"] - 1),min(3, config_base["LAYERS"] + 1)),
+"MAX_HEADS": trial.suggest_int("MAX_HEADS", max(1, config_base["MAX_HEADS"] - 1),min(3, config_base["MAX_HEADS"] + 1)),
+"EARLY_FAIL": trial.suggest_int("EARLY_FAIL", max(1, config_base["EARLY_FAIL"] - 2),min(4, config_base["EARLY_FAIL"] + 2)),
+"NESTIM": trial.suggest_int("NESTIM", max(10, math.floor(config_base["NESTIM"] * 1)),math.ceil(config_base["NESTIM"] * 1)),
 "BATCH": trial.suggest_categorical("BATCH", [max(1, int(config_base["BATCH"] * 1)),config_base["BATCH"], int(config_base["BATCH"] * 1)]),
-"LBACK": trial.suggest_int("LBACK", low=max(5, math.floor(config_base["LBACK"] * 1)),high=math.ceil(config_base["LBACK"] * 1)),
-"PRED_DAYS": trial.suggest_int("PRED_DAYS", low=max(1, config_base["PRED_DAYS"] - 0),high=config_base["PRED_DAYS"] + 0)})
+"LBACK": trial.suggest_int("LBACK", max(5, math.floor(config_base["LBACK"] * 1)),math.ceil(config_base["LBACK"] * 1)),
+"PRED_DAYS": trial.suggest_int("PRED_DAYS", max(1, config_base["PRED_DAYS"] - 0),config_base["PRED_DAYS"] + 0)})
     dup_value = is_duplicate_trial(study, config)
     if dup_value is not None:return dup_value
     try:
