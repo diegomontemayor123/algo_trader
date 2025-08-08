@@ -5,7 +5,6 @@
     "TICK": "JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE",
     "MACRO": "GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM",
     "FEAT": "sma,ema,boll,macd,volchange,donchian",
-    "PRUNE": "none",
     "YWIN":0,
     "PRUNEWIN": 0,
     "THRESH": 0,
@@ -30,8 +29,6 @@
     "LAYERS": 1,
     "EARLY_FAIL": 2,
     "VAL_SPLIT": 0.15,
-    "WARMUP": 0,
     "TEST_CHUNK": 24,
-    "RETRAIN": 0,
     "ATTENT": 1
 }

@@ -1,9 +1,7 @@
 import numpy as np
-import torch
 import matplotlib.pyplot as plt
 import pandas as pd
 from dateutil.relativedelta import relativedelta
-from feat import load_prices
 from perf import calc_perf_metrics
 from retrain import run_retraining_chunks
 np.seterr(all='raise')
@@ -16,13 +14,9 @@ def save_to_csv(var,csv_path):
     try:x.to_csv(csv_path);return x
     except Exception as e:print(f"Error saving {var} to {csv_path}: {e}")
 
-def run_btest(  device, initial_capital, split, lback,comp_feat, norm_feat, TICK, start, end,feat, macro_keys,
-                test_chunk, RETRAIN, model=None, plot=False,weight_csv_path="csv/weight.csv", config=None, selected_feat=None):
+def run_btest(device, initial_capital, split, lback,comp_feat, norm_feat, TICK, start, end,feat, macro_keys,
+                test_chunk, plot=False,weight_csv_path="csv/weight.csv", config=None):
     split_dt = pd.to_datetime(split);   end_dt = pd.to_datetime(end)
-    cached_data = load_prices(config["START"], end, macro_keys)
-    feat_df, ret_df = comp_feat(TICK, feat, cached_data, macro_keys)
-    if selected_feat is not None: feat_df = feat_df[selected_feat]
-    feat_df.index = pd.to_datetime(feat_df.index) ;     ret_df.index = pd.to_datetime(ret_df.index)
     chunks = [];    curr_start = split_dt
     while curr_start < end_dt:
         curr_end = min(curr_start + relativedelta(months=test_chunk) - pd.Timedelta(days=1),end_dt)
@@ -37,46 +31,9 @@ def run_btest(  device, initial_capital, split, lback,comp_feat, norm_feat, TICK
             chunks[-2] = (prev_start, final_end)
             chunks.pop()
     pfo_values = [initial_capital];bench_values = [initial_capital];daily_weight = [];all_pfo_metrics = [];all_bench_metrics = [];avg_outperf = {}
-
-    if RETRAIN < 1:
-        model.eval()
-        start_index = feat_df.index.get_indexer([split_dt], method='bfill')[0]
-        assets = ret_df.columns
-        for i in range(start_index - lback, len(feat_df) - lback):
-            current_date = ret_df.index[i + lback]
-            if current_date > end_dt:break
-            if current_date < split_dt:continue
-            feat_win = feat_df.iloc[i:i + lback].values.astype(np.float32)
-            normalized_feat = norm_feat(feat_win)
-            input_tensor = torch.tensor(normalized_feat).unsqueeze(0).to(device)
-            with torch.no_grad(): weight = model(input_tensor).cpu().numpy().flatten()
-            per_ret = ret_df.loc[current_date].values
-            pfo_ret = np.dot(weight, per_ret); bench_ret = np.mean(per_ret)
-            pfo_values.append(pfo_values[-1] * (1 + pfo_ret))
-            bench_values.append(bench_values[-1] * (1 + bench_ret))
-            daily_weight.append(pd.Series(weight, index=assets, name=current_date))
-        save_to_csv(daily_weight,weight_csv_path);weight_df = pd.read_csv(weight_csv_path, index_col="Date", parse_dates=True)
-        pfo_series = pd.Series(pfo_values[1:], index=weight_df.index)
-        bench_series = pd.Series(bench_values[1:], index=weight_df.index)
-        for idx, (chunk_start, chunk_end) in enumerate(chunks):
-            chunk_pfo = pfo_series.loc[chunk_start:chunk_end]; chunk_bench = bench_series.loc[chunk_start:chunk_end]
-            if len(chunk_pfo) < 2: continue
-            pfo_metrics = calc_perf_metrics(chunk_pfo);bench_metrics = calc_perf_metrics(chunk_bench)
-            all_pfo_metrics.append(pfo_metrics); all_bench_metrics.append(bench_metrics)
-            print(f"[Test] Chunk {idx+1}: Pfo Metrics: {pfo_metrics}")
-            print(f"[Test] Chunk {idx+1}: Bench Metrics: {bench_metrics}")
-        if all_pfo_metrics and all_bench_metrics:
-            metrics_keys = all_pfo_metrics[0].keys()
-            for key in metrics_keys:
-                port_vals = [m[key] for m in all_pfo_metrics]
-                bench_vals = [m[key] for m in all_bench_metrics]
-                diffs = [p - b for p, b in zip(port_vals, bench_vals)]
-                avg_outperf[key] = np.mean(diffs)
-    else:
-        print(f"[Test] Running test_chunk: {test_chunk} and retrain: {RETRAIN}")
-        pfo_values, bench_values, daily_weight, all_pfo_metrics, all_bench_metrics, avg_outperf = run_retraining_chunks(chunks, feat_df, ret_df, lback, norm_feat, TICK, comp_feat, macro_keys, config, start, device, initial_capital, model0=model)
-        save_to_csv(daily_weight, weight_csv_path);weight_df = pd.read_csv(weight_csv_path, index_col="Date", parse_dates=True)
-        pfo_series = pd.Series(pfo_values[1:], index=weight_df.index);  bench_series = pd.Series(bench_values[1:], index=weight_df.index)
+    pfo_values, bench_values, daily_weight, all_pfo_metrics, all_bench_metrics, avg_outperf = run_retraining_chunks(chunks,  lback, norm_feat, TICK,feat, comp_feat, macro_keys, config, start, device, initial_capital)
+    save_to_csv(daily_weight, weight_csv_path);weight_df = pd.read_csv(weight_csv_path, index_col="Date", parse_dates=True)
+    pfo_series = pd.Series(pfo_values[1:], index=weight_df.index);  bench_series = pd.Series(bench_values[1:], index=weight_df.index)
     comb_pfo_metrics = calc_perf_metrics(pfo_series) ;  comb_bench_metrics = calc_perf_metrics(bench_series)
     report_path = "img/test.txt"
     with open(report_path, "w") as f:

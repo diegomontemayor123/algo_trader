@@ -1,7 +1,7 @@
 import torch, multiprocessing
 import numpy as np
 from torch.utils.data import DataLoader
-from model import DifferentiableSharpeLoss, TransformerLRScheduler, create_model
+from model import DifferentiableSharpeLoss, create_model
 np.seterr(all='raise')
 
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -9,18 +9,11 @@ MAX_EPOCHS = 20
 
 def train_model(model, train_loader, val_loader, config, asset_sd):
     optimizer = torch.optim.Adam(model.parameters(), lr=config["INIT_LR"], weight_decay=config["DECAY"])
-    if config["WARMUP"] > 0: 
-        total_steps = (MAX_EPOCHS * len(train_loader))
-        warm_steps = int(total_steps * config["WARMUP"])
-        print(f"[Train] Total steps: {total_steps}, warmup: {warm_steps}")
-        learn_scheduler = TransformerLRScheduler(optimizer, d_model=model.mlp_head[0].in_features, warm_steps=warm_steps)
     loss_func = DifferentiableSharpeLoss(return_pen=config["RETURN_PEN"],return_exp=config["RETURN_EXP"],exp_exp=config["EXP_EXP"],exp_pen=config["EXP_PEN"],sd_pen=config["SD_PEN"],sd_exp=config["SD_EXP"],)
     best_val_loss = float('inf')
-    patience_counter = 0
-    lrs = []
+    patience_counter = 0; lrs = []
     for epoch in range(MAX_EPOCHS):
-        model.train()
-        train_loss = []
+        model.train(); train_loss = []
         for batch_idx, (batch_feat, batch_ret) in enumerate(train_loader):
             batch_feat = batch_feat.to(DEVICE, non_blocking=True)
             batch_ret = batch_ret.to(DEVICE, non_blocking=True)
@@ -34,14 +27,10 @@ def train_model(model, train_loader, val_loader, config, asset_sd):
                 if param.grad is not None:
                     grad_norm = param.grad.data.norm(2).item()
                     total_grad_norm += grad_norm
-            #print(f"[Train] Total grad norm: {total_grad_norm:.6f}\n")
             for name, param in model.named_parameters():
                 if param.grad is not None and (torch.isnan(param.grad).any() or torch.isinf(param.grad).any()):
                     print(f"[Train] Skipping retraining chunk due to NaNs in gradients: {name}");return None
             optimizer.step()
-            if config["WARMUP"] > 0:
-                learn_scheduler.step()
-                print(f"[Train] Current learning rate: {optimizer.param_groups[0]['lr']:.6f}\n")
             lrs.append(optimizer.param_groups[0]['lr'])
             train_loss.append(loss.item())
         model.eval()
@@ -62,8 +51,6 @@ def train_model(model, train_loader, val_loader, config, asset_sd):
         else:
             patience_counter += 1
             if patience_counter >= config["EARLY_FAIL"]: break
-    #plt.figure(figsize=(10, 4));plt.plot(lrs);plt.title('Learning Schedule');plt.xlabel('Training Step')
-    #plt.ylabel('Learning Rate');plt.grid(True);plt.savefig('img/learn_sched.png');plt.close();
     return model
 
 def train(config, feat, ret):
@@ -72,8 +59,7 @@ def train(config, feat, ret):
     num_workers = min(2, multiprocessing.cpu_count())
     train_loader = DataLoader(train_data, batch_size=config["BATCH"], shuffle=True, num_workers=num_workers,pin_memory=True, persistent_workers=True)
     val_loader = DataLoader(val_data, batch_size=config["BATCH"], shuffle=False, num_workers=num_workers,pin_memory=True, persistent_workers=True)
-    model = create_model(train_data[0][0].shape[1], config)
-    #if torch.cuda.is_available(): model = torch.compile(model) 
+    model = create_model(train_data[0][0].shape[1], config) 
     asset_sd = torch.tensor(train_data.ret.std(dim=0).cpu().numpy().astype(np.float32), device=DEVICE)
     model0 = train_model(model, train_loader, val_loader, config, asset_sd=asset_sd)
     return model0
