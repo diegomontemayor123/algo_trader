@@ -19,7 +19,10 @@ if torch.cuda.is_available(): torch.cuda.manual_seed_all(SEED)
 
 def run_retraining_chunks(chunks, lback, norm_feat, TICK, feat, comp_feat, macro_keys, config, start, device, initial_capital):
     cached_data = load_prices(config["START"], config["END"], macro_keys)
-    feat_df, ret_df = comp_feat(TICK, feat, cached_data, macro_keys, split_date=config["SPLIT"], method=["rf"])
+    #feat_df, ret_df = comp_feat(TICK, feat, cached_data, macro_keys, split_date=config["SPLIT"], method=["rf"])
+    # Load all raw features without pruning (method=None)
+    feat_df, ret_df = comp_feat(TICK, feat, cached_data, macro_keys, split_date=config["SPLIT"], method=None)
+
     feat_df.index = pd.to_datetime(feat_df.index)
     ret_df.index = pd.to_datetime(ret_df.index)
     
@@ -41,6 +44,11 @@ def run_retraining_chunks(chunks, lback, norm_feat, TICK, feat, comp_feat, macro
         cached_chunk_data = load_prices(chunk_config["START"], config["END"], macro_keys)
         feat_list = config["FEAT"].split(",") if isinstance(config["FEAT"], str) else config["FEAT"]
         feat_train, ret_train = comp_feat(TICK, feat_list, cached_chunk_data, macro_keys, split_date=chunk_config["SPLIT"], method=["rf"])
+        
+        # Lock feature set for both training and evaluation in this chunk
+        feat_cols = feat_train.columns
+        feat_df_chunk = feat_df[feat_cols]
+        
         print(f"[Retrain] Feature train shape: {feat_train.shape}, Return train shape: {ret_train.shape}")
         train_data, val_data, _ = prep_data(feat_train, ret_train, chunk_config)
         train_loader = DataLoader(train_data, batch_size=config["BATCH"], shuffle=True, num_workers=min(2, multiprocessing.cpu_count()),pin_memory=True, persistent_workers=True)
@@ -59,7 +67,9 @@ def run_retraining_chunks(chunks, lback, norm_feat, TICK, feat, comp_feat, macro
         for i in range(start_idx - lback, end_idx - lback + 1):
             current_date = ret_df.index[i + lback]
             if current_date < chunk_start or current_date > chunk_end: continue
-            feat_win = feat_df.iloc[i:i + lback].values.astype(np.float32)
+            #feat_win = feat_df.iloc[i:i + lback].values.astype(np.float32)
+            feat_win = feat_df_chunk.iloc[i:i + lback].values.astype(np.float32)
+            
             normalized_feat = norm_feat(feat_win)
             input_tensor = torch.tensor(normalized_feat).unsqueeze(0).to(device)
             with torch.no_grad(): weight = current_model(input_tensor).cpu().numpy().flatten()

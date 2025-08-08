@@ -11,12 +11,15 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=["rf"
     start = split_date_ts - pd.DateOffset(months=config["PRUNEWIN"])
     window = config["YWIN"]
     mask = (ret.index >= start) & (ret.index < split_date_ts)
+
+    portfolio_ret = ret.loc[mask].mean(axis=1, skipna=True)
     #y = (portfolio_ret.shift(-window).rolling(window).mean() / (portfolio_ret.shift(-window).rolling(window).std() + 1e-10)).dropna()
+    
     def max_drawdown(returns): cum = (1 + returns).cumprod();drawdown = (cum - cum.cummax()) / cum.cummax();return drawdown.min() 
     y = (ret.loc[mask].mean(axis=1).shift(-window).rolling(window).mean() - (ret.loc[mask].mean(axis=1).shift(-window).rolling(window).apply(max_drawdown, raw=False) + 1e-10)).dropna()
+    
     X = feat.loc[y.index]
     constant_features = X.nunique(dropna=True)[X.nunique(dropna=True) <= 1].index.tolist(); sparse_features = X.columns[X.isna().sum() > (len(X) - int(0.9 * len(X)))].tolist()
-    #X = X.drop(columns=sparse_features).drop(columns=constant_features)
     dropped_features = constant_features + sparse_features
     if dropped_features:
         print(f"[Prune] {len(dropped_features)} Features have issues (look into dropping):")
