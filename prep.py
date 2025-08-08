@@ -12,21 +12,13 @@ class MarketDataset(torch.utils.data.Dataset):
     def __getitem__(self, index): return self.feat[index], self.ret[index]
 
 def create_sequences(feat, ret, lback, pred_days, TICK):
-
-    sequences = []
-    targets = []
-    indices = []
+    sequences = []; targets = []; indices = []
     for i in range(len(feat) - lback - pred_days):
         feat_win = feat.iloc[i:i + lback].values.astype(np.float32)
         norm_win = norm_feat(feat_win)
-
-        if np.isnan(norm_win).any():
-            print(f"[Prep] NaN detected in norm feat at index {i}")
-
+        if np.isnan(norm_win).any(): print(f"[Prep] NaN detected in norm feat at index {i}")
         future_ret = ret.iloc[i + lback:i + lback + pred_days].mean().values.astype(np.float32)
-        if len(future_ret) != len(TICK):
-            print(f"[Prep] Future ret length mismatch at index {i}: {future_ret.shape}")
-
+        if len(future_ret) != len(TICK): print(f"[Prep] Future ret length mismatch at index {i}: {future_ret.shape}")
         sequences.append(norm_win)
         targets.append(future_ret)
         indices.append(feat.index[i + lback])

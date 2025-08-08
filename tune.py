@@ -11,9 +11,9 @@ def run_experiment(trial,study=None):
         "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
         "MACRO": trial.suggest_categorical("MACRO", ["^GSPC,CL=F,SI=F,NG=F,HG=F,ZC=F,^IRX,TLT,IEF,UUP,HYG,EEM,VEA,FXI,^RUT,^FTSE,^TYX,AUDUSD=X,USDJPY=X,EURUSD=X,GBPUSD=X,ZW=F,GC=F",]),#"GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM"
         "FEAT": trial.suggest_categorical("FEAT", ["ret,price,logret,rollret,sma,ema,momentum,macd,pricevshigh,vol,atr,range,volchange,volptile,zscore,rsi,cmo,williams,stoch,priceptile,adx,meanabsret,boll,donchian,volume,lag,retcrossz,crossmomentumz,crossvolz,crossretrank",]),#"sma,ema,boll,macd,volchange,donchian"
-        "YWIN": trial.suggest_int("YWIN",30,35),#29,28
-        "PRUNEWIN": trial.suggest_int("PRUNEWIN",25,30),#31,28
-        "PRUNEDOWN": trial.suggest_float("PRUNEDOWN",1.8,2.3),
+        "YWIN": trial.suggest_int("YWIN",31,34),#29,28
+        "PRUNEWIN": trial.suggest_int("PRUNEWIN",25,28),#31,28
+        "PRUNEDOWN": trial.suggest_float("PRUNEDOWN",2,2),
         "THRESH": trial.suggest_int("THRESH",175,175),#170
         "NESTIM": trial.suggest_int("NESTIM",200,200),#200
         "BATCH": trial.suggest_int("BATCH",53,53),#53
