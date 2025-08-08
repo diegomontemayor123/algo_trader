@@ -1,7 +1,7 @@
 import os, subprocess, re, optuna, json, csv
 from optuna.samplers import TPESampler
 
-TRIALS = 300
+TRIALS = 200
 
 
 def run_experiment(trial,study=None):
@@ -11,32 +11,32 @@ def run_experiment(trial,study=None):
         "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
         "MACRO": trial.suggest_categorical("MACRO", ["^GSPC,CL=F,SI=F,NG=F,HG=F,ZC=F,^IRX,TLT,IEF,UUP,HYG,EEM,VEA,FXI,^RUT,^FTSE,^TYX,AUDUSD=X,USDJPY=X,EURUSD=X,GBPUSD=X,ZW=F,GC=F",]),#"GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM"
         "FEAT": trial.suggest_categorical("FEAT", ["ret,price,logret,rollret,sma,ema,momentum,macd,pricevshigh,vol,atr,range,volchange,volptile,zscore,rsi,cmo,williams,stoch,priceptile,adx,meanabsret,boll,donchian,volume,lag,retcrossz,crossmomentumz,crossvolz,crossretrank",]),#"sma,ema,boll,macd,volchange,donchian"
-        "YWIN": trial.suggest_int("YWIN",25,40),#29,28
-        "PRUNEWIN": trial.suggest_int("PRUNEWIN",23,32),#31,28
-        "PRUNEDOWN": trial.suggest_float("PRUNEDOWN",1,2),
-        "THRESH": trial.suggest_int("THRESH",125,225),#170
-        "NESTIM": trial.suggest_int("NESTIM",150,250),#200
-        "BATCH": trial.suggest_int("BATCH",40,65),#53
-        "LBACK": trial.suggest_int("LBACK",65,100),#84
-        "PRED_DAYS": trial.suggest_int("PRED_DAYS",2,9),#6
-        "DROPOUT": trial.suggest_float("DROPOUT",.03,.04),#.035
-        "DECAY": trial.suggest_float("DECAY",.002,.005,log=True),#.003
-        "SHORT_PER": trial.suggest_int("SHORT_PER",8,16),#12
-        "MED_PER": trial.suggest_int("MED_PER",10,26),#17
-        "LONG_PER": trial.suggest_int("LONG_PER",40,80),#58
-        "INIT_LR": trial.suggest_float("INIT_LR",.0005,.006,log=True),#.001
-        "EXP_PEN": trial.suggest_float("EXP_PEN",.2,.3),#.24
-        "EXP_EXP": trial.suggest_float("EXP_EXP",1.5,2.1),#1.8
-        "RETURN_PEN": trial.suggest_float("RETURN_PEN",.065,.075),#.073
-        "RETURN_EXP": trial.suggest_float("RETURN_EXP",.25,.32),#.28 
-        "SD_PEN": trial.suggest_float("SD_PEN",.14,.21),#.17 
-        "SD_EXP": trial.suggest_float("SD_EXP",.7,.8),#.74 
+        "YWIN": trial.suggest_int("YWIN",29,33),#29,28
+        "PRUNEWIN": trial.suggest_int("PRUNEWIN",23,29),#31,28
+        "PRUNEDOWN": trial.suggest_float("PRUNEDOWN",1,2.2),
+        "THRESH": trial.suggest_int("THRESH",150,200),#170
+        "NESTIM": trial.suggest_int("NESTIM",200,200),#200
+        "BATCH": trial.suggest_int("BATCH",38,53),#53
+        "LBACK": trial.suggest_int("LBACK",70,84),#84
+        "PRED_DAYS": trial.suggest_int("PRED_DAYS",3,6),#6
+        "DROPOUT": trial.suggest_float("DROPOUT",.035,.035),#.035
+        "DECAY": trial.suggest_float("DECAY",.003,.004,log=True),#.003
+        "SHORT_PER": trial.suggest_int("SHORT_PER",12,16),#12
+        "MED_PER": trial.suggest_int("MED_PER",17,22),#17
+        "LONG_PER": trial.suggest_int("LONG_PER",40,58),#58
+        "INIT_LR": trial.suggest_float("INIT_LR",.001,.003,log=True),#.001
+        "EXP_PEN": trial.suggest_float("EXP_PEN",.24,.3),#.24
+        "EXP_EXP": trial.suggest_float("EXP_EXP",1.8,1.8),#1.8
+        "RETURN_PEN": trial.suggest_float("RETURN_PEN",.073,.073),#.073
+        "RETURN_EXP": trial.suggest_float("RETURN_EXP",.28,.28),#.28 
+        "SD_PEN": trial.suggest_float("SD_PEN",.17,.17),#.17 
+        "SD_EXP": trial.suggest_float("SD_EXP",.74,.74),#.74 
         "SEED": trial.suggest_categorical("SEED",[42]),#42
         "MAX_HEADS": trial.suggest_categorical("MAX_HEADS",[1,2]),#1
         "LAYERS": trial.suggest_categorical("LAYERS",[1,2]),#2
         "EARLY_FAIL": trial.suggest_categorical("EARLY_FAIL",[2,4]),#2
         "VAL_SPLIT": trial.suggest_categorical("VAL_SPLIT",[.15]),#.15
-        "TEST_CHUNK": trial.suggest_categorical("TEST_CHUNK",[24]),
+        "TEST_CHUNK": trial.suggest_categorical("TEST_CHUNK",[12]),
         "ATTENT": trial.suggest_categorical("ATTENT",[1]),
     }
 
