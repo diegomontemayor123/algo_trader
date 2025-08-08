@@ -8,12 +8,8 @@ class MarketDataset(torch.utils.data.Dataset):
     def __init__(self, feat, ret):
         self.feat = feat
         self.ret = ret
-
-    def __len__(self):
-        return len(self.feat)
-
-    def __getitem__(self, index):
-        return self.feat[index], self.ret[index]
+    def __len__(self): return len(self.feat)
+    def __getitem__(self, index): return self.feat[index], self.ret[index]
 
 def create_sequences(feat, ret, lback, pred_days, TICK):
 

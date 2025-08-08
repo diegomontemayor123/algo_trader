@@ -104,7 +104,6 @@ def comp_feat(TICK, FEAT, cached_data, macro_keys, thresh=config["THRESH"], spli
     #feat = norm_feat(feat)
     feat = select_features(feat, ret, split_date, thresh=thresh, method=method, train_end_date=train_end_date)
     feat.to_csv("csv/feat_all.csv")
-    
     return feat, ret
 
 def norm_feat(feat_win):
