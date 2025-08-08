@@ -25,6 +25,7 @@ def run_chunk_tune(trial, start_date, end_date, split_date, config_base, study=N
 
 "YWIN": trial.suggest_int("YWIN", low=max(5, math.floor(config_base["YWIN"] * 0.9)),high=math.ceil(config_base["YWIN"] * 1.1)),
 "PRUNEWIN": trial.suggest_int("PRUNEWIN", low=max(5, math.floor(config_base["PRUNEWIN"] * 0.9)),high=math.ceil(config_base["PRUNEWIN"] * 1.1)),
+"PRUNEDOWN": trial.suggest_float("PRUNEDOWN", low=max(5, math.floor(config_base["PRUNEDOWN"] * 0.9)),high=math.ceil(config_base["PRUNEDOWN"] * 1.1)),
 "THRESH": trial.suggest_int("THRESH", low=max(10, math.floor(config_base["THRESH"] * 0.9)),high=math.ceil(config_base["THRESH"] * 1.1)),
 "DECAY": trial.suggest_float("DECAY", low=max(1e-8, config_base["DECAY"] * 0.85),high=config_base["DECAY"] * 1.15,log=False),
 "DROPOUT": trial.suggest_float("DROPOUT", low=max(0.0, config_base["DROPOUT"] * 0.65),high=min(1.0, config_base["DROPOUT"] * 1.35)),

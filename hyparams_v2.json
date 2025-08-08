@@ -7,6 +7,7 @@
     "FEAT": "'ret,price,logret,rollret,sma,ema,momentum,macd,pricevshigh,vol,atr,range,volchange,volptile,zscore,rsi,cmo,williams,stoch,priceptile,adx,meanabsret,boll,donchian,volume,lag,retcrossz,crossmomentumz,crossvolz,crossretrank",
     "YWIN": 29,
     "PRUNEWIN": 31,
+    "PRUNEDOWN": 1,
     "THRESH": 170,
     "NESTIM": 200,
     "BATCH": 53,
