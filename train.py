@@ -14,7 +14,8 @@ np.random.seed(SEED)
 random.seed(SEED)
 if torch.cuda.is_available(): torch.cuda.manual_seed_all(SEED)
 
-def run_training_chunks(chunks, lback, norm_feat, TICK, feat, comp_feat, macro_keys, config, start, device, initial_capital):
+
+def run_training_chunks(chunks, lback, norm_feat, TICK, comp_feat, macro_keys, config, start, device, initial_capital):
     pfo_values = [initial_capital];bench_values = [initial_capital]; daily_weight = []; all_pfo_metrics = []; all_bench_metrics = []
     
     for idx, (chunk_start, chunk_end) in enumerate(chunks):
