@@ -1,9 +1,10 @@
-import torch, sys, multiprocessing
+import torch, sys, multiprocessing, warnings
 import numpy as np
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from feat import *
 np.seterr(all='raise')
+warnings.filterwarnings("ignore",message="enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.self_attn.num_heads is odd")
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 INITIAL_CAPITAL = 100
 MAX_EPOCHS = 20 
@@ -21,7 +22,8 @@ def train_model(model, train_loader, val_loader, config, asset_sd):
             batch_ret = batch_ret.to(DEVICE, non_blocking=True)
             norm_weight = model(batch_feat)
             loss = loss_func(norm_weight, batch_ret, asset_sd=asset_sd, model=model,epoch=epoch,batch_idx=batch_idx)
-            if torch.isnan(loss) or torch.isinf(loss): print("[Train] NaN or Inf loss detected — skipping model.");return None
+            if loss is None: print("[Model] Loss is None, skipping batch.");continue 
+            if torch.isnan(loss) or torch.isinf(loss): print("[Model] NaN or Inf loss detected — skipping model.");return None
             optimizer.zero_grad()
             loss.backward()
             total_grad_norm = 0.0
@@ -31,7 +33,7 @@ def train_model(model, train_loader, val_loader, config, asset_sd):
                     total_grad_norm += grad_norm
             for name, param in model.named_parameters():
                 if param.grad is not None and (torch.isnan(param.grad).any() or torch.isinf(param.grad).any()):
-                    print(f"[Train] Skipping training chunk due to NaNs in gradients: {name}");return None
+                    print(f"[Model] Skipping training chunk due to NaNs in gradients: {name}");return None
             optimizer.step()
             lrs.append(optimizer.param_groups[0]['lr'])
             train_loss.append(loss.item())
@@ -107,7 +109,7 @@ class DifferentiableSharpeLoss(nn.Module):
         ret = (pfo_weight * target_ret).sum(dim=1);mean_ret = torch.mean(ret)
         if ret.numel() > 1 and not torch.isnan(ret).all():
             sd_ret = torch.std(ret, unbiased=False) + 1e-10
-            if sd_ret < 1e-6:print("SD - ret too low (<1e-6), skip batch.");return None  
+            if sd_ret < 1e-10:print("SD - ret too low (<1e-6), skip batch.");return None  
         else:print("ret invalid, skip batch.");return None 
         loss = -(self.return_pen * torch.sign(mean_ret) * mean_ret.abs().pow(self.return_exp))
         loss += self.sd_pen*sd_ret.pow(self.sd_exp) 
@@ -119,6 +121,7 @@ class DifferentiableSharpeLoss(nn.Module):
 
 if __name__ == "__main__":
     from test import run_btest
+    load_prices(START=config["START"], END=config["END"], macro_keys=config["MACRO"])
     print(f"Configured TICK: {config['TICK']} (count: {len(config['TICK'])})")
     TICK = config["TICK"]; feat_list = config["FEAT"]; macro_keys = config["MACRO"]
     if isinstance(macro_keys, str): macro_keys = [k.strip() for k in macro_keys.split(",") if k.strip()]

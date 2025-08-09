@@ -19,10 +19,31 @@ def fetch_macro(name, ticker, start, end):
     except Exception as e: print(f"[Feat] Failed to fetch {name} ({ticker}): {e}");return pd.Series(dtype='float64')
     
 def load_prices(START, END, macro_keys):
-    if os.path.exists(PRICE_CACHE): data = pd.read_csv(PRICE_CACHE, index_col=0, parse_dates=True)
+    if os.path.exists(PRICE_CACHE):
+        data = pd.read_csv(PRICE_CACHE, index_col=0, parse_dates=True)
+        cache_start = data.index.min()
+        cache_end = data.index.max()
+        # If cached data doesn't cover START or END within 5 days, redownload
+        if (cache_start - pd.to_datetime(START)).days > 5 or (pd.to_datetime(END) - cache_end).days > 5:
+            print("[Feat] Cache date range outside 5-day grace period, redownloading...")
+            raw_data = yf.download(" ".join(TICK), start=START, end=END + pd.Timedelta(days=1), auto_adjust=False)
+            price = raw_data['Adj Close']
+            volume = raw_data['Volume']
+            high = raw_data['High']
+            low = raw_data['Low']
+            volume.columns = [f"{ticker}_volume" for ticker in volume.columns]
+            high.columns = [f"{ticker}_high" for ticker in high.columns]
+            low.columns = [f"{ticker}_low" for ticker in low.columns]
+            data = pd.concat([price, volume, high, low], axis=1)
+            for macro_name in macro_keys:
+                macro_series = fetch_macro(macro_name, macro_name, START, END)
+                data[macro_name] = macro_series
+            data = data.sort_index()
+            data.to_csv(PRICE_CACHE)
+            print(f"[Feat] Cached to {PRICE_CACHE}")
     else:
         print("[Feat] Downloading price and macro data...")
-        raw_data = yf.download(" ".join(TICK), start=START, end=END, auto_adjust=False)
+        raw_data = yf.download(" ".join(TICK), start=START, end=END + pd.Timedelta(days=1), auto_adjust=False)
         price = raw_data['Adj Close']
         volume = raw_data['Volume']
         high = raw_data['High']
