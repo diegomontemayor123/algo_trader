@@ -68,7 +68,7 @@ def add_volptile(data):
     if 'ret' not in data.columns: data['ret'] = data['close'].pct_change()
     for p in per:
         vol = data['ret'].rolling(p).std()
-        data[f'volptile_{p}'] = vol.rolling(p).apply(lambda x: pd.Series(x).rank(pct=True).iloc[-1])
+        data[f'volptile_{p}'] = vol.rolling(p).apply(lambda x: pd.Series(x).rank(pct=True).iloc[-1], raw=False).fillna(0.5)
 
 # ========================== OSCILLATORS / MEAN REVERSION  ==========================
 def add_rsi(data):
@@ -166,41 +166,100 @@ def setallcrossfeat(cross_feat_dict):
 
 def add_retcrossz(data, ticker):
     global CROSS_FEAT
-    if not CROSS_FEAT: return
+    if not CROSS_FEAT:
+        return
     try:
         ret_df = pd.DataFrame({k: df['ret'] for k, df in CROSS_FEAT.items() if 'ret' in df})
-        ret_df = ret_df.dropna()
-        zscores = (ret_df.sub(ret_df.mean(axis=1), axis=0).div(ret_df.std(axis=1) + 1e-10, axis=0))
-        if ticker in zscores: data["retcrossz"] = zscores[ticker]
-    except Exception as e: print(f"[Cross-Z] Failed for {ticker}: {e}")
+        # align to the target asset index (do not drop rows)
+        ret_df = ret_df.reindex(data.index)
+        # row-wise mean/std skipping NaNs
+        row_mean = ret_df.mean(axis=1, skipna=True)
+        row_std = ret_df.std(axis=1, skipna=True) + 1e-10
+        zscores = (ret_df.sub(row_mean, axis=0)).div(row_std, axis=0)
+        if ticker in zscores.columns:
+            data["retcrossz"] = zscores[ticker]
+    except Exception as e:
+        print(f"[Cross-Z] Failed for {ticker}: {e}")
+
 def add_crossmomentum(data, ticker):
     global CROSS_FEAT
-    if not CROSS_FEAT: return
+    if not CROSS_FEAT:
+        return
     try:
         for p in per:
             mom_df = pd.DataFrame({k: df['close'] / df['close'].shift(p) - 1 for k, df in CROSS_FEAT.items()})
-            zscores = (mom_df.sub(mom_df.mean(axis=1), axis=0).div(mom_df.std(axis=1) + 1e-10, axis=0))
-            if ticker in zscores: data[f"cross_momentum_z_{p}"] = zscores[ticker]
-    except Exception as e: print(f"[Cross-Momentum] Failed for {ticker}: {e}")
+            mom_df = mom_df.reindex(data.index)
+            row_mean = mom_df.mean(axis=1, skipna=True)
+            row_std = mom_df.std(axis=1, skipna=True) + 1e-10
+            zscores = (mom_df.sub(row_mean, axis=0)).div(row_std, axis=0)
+            if ticker in zscores.columns:
+                data[f"cross_momentum_z_{p}"] = zscores[ticker]
+    except Exception as e:
+        print(f"[Cross-Momentum] Failed for {ticker}: {e}")
+
 def add_crossvolz(data, ticker):
     global CROSS_FEAT
-    if not CROSS_FEAT: return
+    if not CROSS_FEAT:
+        return
     try:
         for p in per:
             vol_df = pd.DataFrame({k: df['ret'].rolling(p).std() for k, df in CROSS_FEAT.items() if 'ret' in df})
-            zscores = (vol_df.sub(vol_df.mean(axis=1), axis=0).div(vol_df.std(axis=1) + 1e-10, axis=0))
-            if ticker in zscores: data[f"cross_volz_{p}"] = zscores[ticker]
-    except Exception as e: print(f"[Cross-Vol-Z] Failed for {ticker}: {e}")
+            vol_df = vol_df.reindex(data.index)
+            row_mean = vol_df.mean(axis=1, skipna=True)
+            row_std = vol_df.std(axis=1, skipna=True) + 1e-10
+            zscores = (vol_df.sub(row_mean, axis=0)).div(row_std, axis=0)
+            if ticker in zscores.columns:
+                data[f"cross_volz_{p}"] = zscores[ticker]
+    except Exception as e:
+        print(f"[Cross-Vol-Z] Failed for {ticker}: {e}")
+
 def add_crossretrank(data, ticker):
     global CROSS_FEAT
-    if not CROSS_FEAT: return
+    if not CROSS_FEAT:
+        return
     try:
         for p in per:
             rollret = {k: df['close'].pct_change(p) for k, df in CROSS_FEAT.items()}
             ret_df = pd.DataFrame(rollret)
+            ret_df = ret_df.reindex(data.index)
             ranks = ret_df.rank(axis=1, pct=True)
-            if ticker in ranks: data[f"cross_retrank_{p}"] = ranks[ticker]
-    except Exception as e: print(f"[Cross-Rank] Failed for {ticker}: {e}")
+            if ticker in ranks.columns:
+                data[f"cross_retrank_{p}"] = ranks[ticker]
+    except Exception as e:
+        print(f"[Cross-Rank] Failed for {ticker}: {e}")
+
+def add_crossbeta(data, ticker):
+    global CROSS_FEAT
+    if not CROSS_FEAT:
+        return
+    try:
+        basket = pd.DataFrame({k: df['ret'] for k, df in CROSS_FEAT.items() if 'ret' in df}).drop(columns=[ticker], errors='ignore')
+        if 'ret' not in data:
+            data['ret'] = data['close'].pct_change()
+        for p in per:
+            # rolling cov with basket mean series; reindex to ensure alignment
+            basket_mean = basket.mean(axis=1)
+            rolling_cov = data['ret'].rolling(p).cov(basket_mean).reindex(data.index)
+            rolling_var = basket_mean.rolling(p).var().reindex(data.index)
+            data[f"cross_beta_{p}"] = rolling_cov / (rolling_var + 1e-10)
+    except Exception as e:
+        print(f"[Cross-Beta] Failed for {ticker}: {e}")
+
+def add_crosscorr(data, ticker):
+    global CROSS_FEAT
+    if not CROSS_FEAT:
+        return
+    try:
+        for p in per:
+            peers = pd.DataFrame({k: df['ret'] for k, df in CROSS_FEAT.items() if 'ret' in df and k != ticker})
+            peers = peers.reindex(data.index)
+            peers_mean = peers.mean(axis=1, skipna=True)
+            data[f'cross_corr_{p}'] = data['ret'].rolling(p).corr(peers_mean)
+    except Exception as e:
+        print(f"[Cross-Corr] Failed for {ticker}: {e}")
+
+
+
 def add_crossrelstrength(data, ticker, benchmark='SPY'):
     global CROSS_FEAT
     if not CROSS_FEAT or benchmark not in CROSS_FEAT: return
@@ -209,26 +268,7 @@ def add_crossrelstrength(data, ticker, benchmark='SPY'):
             relstrength = data['close'] / CROSS_FEAT[benchmark]['close']
             data[f"cross_relstrength_{p}"] = relstrength / relstrength.rolling(p).mean()
     except Exception as e: print(f"[Cross-RelStrength] Failed for {ticker}: {e}")
-def add_crossbeta(data, ticker):
-    global CROSS_FEAT
-    if not CROSS_FEAT: return
-    try:
-        basket = pd.DataFrame({k: df['ret'] for k, df in CROSS_FEAT.items() if 'ret' in df}).drop(columns=[ticker], errors='ignore')
-        if 'ret' not in data: data['ret'] = data['close'].pct_change()
-        for p in per:
-            rolling_cov = data['ret'].rolling(p).cov(basket.mean(axis=1))
-            rolling_var = basket.mean(axis=1).rolling(p).var()
-            data[f"cross_beta_{p}"] = rolling_cov / (rolling_var + 1e-10)
-    except Exception as e:
-        print(f"[Cross-Beta] Failed for {ticker}: {e}")
-def add_crosscorr(data, ticker):
-    global CROSS_FEAT
-    if not CROSS_FEAT: return
-    try:
-        for p in per:
-            peers = pd.DataFrame({k: df['ret'] for k, df in CROSS_FEAT.items() if 'ret' in df and k != ticker})
-            data[f'cross_corr_{p}'] = data['ret'].rolling(p).corr(peers.mean(axis=1))
-    except Exception as e: print(f"[Cross-Corr] Failed for {ticker}: {e}")
+
 
 FTR_FUNC = {
     # Basic

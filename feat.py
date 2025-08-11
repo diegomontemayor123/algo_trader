@@ -1,18 +1,19 @@
 import os
 import pandas as pd
 import yfinance as yf
+import numpy as np
 from feat_list import FTR_FUNC, add_volume, setallcrossfeat
 from load import load_config
 from prune import select_features 
 
 config = load_config()
 PRICE_CACHE = "csv/prices.csv"; TICK = ['JPM', 'MSFT', 'NVDA', 'AVGO', 'LLY', 'COST', 'MA', 'XOM', 'UNH', 'AMZN', 'CAT', 'ADBE', 'TSLA']
+MAX_START = max([int(config["SHORT_PER"]), int(config["MED_PER"]), int(config["LONG_PER"])])
 
 def fetch_macro(name, ticker, start, end):
     try:
-        yf_data = yf.download(ticker, start=start, end=end, auto_adjust=False)
-        if 'Adj Close' in yf_data:series = yf_data['Adj Close']
-        elif 'Close' in yf_data:series = yf_data['Close']
+        yf_data = yf.download(ticker, start=start, end=end, auto_adjust=True)
+        if 'Close' in yf_data:series = yf_data['Close']
         else:raise ValueError(f"No valid price column found for {ticker}")
         series.name = name
         return series
@@ -23,11 +24,10 @@ def load_prices(START, END, macro_keys):
         data = pd.read_csv(PRICE_CACHE, index_col=0, parse_dates=True)
         cache_start = data.index.min()
         cache_end = data.index.max()
-        # If cached data doesn't cover START or END within 5 days, redownload
         if (cache_start - pd.to_datetime(START)).days > 5 or (pd.to_datetime(END) - cache_end).days > 5:
             print("[Feat] Cache date range outside 5-day grace period, redownloading...")
-            raw_data = yf.download(" ".join(TICK), start=START, end=END + pd.Timedelta(days=1), auto_adjust=False)
-            price = raw_data['Adj Close']
+            raw_data = yf.download(" ".join(TICK), start=START, end=END + pd.Timedelta(days=1), auto_adjust=True)
+            price = raw_data['Close']
             volume = raw_data['Volume']
             high = raw_data['High']
             low = raw_data['Low']
@@ -43,8 +43,8 @@ def load_prices(START, END, macro_keys):
             print(f"[Feat] Cached to {PRICE_CACHE}")
     else:
         print("[Feat] Downloading price and macro data...")
-        raw_data = yf.download(" ".join(TICK), start=START, end=END + pd.Timedelta(days=1), auto_adjust=False)
-        price = raw_data['Adj Close']
+        raw_data = yf.download(" ".join(TICK), start=START, end=END + pd.Timedelta(days=1), auto_adjust=True)
+        price = raw_data['Close']
         volume = raw_data['Volume']
         high = raw_data['High']
         low = raw_data['Low']
@@ -70,7 +70,8 @@ def process_macro_feat(cached_data, index, macro_keys, min_non_na_ratio=0.1):
         if  non_na_ratio < min_non_na_ratio:
             print(f"[Feat] Excluding {col} due to low data coverage ({non_na_ratio:.2%} non-NA)")
             continue
-        series = series.bfill().ffill()
+        series = series.ffill()
+        if series.isna().sum()>0: print(f"[Feat] Dropping {series.isna().sum()} NaN values from macro series.");series = series.dropna()
         try:pct_series = series.pct_change(fill_method=None).fillna(0)
         except Exception as e:
             print(f"[Feat] Warning: pct_change failed for {col} with error {e}, filling zeros")
@@ -112,7 +113,8 @@ def comp_feat(TICK, FEAT, cached_data, macro_keys, thresh=config["THRESH"], spli
         all_feat[ticker] = df
     
     setallcrossfeat(all_feat)
-    feat = pd.concat(all_feat.values(), axis=1).dropna()
+    feat = pd.concat(all_feat.values(), axis=1).iloc[MAX_START:]
+    #if feat.isna().sum().sum()>0: print(f"[Feat] Dropped {feat.isna().any(axis=1).sum()} NaN rows from features.");feat = feat.dropna()
     ret = prices.pct_change().shift(-1).reindex(feat.index)
     if ret.iloc[-1].isna().all():
         ret = ret.iloc[:-1]
@@ -127,6 +129,44 @@ def comp_feat(TICK, FEAT, cached_data, macro_keys, thresh=config["THRESH"], spli
     return feat, ret
 
 def norm_feat(feat_win):
-    mean = feat_win.mean(axis=0)
-    std = feat_win.std(axis=0) + 1e-10
+    mean = feat_win[:-1].mean(axis=0)
+    std = feat_win[:-1].std(axis=0) + 1e-10
     return (feat_win - mean) / std
+
+
+class RollingScaler:
+    """
+    Fit on training-window data (2D array n_rows x n_features or stacked sequences),
+    then transform any sequence windows with the same feature order.
+    """
+    def __init__(self, eps=1e-10):
+        self.mean_ = None
+        self.std_ = None
+        self.eps = eps
+
+    def fit(self, X):
+        X = np.asarray(X)
+        if X.ndim == 3:  # (n_seqs, seq_len, n_feat)
+            X = X.reshape(-1, X.shape[-1])
+        if X.ndim != 2:
+            raise ValueError("Expected 2D array for fit")
+        self.mean_ = np.nanmean(X, axis=0)
+        self.std_ = np.nanstd(X, axis=0)
+        self.std_[self.std_ < self.eps] = 1.0
+
+    def transform(self, X):
+        X = np.asarray(X)
+        # allow X shape (seq_len, n_feat) or (n_seqs, seq_len, n_feat)
+        if X.ndim == 2:
+            return (X - self.mean_) / self.std_
+        elif X.ndim == 3:
+            shp = X.shape
+            flat = X.reshape(-1, shp[-1])
+            flat = (flat - self.mean_) / self.std_
+            return flat.reshape(shp)
+        else:
+            raise ValueError("Unsupported shape for transform")
+
+    def fit_transform(self, X):
+        self.fit(X)
+        return self.transform(X)

@@ -26,9 +26,9 @@
     "SD_PEN": 0.17,
     "SD_EXP": 0.74,
     "SEED": 42,
-    "MAX_HEADS": 1,
-    "LAYERS": 1,
-    "EARLY_FAIL": 2,
+    "MAX_HEADS": 4,
+    "LAYERS": 3,
+    "EARLY_FAIL": 4,
     "VAL_SPLIT": 0.15,
     "TEST_CHUNK": 12,
     "ATTENT": 1
