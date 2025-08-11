@@ -35,7 +35,7 @@ def run_experiment(trial,study=None):
         "MAX_HEADS": trial.suggest_int("MAX_HEADS",1,10),#1
         "LAYERS": trial.suggest_int("LAYERS",1,10),#2
         "EARLY_FAIL": trial.suggest_int("EARLY_FAIL",2,8),#2
-        "VAL_SPLIT": trial.suggest_int("VAL_SPLIT",.1,0.2),#.15
+        "VAL_SPLIT": trial.suggest_categorical("VAL_SPLIT",[0.1,0.15,0.2]),#.15
         "TEST_CHUNK": trial.suggest_categorical("TEST_CHUNK",[12]),
         "ATTENT": trial.suggest_categorical("ATTENT",[1]),
     }
