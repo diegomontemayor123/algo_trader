@@ -1,7 +1,7 @@
 import os, subprocess, re, optuna, json, csv
 from optuna.samplers import TPESampler
 
-TRIALS = 20
+TRIALS = 200
 
 
 def run_experiment(trial,study=None):
@@ -11,21 +11,21 @@ def run_experiment(trial,study=None):
         "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
         "MACRO": trial.suggest_categorical("MACRO", ["^GSPC,CL=F,SI=F,NG=F,HG=F,ZC=F,^IRX,TLT,IEF,UUP,HYG,EEM,VEA,FXI,^RUT,^FTSE,^TYX,AUDUSD=X,USDJPY=X,EURUSD=X,GBPUSD=X,ZW=F,GC=F",]),#"GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM"
         "FEAT": trial.suggest_categorical("FEAT", ["ret,price,logret,rollret,sma,ema,momentum,macd,pricevshigh,vol,atr,range,volchange,volptile,zscore,rsi,cmo,williams,stoch,priceptile,adx,meanabsret,boll,donchian,volume,lag,retcrossz,crossmomentumz,crossvolz,crossretrank",]),#"sma,ema,boll,macd,volchange,donchian"
-        "YWIN": trial.suggest_int("YWIN",32,32),#29,28
-        "PRUNEWIN": trial.suggest_int("PRUNEWIN",28,28),#31,28
-        "PRUNEDOWN": trial.suggest_float("PRUNEDOWN",1,1),
-        "THRESH": trial.suggest_int("THRESH",170,170),#170
+        "YWIN": trial.suggest_int("YWIN",32,38),#29,28
+        "PRUNEWIN": trial.suggest_int("PRUNEWIN",27,32),#31,28
+        "PRUNEDOWN": trial.suggest_float("PRUNEDOWN",1.25,1.75),
+        "THRESH": trial.suggest_int("THRESH",177,177),#170
         "NESTIM": trial.suggest_int("NESTIM",200,200),#200
-        "BATCH": trial.suggest_int("BATCH",53,53),#53
-        "LBACK": trial.suggest_int("LBACK",84,84),#84
-        "PRED_DAYS": trial.suggest_int("PRED_DAYS",6,6),#6
+        "BATCH": trial.suggest_int("BATCH",44,54),#53
+        "LBACK": trial.suggest_int("LBACK",74,84),#84
+        "PRED_DAYS": trial.suggest_int("PRED_DAYS",3,5),#6
         "DROPOUT": trial.suggest_float("DROPOUT",.035,.035),#.035
-        "DECAY": trial.suggest_float("DECAY",.003,.003,log=True),#.003
-        "SHORT_PER": trial.suggest_int("SHORT_PER",12,12),#12
-        "MED_PER": trial.suggest_int("MED_PER",17,17),#17
-        "LONG_PER": trial.suggest_int("LONG_PER",58,58),#58
-        "INIT_LR": trial.suggest_float("INIT_LR",.001,.001,log=True),#.001
-        "EXP_PEN": trial.suggest_float("EXP_PEN",.24,.24),#.24
+        "DECAY": trial.suggest_float("DECAY",.003,.004,log=True),#.003
+        "SHORT_PER": trial.suggest_int("SHORT_PER",8,13),#12
+        "MED_PER": trial.suggest_int("MED_PER",14,24),#17
+        "LONG_PER": trial.suggest_int("LONG_PER",35,45),#58
+        "INIT_LR": trial.suggest_float("INIT_LR",.001,.003,log=True),#.001
+        "EXP_PEN": trial.suggest_float("EXP_PEN",.245,.245),#.24
         "EXP_EXP": trial.suggest_float("EXP_EXP",1.8,1.8),#1.8
         "RETURN_PEN": trial.suggest_float("RETURN_PEN",.073,.073),#.073
         "RETURN_EXP": trial.suggest_float("RETURN_EXP",.28,.28),#.28 
