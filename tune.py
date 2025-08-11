@@ -1,42 +1,42 @@
 import os, subprocess, re, optuna, json, csv
 from optuna.samplers import TPESampler
 
-TRIALS = 200
+TRIALS = 400
 
 
 def run_experiment(trial,study=None):
-    config = {"START": trial.suggest_categorical("START", ["2015-01-01"]),#2019 Jan
+    config = {"START": trial.suggest_categorical("START", ["2013-01-01","2012-10-01","2012-07-01","2012-04-01","2012-01-01"]),#2019 Jan
         "END": trial.suggest_categorical("END", ["2023-01-01"]),#2025 Jul
-        "SPLIT": trial.suggest_categorical("SPLIT", ["2019-01-01",]),#2023 Jan
+        "SPLIT": trial.suggest_categorical("SPLIT", ["2017-01-01",]),#2023 Jan
         "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
         "MACRO": trial.suggest_categorical("MACRO", ["^GSPC,CL=F,SI=F,NG=F,HG=F,ZC=F,^IRX,TLT,IEF,UUP,HYG,EEM,VEA,FXI,^RUT,^FTSE,^TYX,AUDUSD=X,USDJPY=X,EURUSD=X,GBPUSD=X,ZW=F,GC=F",]),#"GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM"
         "FEAT": trial.suggest_categorical("FEAT", ["ret,price,logret,rollret,sma,ema,momentum,macd,pricevshigh,vol,atr,range,volchange,volptile,zscore,rsi,cmo,williams,stoch,priceptile,adx,meanabsret,boll,donchian,volume,lag,retcrossz,crossmomentumz,crossvolz,crossretrank",]),#"sma,ema,boll,macd,volchange,donchian"
-        "YWIN": trial.suggest_int("YWIN",32,38),#29,28
-        "PRUNEWIN": trial.suggest_int("PRUNEWIN",27,32),#31,28
-        "PRUNEDOWN": trial.suggest_float("PRUNEDOWN",1.25,1.75),
-        "THRESH": trial.suggest_int("THRESH",177,177),#170
-        "NESTIM": trial.suggest_int("NESTIM",200,200),#200
-        "BATCH": trial.suggest_int("BATCH",44,54),#53
-        "LBACK": trial.suggest_int("LBACK",74,84),#84
-        "PRED_DAYS": trial.suggest_int("PRED_DAYS",3,5),#6
-        "DROPOUT": trial.suggest_float("DROPOUT",.035,.035),#.035
+        "YWIN": trial.suggest_int("YWIN",20,40),#29,28
+        "PRUNEWIN": trial.suggest_int("PRUNEWIN",20,40),#31,28
+        "PRUNEDOWN": trial.suggest_float("PRUNEDOWN",1,2),
+        "THRESH": trial.suggest_int("THRESH",100,250),#170
+        "NESTIM": trial.suggest_int("NESTIM",150,250),#200
+        "BATCH": trial.suggest_int("BATCH",40,60),#53
+        "LBACK": trial.suggest_int("LBACK",60,95),#84
+        "PRED_DAYS": trial.suggest_int("PRED_DAYS",1,9),#6
+        "DROPOUT": trial.suggest_float("DROPOUT",.03,.045),#.035
         "DECAY": trial.suggest_float("DECAY",.003,.004,log=True),#.003
-        "SHORT_PER": trial.suggest_int("SHORT_PER",8,13),#12
-        "MED_PER": trial.suggest_int("MED_PER",14,24),#17
-        "LONG_PER": trial.suggest_int("LONG_PER",35,45),#58
-        "INIT_LR": trial.suggest_float("INIT_LR",.001,.003,log=True),#.001
-        "EXP_PEN": trial.suggest_float("EXP_PEN",.245,.245),#.24
+        "SHORT_PER": trial.suggest_int("SHORT_PER",5,18),#12
+        "MED_PER": trial.suggest_int("MED_PER",14,35),#17
+        "LONG_PER": trial.suggest_int("LONG_PER",30,80),#58
+        "INIT_LR": trial.suggest_float("INIT_LR",.001,.006,log=True),#.001
+        "EXP_PEN": trial.suggest_float("EXP_PEN",.23,.26),#.24
         "EXP_EXP": trial.suggest_float("EXP_EXP",1.8,1.8),#1.8
-        "RETURN_PEN": trial.suggest_float("RETURN_PEN",.073,.073),#.073
+        "RETURN_PEN": trial.suggest_float("RETURN_PEN",.07,.08),#.073
         "RETURN_EXP": trial.suggest_float("RETURN_EXP",.28,.28),#.28 
-        "SD_PEN": trial.suggest_float("SD_PEN",.17,.17),#.17 
-        "SD_EXP": trial.suggest_float("SD_EXP",.74,.74),#.74 
+        "SD_PEN": trial.suggest_float("SD_PEN",.15,.2),#.17 
+        "SD_EXP": trial.suggest_float("SD_EXP",.7,.8),#.74 
         "SEED": trial.suggest_categorical("SEED",[42]),#42
-        "MAX_HEADS": trial.suggest_categorical("MAX_HEADS",[1]),#1
-        "LAYERS": trial.suggest_categorical("LAYERS",[1]),#2
-        "EARLY_FAIL": trial.suggest_categorical("EARLY_FAIL",[2]),#2
+        "MAX_HEADS": trial.suggest_categorical("MAX_HEADS",[1,2,3,4]),#1
+        "LAYERS": trial.suggest_categorical("LAYERS",[1,2,3,4,5]),#2
+        "EARLY_FAIL": trial.suggest_categorical("EARLY_FAIL",[2,3,4,5,6,7,8]),#2
         "VAL_SPLIT": trial.suggest_categorical("VAL_SPLIT",[.15]),#.15
-        "TEST_CHUNK": trial.suggest_categorical("TEST_CHUNK",[12]),
+        "TEST_CHUNK": trial.suggest_categorical("TEST_CHUNK",[6,9,12,15,18,21,24,36,48]),
         "ATTENT": trial.suggest_categorical("ATTENT",[1]),
     }
 
