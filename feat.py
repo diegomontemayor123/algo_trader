@@ -1,14 +1,13 @@
 import os
 import pandas as pd
 import yfinance as yf
-import numpy as np
 from feat_list import FTR_FUNC, add_volume, setallcrossfeat
 from load import load_config
 from prune import select_features 
 
 config = load_config()
 PRICE_CACHE = "csv/prices.csv"; TICK = ['JPM', 'MSFT', 'NVDA', 'AVGO', 'LLY', 'COST', 'MA', 'XOM', 'UNH', 'AMZN', 'CAT', 'ADBE', 'TSLA']
-MAX_START = max([int(config["SHORT_PER"]), int(config["MED_PER"]), int(config["LONG_PER"])])
+MAX_START =  int(config["LONG_PER"]) +1 
 
 def fetch_macro(name, ticker, start, end):
     try:
@@ -114,7 +113,7 @@ def comp_feat(TICK, FEAT, cached_data, macro_keys, thresh=config["THRESH"], spli
     
     setallcrossfeat(all_feat)
     feat = pd.concat(all_feat.values(), axis=1).iloc[MAX_START:]
-    #if feat.isna().sum().sum()>0: print(f"[Feat] Dropped {feat.isna().any(axis=1).sum()} NaN rows from features.");feat = feat.dropna()
+    if feat.isna().sum().sum()>0: print(f"[Feat] Dropped {feat.isna().any(axis=1).sum()} NaN rows from features.");feat = feat.dropna()
     ret = prices.pct_change().shift(-1).reindex(feat.index)
     if ret.iloc[-1].isna().all():
         ret = ret.iloc[:-1]
@@ -132,41 +131,3 @@ def norm_feat(feat_win):
     mean = feat_win[:-1].mean(axis=0)
     std = feat_win[:-1].std(axis=0) + 1e-10
     return (feat_win - mean) / std
-
-
-class RollingScaler:
-    """
-    Fit on training-window data (2D array n_rows x n_features or stacked sequences),
-    then transform any sequence windows with the same feature order.
-    """
-    def __init__(self, eps=1e-10):
-        self.mean_ = None
-        self.std_ = None
-        self.eps = eps
-
-    def fit(self, X):
-        X = np.asarray(X)
-        if X.ndim == 3:  # (n_seqs, seq_len, n_feat)
-            X = X.reshape(-1, X.shape[-1])
-        if X.ndim != 2:
-            raise ValueError("Expected 2D array for fit")
-        self.mean_ = np.nanmean(X, axis=0)
-        self.std_ = np.nanstd(X, axis=0)
-        self.std_[self.std_ < self.eps] = 1.0
-
-    def transform(self, X):
-        X = np.asarray(X)
-        # allow X shape (seq_len, n_feat) or (n_seqs, seq_len, n_feat)
-        if X.ndim == 2:
-            return (X - self.mean_) / self.std_
-        elif X.ndim == 3:
-            shp = X.shape
-            flat = X.reshape(-1, shp[-1])
-            flat = (flat - self.mean_) / self.std_
-            return flat.reshape(shp)
-        else:
-            raise ValueError("Unsupported shape for transform")
-
-    def fit_transform(self, X):
-        self.fit(X)
-        return self.transform(X)

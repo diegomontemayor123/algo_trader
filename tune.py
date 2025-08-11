@@ -1,11 +1,11 @@
 import os, subprocess, re, optuna, json, csv
 from optuna.samplers import TPESampler
 
-TRIALS = 200
+TRIALS = 20
 
 
 def run_experiment(trial,study=None):
-    config = {"START": trial.suggest_categorical("START", ["2015-01-01","2014-01-01","2013-01-01"]),#2019 Jan
+    config = {"START": trial.suggest_categorical("START", ["2015-01-01"]),#2019 Jan
         "END": trial.suggest_categorical("END", ["2023-01-01"]),#2025 Jul
         "SPLIT": trial.suggest_categorical("SPLIT", ["2019-01-01",]),#2023 Jan
         "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
@@ -32,10 +32,10 @@ def run_experiment(trial,study=None):
         "SD_PEN": trial.suggest_float("SD_PEN",.17,.17),#.17 
         "SD_EXP": trial.suggest_float("SD_EXP",.74,.74),#.74 
         "SEED": trial.suggest_categorical("SEED",[42]),#42
-        "MAX_HEADS": trial.suggest_int("MAX_HEADS",1,10),#1
-        "LAYERS": trial.suggest_int("LAYERS",1,10),#2
-        "EARLY_FAIL": trial.suggest_int("EARLY_FAIL",2,8),#2
-        "VAL_SPLIT": trial.suggest_categorical("VAL_SPLIT",[0.1,0.15,0.2]),#.15
+        "MAX_HEADS": trial.suggest_categorical("MAX_HEADS",[1]),#1
+        "LAYERS": trial.suggest_categorical("LAYERS",[1]),#2
+        "EARLY_FAIL": trial.suggest_categorical("EARLY_FAIL",[2]),#2
+        "VAL_SPLIT": trial.suggest_categorical("VAL_SPLIT",[.15]),#.15
         "TEST_CHUNK": trial.suggest_categorical("TEST_CHUNK",[12]),
         "ATTENT": trial.suggest_categorical("ATTENT",[1]),
     }

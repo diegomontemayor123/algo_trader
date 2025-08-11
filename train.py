@@ -29,8 +29,8 @@ def run_training_chunks(chunks, lback, norm_feat, TICK, comp_feat, macro_keys, c
 
         cached_chunk_data = load_prices(chunk_config["START"], chunk_config["END"], macro_keys)
         feat_train, ret_train = comp_feat(TICK, config["FEAT"], cached_chunk_data, macro_keys, split_date=chunk_config["SPLIT"], method=["rf"])
-        current_model, scaler = train(chunk_config, feat_train, ret_train)
-        #current_model = train(chunk_config, feat_train, ret_train)
+        #current_model, scaler = train(chunk_config, feat_train, ret_train)
+        current_model = train(chunk_config, feat_train, ret_train)
         current_model.eval()       
         start_idx = feat_train.index.get_indexer([chunk_start], method='bfill')[0]
         end_idx = feat_train.index.get_indexer([chunk_end], method='ffill')[0]
@@ -44,8 +44,8 @@ def run_training_chunks(chunks, lback, norm_feat, TICK, comp_feat, macro_keys, c
         for i in range(start_idx - lback, end_idx - lback + 1):
             current_date = ret_train.index[i + lback]
             if current_date < chunk_start or current_date > chunk_end: continue
-            #normalized_feat = norm_feat(feat_train.iloc[i:i + lback].values.astype(np.float32))
-            normalized_feat = scaler.transform(feat_train.iloc[i:i + lback].values.astype(np.float32)) 
+            normalized_feat = norm_feat(feat_train.iloc[i:i + lback].values.astype(np.float32))
+            #normalized_feat = scaler.transform(feat_train.iloc[i:i + lback].values.astype(np.float32)) 
             input_tensor = torch.tensor(normalized_feat).unsqueeze(0).to(device)
             with torch.no_grad(): weight = current_model(input_tensor).cpu().numpy().flatten()
             pfo_ret = np.dot(weight, ret_train.loc[current_date].values)
