@@ -1,4 +1,4 @@
-import torch, copy, random, os
+import torch, copy, random
 import pandas as pd
 import numpy as np
 from feat import load_prices
@@ -9,20 +9,11 @@ from minitune import minitune_for_chunk
 np.seterr(all='raise')
 
 SEED = load_config()["SEED"]
-
-# Set Python, NumPy, Torch seeds
-os.environ["PYTHONHASHSEED"] = str(SEED)
+torch.manual_seed(SEED)
 np.random.seed(SEED)
 random.seed(SEED)
-torch.manual_seed(SEED)
-if torch.cuda.is_available():
-    torch.cuda.manual_seed_all(SEED)
-    os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
+if torch.cuda.is_available(): torch.cuda.manual_seed_all(SEED)
 
-# Force deterministic PyTorch behavior
-torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.benchmark = False
-torch.use_deterministic_algorithms(True)
 
 
 def run_training_chunks(chunks, lback, norm_feat, TICK, comp_feat, macro_keys, config, start, device, initial_capital):
