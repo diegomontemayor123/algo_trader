@@ -20,7 +20,7 @@ def run_experiment(trial,study=None):
     "BATCH": trial.suggest_int("BATCH", 56, 80),
     "LBACK": trial.suggest_int("LBACK", 85, 100),
     "PRED_DAYS": trial.suggest_int("PRED_DAYS", 5, 8),
-    "DROPOUT": trial.suggest_float("DROPOUT", 0.032, 0.0398),
+    "DROPOUT": trial.suggest_float("DROPOUT", 0.032, 0.042),
     "DECAY": trial.suggest_float("DECAY", 0.0030, 0.0035, log=True),
     "SHORT_PER": trial.suggest_int("SHORT_PER", 13, 17),
     "MED_PER": trial.suggest_int("MED_PER", 19, 24),
