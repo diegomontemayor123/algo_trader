@@ -3,7 +3,7 @@
 import torch
 import numpy as np
 import pandas as pd
-from feat import norm_feat, RollingScaler  # RollingScaler added to feat.py
+from feat import RollingScaler  # RollingScaler added to feat.py
 np.seterr(all='raise')
 
 class MarketDataset(torch.utils.data.Dataset):
@@ -28,6 +28,11 @@ def create_sequences(feat, ret, lback, pred_days, TICK):
         indices.append(feat.index[i + lback])
     print(f"[Prep] Feature/Return DataFrame shape: {feat.shape} / {ret.shape}, num_seq: {len(sequences)} ")
     return sequences, targets, indices
+
+def zscore_shrink(local_seq, global_seq, alpha=None):
+    local_z = (local_seq - local_seq.mean(axis=0, keepdims=True)) / (local_seq.std(axis=0, keepdims=True) + 1e-8)
+    return alpha * local_z + (1 - alpha) * global_seq
+
 
 def prep_data(feat, ret, config):
     print(f"[Prep] Feat/Ret date range: {feat.index[0].date()} - {feat.index[-1].date()} / {ret.index[0].date()} - {ret.index[-1].date()}")
@@ -69,9 +74,14 @@ def prep_data(feat, ret, config):
     scaler.fit(stacked)
 
     # transform all sequences (train/val/test)
-    train_seq_scaled = scaler.transform(np.array(train_seq))
-    val_seq_scaled = scaler.transform(np.array(val_seq)) if len(val_seq) else np.empty((0,)) 
-    test_seq_scaled = scaler.transform(np.array(test_sequences)) if len(test_sequences) else np.empty((0,))
+    alpha = 1
+    train_seq_scaled = np.array([zscore_shrink(local_seq, global_seq, alpha)
+        for local_seq, global_seq in zip(train_seq, scaler.transform(np.array(train_seq)))])
+    val_seq_scaled = np.array([zscore_shrink(local_seq, global_seq, alpha)
+        for local_seq, global_seq in zip(val_seq, scaler.transform(np.array(val_seq)))]) if len(val_seq) else np.empty((0,))
+    test_seq_scaled = np.array([zscore_shrink(local_seq, global_seq, alpha)
+        for local_seq, global_seq in zip(test_sequences, scaler.transform(np.array(test_sequences)))]) if len(test_sequences) else np.empty((0,))
+
 
     # create datasets
     train_data = MarketDataset(torch.tensor(train_seq_scaled), torch.tensor(np.array(train_tgt)))

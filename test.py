@@ -14,7 +14,7 @@ def save_to_csv(var,csv_path):
     try:x.to_csv(csv_path);return x
     except Exception as e:print(f"Error saving {var} to {csv_path}: {e}")
 
-def run_btest(device, initial_capital, split, lback,comp_feat, norm_feat, TICK, start, end,feat, macro_keys,
+def run_btest(device, initial_capital, split, lback,comp_feat, TICK, start, end,feat, macro_keys,
                 test_chunk, plot=False,weight_csv_path="csv/weight.csv", config=None):
     split_dt = pd.to_datetime(split);   end_dt = pd.to_datetime(end)
     chunks = [];    curr_start = split_dt
@@ -31,7 +31,7 @@ def run_btest(device, initial_capital, split, lback,comp_feat, norm_feat, TICK, 
             chunks[-2] = (prev_start, final_end)
             chunks.pop()
     pfo_values = [initial_capital];bench_values = [initial_capital];daily_weight = [];all_pfo_metrics = [];all_bench_metrics = [];avg_outperf = {}
-    pfo_values, bench_values, daily_weight, all_pfo_metrics, all_bench_metrics, avg_outperf = run_training_chunks(chunks,  lback, norm_feat, TICK, comp_feat, macro_keys, config, start, device, initial_capital)
+    pfo_values, bench_values, daily_weight, all_pfo_metrics, all_bench_metrics, avg_outperf = run_training_chunks(chunks,  lback, TICK, comp_feat, macro_keys, config, start, device, initial_capital)
     save_to_csv(daily_weight, weight_csv_path);weight_df = pd.read_csv(weight_csv_path, index_col="Date", parse_dates=True)
     pfo_series = pd.Series(pfo_values[1:], index=weight_df.index);  bench_series = pd.Series(bench_values[1:], index=weight_df.index)
     comb_pfo_metrics = calc_perf_metrics(pfo_series) ;  comb_bench_metrics = calc_perf_metrics(bench_series)

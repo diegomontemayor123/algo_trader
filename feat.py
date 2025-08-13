@@ -128,17 +128,7 @@ def comp_feat(TICK, FEAT, cached_data, macro_keys, thresh=config["THRESH"], spli
     feat.to_csv("csv/feat_all.csv")
     return feat, ret
 
-def norm_feat(feat_win):
-    mean = feat_win[:-1].mean(axis=0)
-    std = feat_win[:-1].std(axis=0) + 1e-10
-    return (feat_win - mean) / std
-
-
 class RollingScaler:
-    """
-    Fit on training-window data (2D array n_rows x n_features or stacked sequences),
-    then transform any sequence windows with the same feature order.
-    """
     def __init__(self, eps=1e-10):
         self.mean_ = None
         self.std_ = None
@@ -146,8 +136,7 @@ class RollingScaler:
 
     def fit(self, X):
         X = np.asarray(X)
-        if X.ndim == 3:  # (n_seqs, seq_len, n_feat)
-            X = X.reshape(-1, X.shape[-1])
+        if X.ndim == 3:  X = X.reshape(-1, X.shape[-1])
         if X.ndim != 2:
             raise ValueError("Expected 2D array for fit")
         self.mean_ = np.nanmean(X, axis=0)
@@ -156,9 +145,7 @@ class RollingScaler:
 
     def transform(self, X):
         X = np.asarray(X)
-        # allow X shape (seq_len, n_feat) or (n_seqs, seq_len, n_feat)
-        if X.ndim == 2:
-            return (X - self.mean_) / self.std_
+        if X.ndim == 2: return (X - self.mean_) / self.std_
         elif X.ndim == 3:
             shp = X.shape
             flat = X.reshape(-1, shp[-1])

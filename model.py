@@ -59,16 +59,14 @@ def train_model(model, train_loader, val_loader, config, asset_sd):
 
 def train(config, feat, ret):
     from prep import prep_data
-    #train_data, val_data, test_data, scaler = prep_data(feat, ret, config)
-    train_data, val_data, _ = prep_data(feat, ret, config)
+    train_data, val_data, test_data, scaler = prep_data(feat, ret, config)
     num_workers = min(2, multiprocessing.cpu_count())
     train_loader = DataLoader(train_data, batch_size=config["BATCH"], shuffle=True, num_workers=num_workers,pin_memory=True, persistent_workers=True)
     val_loader = DataLoader(val_data, batch_size=config["BATCH"], shuffle=False, num_workers=num_workers,pin_memory=True, persistent_workers=True)
     model = create_model(train_data[0][0].shape[1], config) 
     asset_sd = torch.tensor(train_data.ret.std(dim=0).cpu().numpy().astype(np.float32), device=DEVICE)
     model0 = train_model(model, train_loader, val_loader, config, asset_sd=asset_sd)
-    return model0
-    #return model0, scaler 
+    return model0, scaler 
 
 class TransformerTrader(nn.Module):
     def __init__(self, dimen, num_heads, num_layers, dropout, seq_len, TICK, feat_attent):
@@ -128,7 +126,7 @@ if __name__ == "__main__":
     TICK = config["TICK"]; feat_list = config["FEAT"]; macro_keys = config["MACRO"]
     if isinstance(macro_keys, str): macro_keys = [k.strip() for k in macro_keys.split(",") if k.strip()]
     results = run_btest(device=DEVICE,initial_capital=INITIAL_CAPITAL, split=config["SPLIT"],lback=config["LBACK"],comp_feat=comp_feat,
-                        norm_feat=norm_feat,TICK=TICK,start=config["START"],end=config["END"], feat=feat_list,macro_keys=macro_keys,test_chunk=config["TEST_CHUNK"],
+                        TICK=TICK,start=config["START"],end=config["END"], feat=feat_list,macro_keys=macro_keys,test_chunk=config["TEST_CHUNK"],
                         plot=True,config=config,)     
     pfo_sharpe = results["pfo"].get("sharpe", float('nan'));max_down = results["pfo"].get("max_down", float('nan'))
     cagr = results["pfo"].get("cagr", float('nan'));bench_sharpe = results["bench"].get("sharpe", float('nan'))
