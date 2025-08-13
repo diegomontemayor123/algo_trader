@@ -11,30 +11,30 @@ def run_experiment(trial,study=None):
         "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
         "MACRO": trial.suggest_categorical("MACRO", ["^GSPC,CL=F,SI=F,NG=F,HG=F,ZC=F,^IRX,TLT,IEF,UUP,HYG,EEM,VEA,FXI,^RUT,^FTSE,^TYX,AUDUSD=X,USDJPY=X,EURUSD=X,GBPUSD=X,ZW=F,GC=F",]),#"GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM"
         "FEAT": trial.suggest_categorical("FEAT", ["ret,price,logret,rollret,sma,ema,momentum,macd,pricevshigh,vol,atr,range,volchange,volptile,zscore,rsi,cmo,williams,stoch,priceptile,adx,meanabsret,boll,donchian,volume,lag,retcrossz,crossmomentumz,crossvolz,crossretrank",]),#"sma,ema,boll,macd,volchange,donchian"
-        "YWIN": trial.suggest_int("YWIN",22,22),#29,28
-        "PRUNEWIN": trial.suggest_int("PRUNEWIN",26,29),#31,28
-        "PRUNEDOWN": trial.suggest_float("PRUNEDOWN",1.1,1.1),
-        "THRESH": trial.suggest_int("THRESH",130,160),#170
-        "NESTIM": trial.suggest_int("NESTIM",180,180),#200
-        "BATCH": trial.suggest_int("BATCH",60,85),#53
-        "LBACK": trial.suggest_int("LBACK",84,94),#84
-        "PRED_DAYS": trial.suggest_int("PRED_DAYS",5,7),#6
-        "DROPOUT": trial.suggest_float("DROPOUT",.035,.035),#.035
-        "DECAY": trial.suggest_float("DECAY",.0032,.0032,log=True),#.003
-        "SHORT_PER": trial.suggest_int("SHORT_PER",15,17),#12
-        "MED_PER": trial.suggest_int("MED_PER",22,22),#17
-        "LONG_PER": trial.suggest_int("LONG_PER",57,73),#58
-        "INIT_LR": trial.suggest_float("INIT_LR",.005,.008,log=True),#.001
-        "EXP_PEN": trial.suggest_float("EXP_PEN",.232,.232),#.24
+        "YWIN": trial.suggest_int("YWIN",26,35),#29,28
+        "PRUNEWIN": trial.suggest_int("PRUNEWIN",27,31),#31,28
+        "PRUNEDOWN": trial.suggest_float("PRUNEDOWN",1.2,1.6),
+        "THRESH": trial.suggest_int("THRESH",153,229),#170
+        "NESTIM": trial.suggest_int("NESTIM",200,200),#200
+        "BATCH": trial.suggest_int("BATCH",57,67),#53
+        "LBACK": trial.suggest_int("LBACK",78,88),#84
+        "PRED_DAYS": trial.suggest_int("PRED_DAYS",5,5),#6
+        "DROPOUT": trial.suggest_float("DROPOUT",.035,.042),#.035
+        "DECAY": trial.suggest_float("DECAY",.0032,.0036,log=True),#.003
+        "SHORT_PER": trial.suggest_int("SHORT_PER",12,15),#12
+        "MED_PER": trial.suggest_int("MED_PER",17,22),#17
+        "LONG_PER": trial.suggest_int("LONG_PER",50,61),#58
+        "INIT_LR": trial.suggest_float("INIT_LR",.006,.008,log=True),#.001
+        "EXP_PEN": trial.suggest_float("EXP_PEN",.232,.242),#.24
         "EXP_EXP": trial.suggest_float("EXP_EXP",1.8,1.8),#1.8
-        "RETURN_PEN": trial.suggest_float("RETURN_PEN",.073,.073),#.073
+        "RETURN_PEN": trial.suggest_float("RETURN_PEN",.0755,.0755),#.073
         "RETURN_EXP": trial.suggest_float("RETURN_EXP",.28,.28),#.28 
-        "SD_PEN": trial.suggest_float("SD_PEN",.17,.17),#.17 
-        "SD_EXP": trial.suggest_float("SD_EXP",.76,.76),#.74 
+        "SD_PEN": trial.suggest_float("SD_PEN",.175,.175),#.17 
+        "SD_EXP": trial.suggest_float("SD_EXP",.75,.75),#.74 
         "SEED": trial.suggest_categorical("SEED",[42]),#42
-        "MAX_HEADS": trial.suggest_categorical("MAX_HEADS",[1,2,4]),#1
-        "LAYERS": trial.suggest_categorical("LAYERS",[2,3]),#2
-        "EARLY_FAIL": trial.suggest_categorical("EARLY_FAIL",[5,7]),#2
+        "MAX_HEADS": trial.suggest_categorical("MAX_HEADS",[1,2]),#1
+        "LAYERS": trial.suggest_categorical("LAYERS",[4,5,6]),#2
+        "EARLY_FAIL": trial.suggest_categorical("EARLY_FAIL",[2,4,6,8]),#2
         "VAL_SPLIT": trial.suggest_categorical("VAL_SPLIT",[.15]),#.15
         "TEST_CHUNK": trial.suggest_categorical("TEST_CHUNK",[12]),
         "ATTENT": trial.suggest_categorical("ATTENT",[1]),
