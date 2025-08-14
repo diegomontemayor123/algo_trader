@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os, math, warnings, json
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Dict
 import numpy as np
 import pandas as pd
 from pandas.tseries.offsets import BDay
@@ -23,7 +23,7 @@ except: xgb = None
 warnings.filterwarnings("ignore")
 
 TICKERS = ['JPM','MSFT','NVDA','AVGO','LLY','COST','MA','XOM','UNH','AMZN','CAT','ADBE']
-MACRO_TICKERS = ['^VIX','^TNX','^GSPC','GLD','TLT','DXY=X']
+MACRO_TICKERS = ['^VIX','^TNX','^GSPC','GLD','TLT','DX-Y.NYB']
 SECTOR_MAP = {'JPM':'XLF','MSFT':'XLK','NVDA':'XLK','AVGO':'XLK','LLY':'XLV','COST':'XLP','MA':'XLF','XOM':'XLE','UNH':'XLV','AMZN':'XLY','CAT':'XLI','ADBE':'XLK'}
 START, END, SPLIT = '2012-01-01','2020-12-31','2017-01-01'
 REBALANCE_FREQ, TARGET_HORIZON_DAYS, RETRAIN_FREQ_DAYS, SEED = 'W-FRI', 5, 20, 42
@@ -55,47 +55,67 @@ class PriceLoader:
         return df.loc[start:end]
 
 class FeatureEngine:
-    def __init__(self,windows=[5,10,20,60,120]): self.windows=windows; self.feature_columns=None
-    def _tech_block(self,close,vol,high,low):
-        r,f = close.pct_change(),pd.DataFrame(index=close.index)
-        for w in self.windows: roll=r.rolling(w); f.update({f'ret_{w}':close.pct_change(w),f'vol_{w}':roll.std(),f'mom_{w}':roll.mean()/(roll.std()+1e-12),f'rev_{w}':-roll.sum(),f'skew_{w}':roll.skew(),f'kurt_{w}':roll.kurt()})
-        delta,up,down = close.diff(),delta.clip(lower=0).rolling(14).mean(),(-delta.clip(upper=0)).rolling(14).mean(); rs=up/(down+1e-12); f['rsi']=100-(100/(1+rs))
-        exp1,exp2,macd = close.ewm(span=12).mean(),close.ewm(span=26).mean(),exp1-exp2; f['macd']=macd-macd.ewm(span=9).mean()
-        ma20,sd20 = close.rolling(20).mean(),close.rolling(20).std(); f['bb_pos']=(close-ma20)/(2*sd20+1e-12)
-        f.update({'dollar_vol':(close*vol).rolling(20).mean(),'amihud':(r.abs()/(close*vol+1e-12)).rolling(20).mean(),'hl_ratio':(high-low)/(close+1e-12)})
+    def __init__(self, windows=[5,10,20,60,120]):
+        self.windows = windows
+        self.feature_columns = None
+
+    def _tech_block(self, close, vol, high, low):
+        r = close.pct_change()
+        f = pd.DataFrame(index=close.index)
+        for w in self.windows:
+            roll = r.rolling(w)
+            for w in self.windows:
+                f[f'ret_{w}'] = close.pct_change(w)
+                f[f'vol_{w}']  = roll.std().reindex(close.index).fillna(0.0)
+                f[f'mom_{w}']  = (roll.mean() / (roll.std() + 1e-12)).reindex(close.index).fillna(0.0)
+                f[f'rev_{w}']  = (-roll.sum()).reindex(close.index).fillna(0.0)
+                f[f'skew_{w}'] = roll.skew().reindex(close.index).fillna(0.0)
+                f[f'kurt_{w}'] = roll.kurt().reindex(close.index).fillna(0.0)
+                delta = close.diff()
+        up = delta.clip(lower=0).rolling(14).mean()
+        down = (-delta.clip(upper=0)).rolling(14).mean()
+        rs = up / (down + 1e-12)
+        f['rsi'] = 100 - (100 / (1 + rs))
+        exp1, exp2 = close.ewm(span=12).mean(), close.ewm(span=26).mean()
+        macd = exp1 - exp2
+        f['macd'] = macd - macd.ewm(span=9).mean()
+        ma20, sd20 = close.rolling(20).mean(), close.rolling(20).std()
+        f['bb_pos'] = (close - ma20) / (2 * sd20 + 1e-12)
+        f['dollar_vol'] = (close*vol).rolling(20).mean().reindex(close.index).fillna(0.0)
+        f['amihud']     = (r.abs()/(close*vol + 1e-12)).rolling(20).mean().reindex(close.index).fillna(0.0)
+        f['hl_ratio']   = ((high - low)/(close + 1e-12)).reindex(close.index).fillna(0.0)
         return f
-    def align_features(self,X): 
-        if self.feature_columns is None: return X
-        aligned = pd.DataFrame(0.0,index=X.index,columns=self.feature_columns)
-        for col in X.columns:
-            if col in self.feature_columns: aligned[col] = X[col]
-        return aligned
-    def build(self,data):
+
+    def build(self, data):
         feats = []
         for t in TICKERS:
             if (t,'close') not in data: continue
-            try:
-                p,v,h,l = data[(t,'close')].ffill(),data[(t,'vol')].ffill(),data[(t,'high')].ffill(),data[(t,'low')].ffill()
-                f = self._tech_block(p,v,h,l)
-                sec = SECTOR_MAP.get(t)
-                if sec and (sec,'close') in data:
-                    try: sec_ret=data[(sec,'close')].pct_change(); f.update({'sector_beta':p.pct_change().rolling(60).corr(sec_ret),'sector_alpha':p.pct_change().rolling(20).mean()-sec_ret.rolling(20).mean()})
-                    except: f.update({'sector_beta':0.0,'sector_alpha':0.0})
-                feats.append(f.add_suffix(f'_{t}'))
-            except: continue
-        for m in MACRO_TICKERS:
-            if (m,'close') in data:
-                try: mret=data[(m,'close')].pct_change(); feats.append(pd.DataFrame({f'{m}_ret':mret,f'{m}_vol':mret.rolling(20).std(),f'{m}_z60':zscore(mret.rolling(60).mean())},index=data.index))
-                except: continue
-        X = pd.concat(feats,axis=1) if feats else pd.DataFrame(index=data.index)
-        valid = [t for t in TICKERS if (t,'close') in data]
-        if valid:
-            try: closes=pd.concat({t:data[(t,'close')] for t in valid},axis=1); X.update({'breadth':(closes.pct_change()>0).sum(axis=1)/len(valid),'xsec_mom20':closes.pct_change(20).mean(axis=1)})
-            except: pass
-        X.update({'dow':X.index.dayofweek,'month':X.index.month,'qtr':X.index.quarter})
-        X = X.replace([np.inf,-np.inf],np.nan).ffill().bfill().apply(winsorize).apply(zscore).fillna(0.0)
+            p,v,h,l = data[(t,'close')].ffill(), data[(t,'vol')].ffill(), data[(t,'high')].ffill(), data[(t,'low')].ffill()
+            f = self._tech_block(p,v,h,l).fillna(0.0)
+            feats.append(f.add_suffix(f'_{t}'))
+        X = pd.concat(feats, axis=1) if feats else pd.DataFrame(index=data.index)
+        X['dow'] = X.index.dayofweek
+        X['month'] = X.index.month
+        X['qtr'] = X.index.quarter
+        X = X.replace([np.inf,-np.inf], np.nan).ffill().bfill()
+        X = X.apply(winsorize).apply(zscore).fillna(0.0)
         if self.feature_columns is None: self.feature_columns = list(X.columns)
-        return self.align_features(X)
+        return X
+
+class TargetBuilder:
+    def __init__(self, horizon=TARGET_HORIZON_DAYS):
+        self.h = horizon
+
+    def build(self, data):
+        targets = {}
+        for t in TICKERS:
+            if (t,'close') not in data: continue
+            series = data[(t,'close')].pct_change(self.h).shift(-self.h)
+            tmp = pd.Series(0.0, index=data.index)
+            tmp.iloc[:len(series)] = series.fillna(0.0).values.ravel()
+            targets[t] = tmp
+        return pd.DataFrame(targets, index=data.index)
+
 
 class RegimeDetector:
     def __init__(self,lookback=60): self.lookback=lookback
@@ -107,10 +127,6 @@ class RegimeDetector:
             reg[vol>vol.quantile(0.85)],reg[(vol>vol.quantile(0.95))|(breadth<0.2)] = 1,2
             return reg.ffill().fillna(0).astype(int)
         except: return pd.Series(0,index=returns.index,dtype=int)
-
-class TargetBuilder:
-    def __init__(self,horizon=TARGET_HORIZON_DAYS): self.h=horizon
-    def build(self,data): return pd.DataFrame({t:data[(t,'close')].pct_change(self.h).shift(-self.h) for t in TICKERS if (t,'close') in data}).dropna(how='all')
 
 class NeuralAlpha(nn.Module):
     def __init__(self,in_dim,out_dim): super().__init__(); h=256; self.net=nn.Sequential(nn.Linear(in_dim,h),nn.ReLU(),nn.Dropout(0.2),nn.Linear(h,h//2),nn.ReLU(),nn.Dropout(0.1),nn.Linear(h//2,h//4),nn.ReLU(),nn.Linear(h//4,out_dim))
@@ -252,14 +268,11 @@ class Backtester:
 class HybridInstitutionalTrader:
     def __init__(self): self.loader,self.fe,self.regimes,self.ensemble,self.portfolio,self.bt = PriceLoader(),FeatureEngine(),RegimeDetector(),EnsembleAlpha(),PortfolioConstructor(),Backtester()
     def run(self,start=START,end=END,split=SPLIT):
-        try: 
-            print("Loading data..."); data = self.loader.load(start,end)
-            print("Building features..."); close_cols,prices_simple,returns,X = [(t,'close') for t in TICKERS if (t,'close') in data],pd.concat({t:data[(t,'close')] for t in TICKERS if (t,'close') in data},axis=1),pd.concat({t:data[(t,'close')] for t in TICKERS if (t,'close') in data},axis=1).pct_change(),self.fe.build(data)
-            print("Detecting regimes..."); regs = self.regimes.detect(returns.fillna(0))
-            print("Running backtest..."); res = self.bt.run(data,X,returns,regs,self.ensemble,self.portfolio,start=split,end=end)
-            print(json.dumps({'TotalReturn_%':round(res.total_return*100,2),'AnnReturn_%':round(res.ann_return*100,2),'Vol_%':round(res.vol*100,2),'Sharpe':round(res.sharpe,2),'Calmar':round(res.calmar,2),'MaxDD_%':round(res.max_dd*100,2),'WinRate_%':round(res.win_rate*100,2)},indent=2))
-            print('\nFinal Weights:'); [print(f'{k}: {v:.2%}') for k,v in sorted(res.final_weights.items(),key=lambda x:x[1],reverse=True) if v>0.01]
-            return {'summary':res}
-        except Exception as e: print(f"Error: {e}"); return {'error':str(e)}
-
+        print("Loading data..."); data = self.loader.load(start,end)
+        print("Building features..."); close_cols,prices_simple,returns,X = [(t,'close') for t in TICKERS if (t,'close') in data],pd.concat({t:data[(t,'close')] for t in TICKERS if (t,'close') in data},axis=1),pd.concat({t:data[(t,'close')] for t in TICKERS if (t,'close') in data},axis=1).pct_change(),self.fe.build(data)
+        print("Detecting regimes..."); regs = self.regimes.detect(returns.fillna(0))
+        print("Running backtest..."); res = self.bt.run(data,X,returns,regs,self.ensemble,self.portfolio,start=split,end=end)
+        print(json.dumps({'TotalReturn_%':round(res.total_return*100,2),'AnnReturn_%':round(res.ann_return*100,2),'Vol_%':round(res.vol*100,2),'Sharpe':round(res.sharpe,2),'Calmar':round(res.calmar,2),'MaxDD_%':round(res.max_dd*100,2),'WinRate_%':round(res.win_rate*100,2)},indent=2))
+        print('\nFinal Weights:'); [print(f'{k}: {v:.2%}') for k,v in sorted(res.final_weights.items(),key=lambda x:x[1],reverse=True) if v>0.01]
+        return {'summary':res}
 if __name__ == '__main__': HybridInstitutionalTrader().run()
