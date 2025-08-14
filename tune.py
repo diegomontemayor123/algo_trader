@@ -6,41 +6,50 @@ TRIALS = 400
 
 def run_experiment(trial,study=None):
     config = {
-    "START": trial.suggest_categorical("START", ["2012-01-01"]),
+    "START": trial.suggest_categorical("START", [ "2013-01-01"]),
     "END": trial.suggest_categorical("END", ["2023-01-01"]),
     "SPLIT": trial.suggest_categorical("SPLIT", ["2017-01-01"]),
-    "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
-    "MACRO": trial.suggest_categorical("MACRO", ["^GSPC,CL=F,SI=F,NG=F,HG=F,ZC=F,^IRX,TLT,IEF,UUP,HYG,EEM,VEA,FXI,^RUT,^FTSE,^TYX,AUDUSD=X,USDJPY=X,EURUSD=X,GBPUSD=X,ZW=F,GC=F"]),
-    "FEAT": trial.suggest_categorical("FEAT", ["ret,price,logret,rollret,sma,ema,momentum,macd,pricevshigh,vol,atr,range,volchange,volptile,zscore,rsi,cmo,williams,stoch,priceptile,adx,meanabsret,boll,donchian,volume,lag,retcrossz,crossmomentumz,crossvolz,crossretrank"]),
-    "YWIN": trial.suggest_int("YWIN", 19, 26),
-    "PRUNEWIN": trial.suggest_int("PRUNEWIN", 19, 27),
-    "PRUNEDOWN": trial.suggest_float("PRUNEDOWN", 1.0, 1.5531993941811406),
-    "THRESH": trial.suggest_int("THRESH", 145, 199),
-    "NESTIM": trial.suggest_int("NESTIM", 190, 190),
-    "BATCH": trial.suggest_int("BATCH", 52, 65),
-    "LBACK": trial.suggest_int("LBACK", 80, 95),
-    "PRED_DAYS": trial.suggest_int("PRED_DAYS", 5, 9),
-    "DROPOUT": trial.suggest_float("DROPOUT", 0.035, 0.045, log=True),
-    "DECAY": trial.suggest_float("DECAY", 0.0030, 0.0035, log=True),
-    "SHORT_PER": trial.suggest_int("SHORT_PER", 14, 18),
-    "MED_PER": trial.suggest_int("MED_PER", 20, 27),
-    "LONG_PER": trial.suggest_int("LONG_PER", 60, 85),
-    "INIT_LR": trial.suggest_float("INIT_LR", 0.006, 0.007, log=True),
-    "EXP_PEN": trial.suggest_float("EXP_PEN", 0.225, 0.237),
+    "TICK": trial.suggest_categorical(
+        "TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]
+    ),
+    "MACRO": trial.suggest_categorical(
+        "MACRO",
+        ["^GSPC,CL=F,SI=F,NG=F,HG=F,ZC=F,^IRX,TLT,IEF,UUP,HYG,EEM,VEA,FXI,^RUT,^FTSE,^TYX,AUDUSD=X,USDJPY=X,EURUSD=X,GBPUSD=X,ZW=F,GC=F"]
+    ),
+    "FEAT": trial.suggest_categorical(
+        "FEAT",
+        ["ret,price,logret,rollret,sma,ema,momentum,macd,pricevshigh,vol,atr,range,volchange,volptile,zscore,rsi,cmo,williams,stoch,priceptile,adx,meanabsret,boll,donchian,volume,lag,retcrossz,crossmomentumz,crossvolz,crossretrank"]
+    ),
+    "YWIN": trial.suggest_int("YWIN", 20, 33),
+    "PRUNEWIN": trial.suggest_int("PRUNEWIN", 20, 28),
+    "PRUNEDOWN": trial.suggest_float("PRUNEDOWN", 1.22, 1.5),
+    "THRESH": trial.suggest_int("THRESH", 175, 175),
+    "NESTIM": trial.suggest_int("NESTIM", 192, 192),
+    "BATCH": trial.suggest_int("BATCH", 48, 60),
+    "LBACK": trial.suggest_int("LBACK", 78, 93),
+    "PRED_DAYS": trial.suggest_int("PRED_DAYS", 4, 8),
+    "DROPOUT": trial.suggest_float("DROPOUT", 0.034, 0.0403, log=True),
+    "DECAY": trial.suggest_float("DECAY", 0.0030, 0.0038, log=True),
+    "SHORT_PER": trial.suggest_int("SHORT_PER", 12, 16),
+    "MED_PER": trial.suggest_int("MED_PER", 19, 23),
+    "LONG_PER": trial.suggest_int("LONG_PER", 40, 80),
+    "INIT_LR": trial.suggest_float("INIT_LR", 0.0025, 0.0064, log=True),
+    "EXP_PEN": trial.suggest_float("EXP_PEN", 0.230, 0.245),
     "EXP_EXP": trial.suggest_float("EXP_EXP", 1.8, 1.8),
-    "RETURN_PEN": trial.suggest_float("RETURN_PEN", 0.070, 0.0755),
+    "RETURN_PEN": trial.suggest_float("RETURN_PEN", 0.0725, 0.0725),
     "RETURN_EXP": trial.suggest_float("RETURN_EXP", 0.28, 0.28),
-    "SD_PEN": trial.suggest_float("SD_PEN", 0.17, 0.173),
-    "SD_EXP": trial.suggest_float("SD_EXP", 0.75, 0.77),
-    "Z_ALPHA": trial.suggest_float("Z_ALPHA", 0.4, 0.9),
+    "SD_PEN": trial.suggest_float("SD_PEN", 0.17, 0.17243),
+    "SD_EXP": trial.suggest_float("SD_EXP", 0.75, 0.75),
+    "Z_ALPHA": trial.suggest_float("Z_ALPHA", 0.55, 1),
     "SEED": trial.suggest_categorical("SEED", [42]),
     "MAX_HEADS": trial.suggest_categorical("MAX_HEADS", [1, 2]),
-    "LAYERS": trial.suggest_categorical("LAYERS", [1,2,5]),
-    "EARLY_FAIL": trial.suggest_categorical("EARLY_FAIL", [4,5,6,7, 8,9]),
+    "LAYERS": trial.suggest_categorical("LAYERS", [1, 2, 3]),
+    "EARLY_FAIL": trial.suggest_categorical("EARLY_FAIL", [2,3,4]),
     "VAL_SPLIT": trial.suggest_categorical("VAL_SPLIT", [0.15]),
     "TEST_CHUNK": trial.suggest_categorical("TEST_CHUNK", [12]),
-    "ATTENT": trial.suggest_categorical("ATTENT", [1]),
+    "ATTENT": trial.suggest_categorical("ATTENT", [1])
 }
+
 
 
     env = os.environ.copy()
