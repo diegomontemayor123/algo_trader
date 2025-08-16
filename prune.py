@@ -19,15 +19,19 @@ def select_features(feat, ret, split_date, kaggle_ret=None, thresh=config["THRES
     # --- Compare with Kaggle returns if provided ---
     if kaggle_ret is not None:
         common_idx = portfolio_ret.index.intersection(kaggle_ret.index)
-        diffs = (portfolio_ret.loc[common_idx] - kaggle_ret.loc[common_idx]).abs()
-        mismatches = diffs[diffs > 1e-12]  # threshold for floating point
-        if not mismatches.empty:
-            print(f"[Compare] {len(mismatches)} return rows differ vs Kaggle:")
-            print(mismatches.head(20))
-        else:
-            print("[Compare] Local portfolio returns match Kaggle exactly.")
+        diffs = (portfolio_ret.loc[common_idx] - kaggle_ret.loc[common_idx])
+        log_df = pd.DataFrame({
+            "local_ret": portfolio_ret.loc[common_idx],
+            "kaggle_ret": kaggle_ret.loc[common_idx],
+            "diff": diffs
+        })
+        print(f"[Compare] Logging local vs Kaggle returns ({len(log_df)} rows):")
+        print(log_df.head(20))  # show first 20 rows for quick inspection
+        # Entire log is printed, you can scroll or redirect stdout if needed
+        for i, row in log_df.iterrows():
+            print(f"{i.date()} | local: {row['local_ret']:.6f}, kaggle: {row['kaggle_ret']:.6f}, diff: {row['diff']:.6e}")
 
-    # --- Compute target y as before ---
+    # --- Compute target y ---
     def max_drawdown(returns): 
         cum = (1 + returns).cumprod()
         drawdown = (cum - cum.cummax()) / cum.cummax()
