@@ -7,7 +7,36 @@ from load import load_config
 config = load_config()
 
 def select_features(feat, ret, split_date, thresh=config["THRESH"], method=["rf"]):
-    if method is None: return feat
+    # IMMEDIATE INPUT VALIDATION - catch the error at the source
+    print(f"[CRITICAL DEBUG] select_features called with:")
+    print(f"  - feat type: {type(feat)}")
+    print(f"  - feat value preview: {str(feat)[:200] if isinstance(feat, str) else 'DataFrame with shape ' + str(getattr(feat, 'shape', 'unknown'))}")
+    print(f"  - ret type: {type(ret)}")
+    print(f"  - split_date: {split_date}")
+    print(f"  - thresh: {thresh}")
+    print(f"  - method: {method}")
+    
+    if not isinstance(feat, pd.DataFrame):
+        print(f"[ERROR] FEAT IS NOT A DATAFRAME!")
+        print(f"[ERROR] feat type: {type(feat)}")
+        if isinstance(feat, str):
+            print(f"[ERROR] feat is a string with length {len(feat)}")
+            print(f"[ERROR] feat content (first 500 chars): {feat[:500]}")
+        else:
+            print(f"[ERROR] feat content: {feat}")
+        
+        # Import traceback to see the call stack
+        import traceback
+        print(f"[ERROR] Call stack:")
+        traceback.print_stack()
+        
+        raise TypeError(f"Expected pandas DataFrame for 'feat', got {type(feat)}. This suggests an error in the calling function.")
+    
+    if not isinstance(ret, pd.DataFrame):
+        raise TypeError(f"Expected pandas DataFrame for 'ret', got {type(ret)}")
+    
+    if method is None: 
+        return feat
     
     # MAXIMUM REPRODUCIBILITY - Force identical environment
     import random
