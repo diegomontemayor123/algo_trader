@@ -124,8 +124,8 @@ def comp_feat(TICK, FEAT, cached_data, macro_keys, thresh=config["THRESH"], spli
     feat = pd.concat([feat, macro_df], axis=1)
     feat['day_of_week'] = feat.index.dayofweek
     feat['month'] = feat.index.month - 1
-    #feat = select_features(feat, ret, split_date, thresh=thresh, method=method)
-    feat = select_features(feat, use_predefined=True)
+    feat = select_features(feat, ret, split_date, thresh=thresh, method=method)
+    #feat = select_features(feat, use_predefined=True)
 
     feat.to_csv("csv/feat_all.csv")
     return feat, ret
