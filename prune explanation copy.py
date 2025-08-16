@@ -74,7 +74,3 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=["rf"
     print(f"[Prune] Bottom 20 features and scores:")
     for f, s in bottom_20.items(): 
         print(f" - {f}: {s:.6f}")
-
-    
-    print(f"[Prune] Top feature score: {combined_scores.loc[selected_features].head(1).to_string()}")
-    return feat[selected_features]
