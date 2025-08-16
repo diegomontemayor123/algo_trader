@@ -66,6 +66,19 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=["rf"
     y_hash = pd.util.hash_pandas_object(y).sum()
     print(f"[Y_LOG] Y hash (for exact comparison): {y_hash}")
     
+    # Additional precision logging to find the source of differences
+    print(f"[Y_LOG] Pandas version: {pd.__version__}")
+    print(f"[Y_LOG] Y dtype: {y.dtype}")
+    print(f"[Y_LOG] Y precision check - first 3 values with full precision:")
+    for i in range(min(3, len(y))):
+        print(f"[Y_LOG]   y[{i}] = {y.iloc[i]:.20f}")
+    
+    # Check if the issue is in rolling calculations
+    rolling_mean_hash = pd.util.hash_pandas_object(rolling_mean.dropna()).sum()
+    rolling_drawdown_hash = pd.util.hash_pandas_object(rolling_drawdown.dropna()).sum()
+    print(f"[Y_LOG] Rolling mean hash: {rolling_mean_hash}")
+    print(f"[Y_LOG] Rolling drawdown hash: {rolling_drawdown_hash}")
+    
     # Save Y to CSV for manual inspection
     y_df = pd.DataFrame({'date': y.index, 'y_value': y.values})
     y_filename = f"y_values_{split_date.replace('-', '_')}.csv"
