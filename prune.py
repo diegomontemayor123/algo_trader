@@ -7,10 +7,19 @@ from load import load_config
 config = load_config()
 
 def log_series_info(s, name):
-    print(f"[Info] {name}: shape={s.shape}, dtype={s.dtype}, NaNs={s.isna().sum()}, infs={(~np.isfinite(s)).sum()}")
-    if len(s) > 0:
-        print(f"[Sample] {name} head:\n{s.head()}")
-        print(f"[Stats] {name} min={s.min()}, max={s.max()}, mean={s.mean()}, std={s.std()}")
+    if isinstance(s, pd.DataFrame):
+        print(f"[Info] {name}: shape={s.shape}, dtypes=\n{s.dtypes}")
+        print(f"[Info] {name}: NaNs per column:\n{s.isna().sum()}")
+        print(f"[Info] {name}: infs per column:\n{(~np.isfinite(s)).sum()}")
+        if not s.empty:
+            print(f"[Sample] {name} head:\n{s.head()}")
+            print(f"[Stats] {name} describe:\n{s.describe()}")
+    else:  # Series
+        print(f"[Info] {name}: shape={s.shape}, dtype={s.dtype}, NaNs={s.isna().sum()}, infs={(~np.isfinite(s)).sum()}")
+        if len(s) > 0:
+            print(f"[Sample] {name} head:\n{s.head()}")
+            print(f"[Stats] {name} min={s.min()}, max={s.max()}, mean={s.mean()}, std={s.std()}")
+
 
 def select_features(feat, ret, split_date, thresh=config["THRESH"], method=["rf"]):
     if method is None:
