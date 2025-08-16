@@ -40,7 +40,9 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=["rf"
         selected_features = combined_scores[combined_scores > thresh].index
         print(f"[Prune] Selected {len(selected_features)} features with {method[0]} > {thresh} from {start.date()}–{split_date_ts.date()}")
     else: return feat
-
+    print("[Prune] Selected features and their scores:")
+    for f, s in combined_scores.loc[selected_features].items():
+        print(f" - {f}: {s:.6f}")
     #PRUNE RF
     #top_features_log = pd.DataFrame({"feature": selected_features,"avg_score": combined_scores.loc[selected_features].values,"split_date": split_date,"start_date": start.date()})
     #if os.path.exists("rf_prune.csv"): top_features_log.to_csv("rf_prune.csv", mode='a', index=False, header=False)
