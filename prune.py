@@ -7,7 +7,9 @@ from load import load_config
 config = load_config()
 
 def select_features(feat, ret, split_date, thresh=config["THRESH"], method=["rf"]):
-    if method is None: return feat
+    if method is None: 
+        return feat
+
     split_date_ts = pd.to_datetime(split_date)
     start = split_date_ts - pd.DateOffset(months=config["PRUNEWIN"])
     window = config["YWIN"]
@@ -16,10 +18,11 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=["rf"
     portfolio_ret = ret.loc[mask].mean(axis=1, skipna=True)
     
     # sanitize: check for NaNs/Infs in portfolio returns
-    if not np.all(np.isfinite(portfolio_ret)):
-        bad = portfolio_ret[~np.isfinite(portfolio_ret)]
-        print(f"[Sanitize] Found {len(bad)} NaN/Inf in portfolio_ret at dates: {bad.index.tolist()}")
-        portfolio_ret = portfolio_ret.fillna(0).replace([np.inf, -np.inf], 0.0)
+    bad_mask = ~np.isfinite(portfolio_ret)
+    if bad_mask.any():
+        bad_dates = portfolio_ret.index[bad_mask].tolist()
+        print(f"[Sanitize] Filling 0 in portfolio_ret for {len(bad_dates)} dates: {bad_dates}")
+        portfolio_ret[bad_mask] = 0.0
 
     def max_drawdown(returns):
         cum = (1 + returns).cumprod()
@@ -32,16 +35,21 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=["rf"
     rolled_dd = shifted.rolling(window).apply(max_drawdown, raw=False)
     
     # sanitize rolling results
-    rolled_mean = rolled_mean.fillna(0).replace([np.inf, -np.inf], 0.0)
-    rolled_dd = rolled_dd.fillna(0).replace([np.inf, -np.inf], 0.0)
+    for series, name in [(rolled_mean, "rolled_mean"), (rolled_dd, "rolled_dd")]:
+        bad_mask = ~np.isfinite(series)
+        if bad_mask.any():
+            bad_dates = series.index[bad_mask].tolist()
+            print(f"[Sanitize] Filling 0 in {name} for {len(bad_dates)} dates: {bad_dates}")
+            series[bad_mask] = 0.0
 
     y = (rolled_mean - config["PRUNEDOWN"] * (rolled_dd + 1e-10)).dropna()
     
     # check for any remaining problematic values
-    if not np.all(np.isfinite(y)):
-        bad = y[~np.isfinite(y)]
-        print(f"[Sanitize] Found {len(bad)} NaN/Inf in final target y at dates: {bad.index.tolist()}")
-        y = y.fillna(0).replace([np.inf, -np.inf], 0.0)
+    bad_mask = ~np.isfinite(y)
+    if bad_mask.any():
+        bad_dates = y.index[bad_mask].tolist()
+        print(f"[Sanitize] Filling 0 in final target y for {len(bad_dates)} dates: {bad_dates}")
+        y[bad_mask] = 0.0
 
     X = feat.loc[y.index]
     constant_features = X.nunique(dropna=True)[X.nunique(dropna=True) <= 1].index.tolist()
