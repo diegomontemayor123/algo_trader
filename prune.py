@@ -3,34 +3,37 @@ import pandas as pd
 import hashlib
 from sklearn.ensemble import RandomForestRegressor
 from load import load_config
+import numpy as np
 
 config = load_config()
 
-# Utility functions for logging
-def hash_df(df):
-    """Compute MD5 hash of DataFrame/Series for comparison."""
-    if isinstance(df, pd.DataFrame):
-        return hashlib.md5(pd.util.hash_pandas_object(df, index=True).values).hexdigest()
-    elif isinstance(df, pd.Series):
-        return hashlib.md5(pd.util.hash_pandas_object(df, index=True).values).hexdigest()
-    else:
-        return None
+baseline_hashes = {}  # store hashes from the first environment
+
+def safe_hash(df):
+    """Hash DataFrame/Series safely (replace NaN/inf)."""
+    df_copy = df.fillna(0).replace([np.inf, -np.inf], 0)
+    return hashlib.md5(pd.util.hash_pandas_object(df_copy, index=True).values).hexdigest()
 
 def log_step(name, df):
-    """Log details for a DataFrame/Series."""
-    print(f"[Debug] {name} shape: {df.shape if hasattr(df,'shape') else 'N/A'}")
-    print(f"[Debug] {name} head:\n{df.head() if hasattr(df,'head') else df}")
-    print(f"[Debug] {name} hash: {hash_df(df)}")
-    if isinstance(df, (pd.DataFrame, pd.Series)):
-        print(f"[Debug] {name} stats: min {df.min().min() if isinstance(df, pd.DataFrame) else df.min()}, "
-              f"max {df.max().max() if isinstance(df, pd.DataFrame) else df.max()}, "
-              f"mean {df.mean().mean() if isinstance(df, pd.DataFrame) else df.mean()}, "
-              f"count {df.count().sum() if isinstance(df, pd.DataFrame) else df.count()}")
+    """Log stats and detect invalid values safely."""
+    safe_df = df.copy() if isinstance(df, (pd.DataFrame, pd.Series)) else df
+    if isinstance(safe_df, (pd.DataFrame, pd.Series)):
+        safe_df = safe_df.fillna(0).replace([np.inf, -np.inf], 0)
+        print(f"[Debug] {name} shape: {safe_df.shape}")
+        print(f"[Debug] {name} head:\n{safe_df.head()}")
+        print(f"[Debug] {name} stats: min {safe_df.min().min() if isinstance(safe_df, pd.DataFrame) else safe_df.min()}, "
+              f"max {safe_df.max().max() if isinstance(safe_df, pd.DataFrame) else safe_df.max()}, "
+              f"mean {safe_df.mean().mean() if isinstance(safe_df, pd.DataFrame) else safe_df.mean()}, "
+              f"count {safe_df.count().sum() if isinstance(safe_df, pd.DataFrame) else safe_df.count()}")
+    h = safe_hash(safe_df)
+    print(f"[Debug] {name} hash: {h}")
+    # Auto divergence detection
+    if name in baseline_hashes and baseline_hashes[name] != h:
+        raise RuntimeError(f"[Divergence Detected] {name} hash differs from baseline!")
+    baseline_hashes[name] = h
 
 def select_features(feat, ret, split_date, thresh=config["THRESH"], method=["rf"]):
-    if method is None:
-        return feat
-
+    if method is None: return feat
     split_date_ts = pd.to_datetime(split_date)
     start = split_date_ts - pd.DateOffset(months=config["PRUNEWIN"])
     window = config["YWIN"]
@@ -45,13 +48,13 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=["rf"
     shifted = portfolio_ret.shift(-window)
     log_step("Step 3a: shifted", shifted)
 
+    rolled_mean = shifted.rolling(window).mean()
+    log_step("Step 3b: rolled_mean", rolled_mean)
+
     def max_drawdown(returns):
         cum = (1 + returns).cumprod()
         drawdown = (cum - cum.cummax()) / cum.cummax()
         return drawdown.min() 
-
-    rolled_mean = shifted.rolling(window).mean()
-    log_step("Step 3b: rolled_mean", rolled_mean)
 
     rolled_dd = shifted.rolling(window).apply(max_drawdown, raw=False)
     log_step("Step 3c: rolled_dd", rolled_dd)
