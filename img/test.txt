@@ -1,46 +1,46 @@
 =Combined Perf Over Full Per=
-Cagr: Strat 43.39%, Bench 24.55%
-Sharpe: Strat 135.85%, Bench 107.06%
-Max_Down: Strat -25.48%, Bench -30.07%
+Cagr: Strat 17.15%, Bench 24.55%
+Sharpe: Strat 63.28%, Bench 107.06%
+Max_Down: Strat -56.66%, Bench -30.07%
 
 =Per-Chunk Metrics=
 
 -Chunk 1 (2017-01-01 to 2017-12-31)-
-Cagr: Strat 74.63%, Bench 43.41%
-Sharpe: Strat 256.92%, Bench 365.48%
-Max_Down: Strat -10.25%, Bench -2.75%
+Cagr: Strat 125.80%, Bench 43.41%
+Sharpe: Strat 290.89%, Bench 365.48%
+Max_Down: Strat -9.57%, Bench -2.75%
 
 -Chunk 2 (2018-01-01 to 2018-12-31)-
-Cagr: Strat 9.27%, Bench 6.05%
-Sharpe: Strat 49.20%, Bench 37.56%
-Max_Down: Strat -20.45%, Bench -21.95%
+Cagr: Strat 11.67%, Bench 6.05%
+Sharpe: Strat 147.96%, Bench 37.56%
+Max_Down: Strat -3.85%, Bench -21.95%
 
 -Chunk 3 (2019-01-01 to 2019-12-31)-
-Cagr: Strat 78.06%, Bench 43.37%
-Sharpe: Strat 251.14%, Bench 240.98%
-Max_Down: Strat -12.87%, Bench -9.59%
+Cagr: Strat 10.87%, Bench 43.37%
+Sharpe: Strat 143.04%, Bench 240.98%
+Max_Down: Strat -5.83%, Bench -9.59%
 
 -Chunk 4 (2020-01-01 to 2020-12-31)-
-Cagr: Strat 66.38%, Bench 36.02%
-Sharpe: Strat 174.52%, Bench 102.23%
-Max_Down: Strat -12.34%, Bench -30.07%
+Cagr: Strat 33.40%, Bench 36.02%
+Sharpe: Strat 101.84%, Bench 102.23%
+Max_Down: Strat -28.86%, Bench -30.07%
 
 -Chunk 5 (2021-01-01 to 2021-12-31)-
-Cagr: Strat 94.17%, Bench 44.28%
-Sharpe: Strat 166.42%, Bench 245.31%
-Max_Down: Strat -25.12%, Bench -5.68%
+Cagr: Strat 18.50%, Bench 44.28%
+Sharpe: Strat 74.38%, Bench 245.31%
+Max_Down: Strat -22.65%, Bench -5.68%
 
 -Chunk 6 (2022-01-01 to 2022-12-31)-
-Cagr: Strat -14.32%, Bench -10.22%
-Sharpe: Strat -62.91%, Bench -25.93%
-Max_Down: Strat -22.46%, Bench -22.34%
+Cagr: Strat -38.01%, Bench -10.22%
+Sharpe: Strat -42.16%, Bench -25.93%
+Max_Down: Strat -54.45%, Bench -22.34%
 
 =SD - Metrics Across Chunks=
-Cagr: Â±43.35%
-Sharpe: Â±124.36%
-Max_Down: Â±6.19%
+Cagr: ±54.03%
+Sharpe: ±108.83%
+Max_Down: ±19.17%
 
 =Average Outperf Across Chunks (Strat - Bench)=
-Cagr: 24.21%
-Sharpe: -21.73%
-Max_Down: -1.85%
+Cagr: -0.11%
+Sharpe: -41.61%
+Max_Down: -5.47%

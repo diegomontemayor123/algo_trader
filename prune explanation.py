@@ -94,4 +94,5 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=["rf"
         return feat
 
     print(f"[Prune] Top feature score: {combined_scores.loc[selected_features].head(1).to_string()}")
+    for f, s in combined_scores.loc[selected_features].items(): print(f" - {f}: {s:.6f}")
     return feat[selected_features]
