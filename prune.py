@@ -9,8 +9,32 @@ config = load_config()
 def select_features(feat, ret, split_date, thresh=config["THRESH"], method=["rf"]):
     if method is None: return feat
     
-    # Set random seed for exact reproducibility
+    # MAXIMUM REPRODUCIBILITY - Force identical environment
+    import random
+    import sklearn
+    from sklearn.utils import check_random_state
+    
+    # Print versions for debugging
+    print(f"[Debug] Sklearn: {sklearn.__version__}, NumPy: {np.__version__}, Random seed: {config['SEED']}")
+    
+    # Set ALL possible random seeds and control threading
     np.random.seed(config["SEED"])
+    random.seed(config["SEED"])
+    os.environ['PYTHONHASHSEED'] = str(config["SEED"])
+    
+    # Force single-threaded operations across all libraries
+    os.environ['OMP_NUM_THREADS'] = '1'
+    os.environ['MKL_NUM_THREADS'] = '1'
+    os.environ['NUMEXPR_NUM_THREADS'] = '1'
+    os.environ['OPENBLAS_NUM_THREADS'] = '1'
+    
+    # Additional threading controls
+    try:
+        import threadpoolctl
+        with threadpoolctl.threadpool_limits(limits=1, user_api='blas'):
+            pass
+    except ImportError:
+        pass
     
     split_date_ts = pd.to_datetime(split_date)
     start = split_date_ts - pd.DateOffset(months=config["PRUNEWIN"])
@@ -42,20 +66,62 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=["rf"
         return feat
 
     if method[0] == "rf":
-        # CRITICAL CHANGES for exact reproducibility:
-        # 1. Sort data to ensure consistent ordering
+        # MAXIMUM REPRODUCIBILITY for RandomForest
+        
+        # Reset ALL random states immediately before model creation
+        np.random.seed(config["SEED"])
+        random.seed(config["SEED"])
+        
+        # Create and manually set the sklearn random state
+        rng = check_random_state(config["SEED"])
+        np.random.set_state(rng.get_state())
+        
+        # Sort data to ensure identical ordering
         X_sorted = X.sort_index().sort_index(axis=1)
         y_sorted = y.sort_index()
         
-        # 2. Use single thread instead of n_jobs=-1
+        print(f"[Debug] Data shapes - X: {X_sorted.shape}, y: {y_sorted.shape}")
+        print(f"[Debug] First 3 features: {list(X_sorted.columns[:3])}")
+        print(f"[Debug] X data hash: {hash(str(X_sorted.values.tobytes()))}")
+        print(f"[Debug] y data hash: {hash(str(y_sorted.values.tobytes()))}")
+        
+        # Create RandomForest with maximum determinism
         model = RandomForestRegressor(
             n_estimators=config["NESTIM"], 
             random_state=config["SEED"],
-            n_jobs=1  # Changed from -1 to 1 for exact reproducibility
+            n_jobs=1,  # Absolutely critical for reproducibility
+            bootstrap=True,
+            max_features='sqrt',  # Explicit instead of 'auto'
+            criterion='squared_error',
+            min_samples_split=2,
+            min_samples_leaf=1,
+            max_depth=None,
+            warm_start=False,
+            oob_score=False,
+            verbose=0
         )
         
-        model.fit(X_sorted, y_sorted)
+        # Fit with maximum precision control
+        with np.errstate(all='raise'):  # Catch any numerical issues
+            try:
+                model.fit(X_sorted, y_sorted)
+            except FloatingPointError as e:
+                print(f"[Warning] Floating point error: {e}")
+                # Reset and try again
+                np.random.seed(config["SEED"])
+                model.fit(X_sorted, y_sorted)
+        
+        # Get feature importances
         scores = pd.Series(model.feature_importances_, index=X_sorted.columns)
+        
+        # Debug output for comparison
+        top_5_scores = scores.sort_values(ascending=False).head(5)
+        print(f"[Debug] Top 5 feature scores:")
+        for feat, score in top_5_scores.items():
+            print(f"  {feat}: {score:.10f}")
+        
+        print(f"[Debug] Feature importance sum: {scores.sum():.10f}")
+        print(f"[Debug] Feature importance std: {scores.std():.10f}")
     else: 
         return feat
     
