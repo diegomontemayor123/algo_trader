@@ -108,11 +108,31 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=["rf"
         print(f"[Y_LOG] Final Y for RF (first 5): {y.iloc[:5].tolist()}")
         print(f"[Y_LOG] Final Y for RF (last 5): {y.iloc[-5:].tolist()}")
         
-        model = RandomForestRegressor(n_estimators=config["NESTIM"], random_state=config["SEED"], n_jobs=-1)
-        model.fit(X, y)
+        # Force deterministic RF behavior across different numerical backends
+        import numpy as np
+        np.random.seed(config["SEED"])
+        
+        # Round input data to ensure identical RF inputs across environments
+        X_rounded = X.round(10)
+        y_rounded = y.round(10)
+        
+        print(f"[Y_LOG] X input hash: {pd.util.hash_pandas_object(X_rounded).sum()}")
+        print(f"[Y_LOG] Y input hash: {pd.util.hash_pandas_object(y_rounded).sum()}")
+        
+        model = RandomForestRegressor(
+            n_estimators=config["NESTIM"], 
+            random_state=config["SEED"],
+            n_jobs=1,  # Force single-threaded for consistency across backends
+            bootstrap=True,
+            max_features='sqrt',  # More deterministic than 'auto'
+            min_samples_split=5,  # Add stability
+            min_samples_leaf=2    # Add stability
+        )
+        model.fit(X_rounded, y_rounded)
         scores = pd.Series(model.feature_importances_, index=X.columns)
         
         print(f"[Y_LOG] RF training completed successfully")
+        print(f"[Y_LOG] RF feature importance hash: {pd.util.hash_pandas_object(scores).sum()}")
     else: 
         return feat
     
