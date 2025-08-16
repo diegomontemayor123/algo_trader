@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import ta
 from load import load_config
-#np.seterr(all='raise')
+np.seterr(all='raise')
 
 config = load_config()
 per = [int(config["SHORT_PER"]), int(config["MED_PER"]), int(config["LONG_PER"])]

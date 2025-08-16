@@ -4,7 +4,7 @@ import pandas as pd
 from dateutil.relativedelta import relativedelta
 from perf import calc_perf_metrics
 from train import run_training_chunks
-#np.seterr(all='raise')
+np.seterr(all='raise')
 
 def save_to_csv(var,csv_path):
     x = pd.DataFrame(var)
