@@ -29,8 +29,7 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=["rf"
     if method[0] == "rf":
         model = RandomForestRegressor(n_estimators=config["NESTIM"], random_state=config["SEED"],n_jobs=-1 )
         model.fit(X, y)
-        scores = pd.Series(model.feature_importances_, index=X.columns).round(3)
-
+        scores = pd.Series(model.feature_importances_, index=X.columns)
     else: return feat
     
     combined_scores = scores.sort_values(ascending=False)
