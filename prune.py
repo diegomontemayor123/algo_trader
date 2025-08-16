@@ -28,7 +28,11 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=["rf"
 
     if method[0] == "rf":
         model = RandomForestRegressor(n_estimators=config["NESTIM"], random_state=config["SEED"],n_jobs=-1 )
-        print(f"Number of workers (n_jobs): {model.n_jobs}")
+        
+        import joblib
+        n_workers = joblib.cpu_count()
+        print(f"Actual number of workers being used: {n_workers}")
+
         model.fit(X, y)
         scores = pd.Series(model.feature_importances_, index=X.columns)
     else: return feat
