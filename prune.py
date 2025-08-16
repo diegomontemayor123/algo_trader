@@ -6,7 +6,7 @@ from load import load_config
 
 config = load_config()
 
-def select_features_debug(feat, ret, split_date, thresh=config["THRESH"], method=["rf"]):
+def select_features(feat, ret, split_date, thresh=config["THRESH"], method=["rf"]):
     print(f"\n[DEBUG] Starting feature selection for split_date={split_date}")
 
     split_date_ts = pd.to_datetime(split_date)
