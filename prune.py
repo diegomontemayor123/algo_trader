@@ -1,12 +1,18 @@
 import os
 import pandas as pd
+import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from load import load_config
+import hashlib
 
 config = load_config()
 
-def select_features(feat, ret, split_date, kaggle_ret=None, thresh=config["THRESH"], method=["rf"]):
-    if method is None: 
+def hash_array(arr):
+    """Return a reproducible hash for a numpy array or pandas Series"""
+    return hashlib.md5(np.ascontiguousarray(arr, dtype=np.float64)).hexdigest()
+
+def select_features(feat, ret, split_date, thresh=config["THRESH"], method=["rf"]):
+    if method is None:
         return feat
 
     split_date_ts = pd.to_datetime(split_date)
@@ -14,69 +20,80 @@ def select_features(feat, ret, split_date, kaggle_ret=None, thresh=config["THRES
     window = config["YWIN"]
     mask = (ret.index >= start) & (ret.index < split_date_ts)
 
-    portfolio_ret = ret.loc[mask].mean(axis=1, skipna=True)
+    # Step 1: masked returns
+    masked_ret = ret.loc[mask]
+    print(f"[Debug] Step 1: masked_ret shape: {masked_ret.shape}")
+    print(f"[Debug] Step 1: masked_ret hash: {hash_array(masked_ret.values)}")
 
-    # --- Compare with Kaggle returns if provided ---
-    if kaggle_ret is not None:
-        common_idx = portfolio_ret.index.intersection(kaggle_ret.index)
-        diffs = (portfolio_ret.loc[common_idx] - kaggle_ret.loc[common_idx])
-        log_df = pd.DataFrame({
-            "local_ret": portfolio_ret.loc[common_idx],
-            "kaggle_ret": kaggle_ret.loc[common_idx],
-            "diff": diffs
-        })
-        print(f"[Compare] Logging local vs Kaggle returns ({len(log_df)} rows):")
-        print(log_df.head(20))  # show first 20 rows for quick inspection
-        # Entire log is printed, you can scroll or redirect stdout if needed
-        for i, row in log_df.iterrows():
-            print(f"{i.date()} | local: {row['local_ret']:.6f}, kaggle: {row['kaggle_ret']:.6f}, diff: {row['diff']:.6e}")
+    # Step 2: portfolio return
+    portfolio_ret = masked_ret.mean(axis=1, skipna=True)
+    print(f"[Debug] Step 2: portfolio_ret head:\n{portfolio_ret.head()}")
+    print(f"[Debug] Step 2: portfolio_ret hash: {hash_array(portfolio_ret.values)}")
 
-    # --- Compute target y ---
-    def max_drawdown(returns): 
+    # Step 3: shifted rolling mean - for target y
+    def max_drawdown(returns):
         cum = (1 + returns).cumprod()
         drawdown = (cum - cum.cummax()) / cum.cummax()
-        return drawdown.min() 
+        return drawdown.min()
 
-    y = (portfolio_ret.shift(-window)
-                        .rolling(window)
-                        .mean() - config["PRUNEDOWN"] * 
-                        (portfolio_ret.shift(-window)
-                                      .rolling(window)
-                                      .apply(max_drawdown, raw=False) + 1e-10)
-        ).dropna()
+    shifted = portfolio_ret.shift(-window)
+    print(f"[Debug] Step 3a: shifted head:\n{shifted.head()}")
+    print(f"[Debug] Step 3a: shifted hash: {hash_array(shifted.values)}")
 
+    rolled_mean = shifted.rolling(window).mean()
+    print(f"[Debug] Step 3b: rolled_mean head:\n{rolled_mean.head()}")
+    print(f"[Debug] Step 3b: rolled_mean hash: {hash_array(rolled_mean.values)}")
+
+    rolled_drawdown = shifted.rolling(window).apply(max_drawdown, raw=False)
+    print(f"[Debug] Step 3c: rolled_drawdown head:\n{rolled_drawdown.head()}")
+    print(f"[Debug] Step 3c: rolled_drawdown hash: {hash_array(rolled_drawdown.values)}")
+
+    y = (rolled_mean - config["PRUNEDOWN"] * (rolled_drawdown + 1e-10)).dropna()
+    print(f"[Debug] Step 4: target y head:\n{y.head()}")
+    print(f"[Debug] Step 4: target y hash: {hash_array(y.values)}")
+
+    # Step 5: subset features
     X = feat.loc[y.index]
+    print(f"[Debug] Step 5: X shape: {X.shape}")
+    print(f"[Debug] Step 5: X hash: {hash_array(X.values)}")
+
+    # Step 6: drop problematic features
     constant_features = X.nunique(dropna=True)[X.nunique(dropna=True) <= 1].index.tolist()
     sparse_features = X.columns[X.isna().sum() > (len(X) - int(0.9 * len(X)))].tolist()
     dropped_features = constant_features + sparse_features
     if dropped_features:
-        print(f"[Prune] {len(dropped_features)} Features have issues (look into dropping):")
-        for f in dropped_features: 
+        print(f"[Prune] {len(dropped_features)} Features have issues:")
+        for f in dropped_features:
             reason = "constant" if f in constant_features else "too many NaNs"
             print(f" - {f} ({reason})")
-    if X.empty or len(X) < 10: 
-        print("[Prune] Not enough data for feature selection."); 
+    if X.empty or len(X) < 10:
+        print("[Prune] Not enough data for feature selection.")
         return feat
 
-    # --- Fit RF ---
+    # Step 7: Random Forest feature importances
     if method[0] == "rf":
-        model = RandomForestRegressor(n_estimators=config["NESTIM"], 
-                                      random_state=config["SEED"],
-                                      n_jobs=-1)
+        model = RandomForestRegressor(
+            n_estimators=config["NESTIM"],
+            random_state=config["SEED"],
+            n_jobs=-1
+        )
         model.fit(X, y)
         scores = pd.Series(model.feature_importances_, index=X.columns)
-    else: 
+        print(f"[Debug] Step 7: top 10 feature importances:\n{scores.sort_values(ascending=False).head(10)}")
+        print(f"[Debug] Step 7: feature importances hash: {hash_array(scores.values)}")
+    else:
         return feat
 
     combined_scores = scores.sort_values(ascending=False)
     if thresh > 1:
         selected_features = combined_scores.nlargest(int(thresh)).index
-        print(f"[Prune] Selected top {int(thresh)} features by {method[0]} from {start.date()}–{split_date_ts.date()}")
+        print(f"[Prune] Selected top {int(thresh)} features from {start.date()}–{split_date_ts.date()}")
     elif 0 < thresh <= 1:
         selected_features = combined_scores[combined_scores > thresh].index
-        print(f"[Prune] Selected {len(selected_features)} features with {method[0]} > {thresh} from {start.date()}–{split_date_ts.date()}")
-    else: 
+        print(f"[Prune] Selected {len(selected_features)} features with threshold > {thresh}")
+    else:
         return feat
 
     print(f"[Prune] Top feature score: {combined_scores.loc[selected_features].head(1).to_string()}")
+
     return feat[selected_features]
