@@ -3,7 +3,7 @@ import numpy as np
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from feat import *
-np.seterr(all='raise')
+#np.seterr(all='raise')
 warnings.filterwarnings("ignore",message="enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.self_attn.num_heads is odd")
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 INITIAL_CAPITAL = 100

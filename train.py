@@ -6,7 +6,7 @@ from model import train
 from load import load_config
 from perf import calc_perf_metrics  
 from minitune import minitune_for_chunk
-np.seterr(all='raise')
+#np.seterr(all='raise')
 
 SEED = load_config()["SEED"]
 torch.manual_seed(SEED)

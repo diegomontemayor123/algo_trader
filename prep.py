@@ -2,7 +2,7 @@ import torch
 import numpy as np
 import pandas as pd
 from feat import RollingScaler 
-np.seterr(all='raise')
+#np.seterr(all='raise')
 
 class MarketDataset(torch.utils.data.Dataset):
     def __init__(self, feat, ret):
