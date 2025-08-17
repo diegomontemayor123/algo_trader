@@ -1,237 +1,193 @@
 import os
 import pandas as pd
 import numpy as np
-import hashlib
+import sklearn
 from sklearn.ensemble import RandomForestRegressor
 from load import load_config
 
 config = load_config()
 
-def debug_hash(data, name):
-    """Create consistent hash for debugging"""
-    if isinstance(data, pd.Series):
-        # Convert to string with consistent precision and sort by index
-        data_str = data.sort_index().round(12).to_string()
-    elif isinstance(data, pd.DataFrame):
-        data_str = data.sort_index().round(12).to_string()
-    else:
-        data_str = str(data)
-    
-    hash_val = hashlib.md5(data_str.encode()).hexdigest()[:8]
-    print(f"[DEBUG] {name}: hash={hash_val}, shape={getattr(data, 'shape', 'N/A')}, type={type(data).__name__}")
-    
-    if hasattr(data, 'index'):
-        print(f"        Index range: {data.index.min()} to {data.index.max()}")
-    
-    # Handle stats differently for Series vs DataFrame
-    if isinstance(data, pd.Series) and hasattr(data, 'describe'):
-        try:
-            stats = data.describe()
-            print(f"        Stats: mean={stats['mean']:.8f}, std={stats['std']:.8f}")
-        except:
-            print(f"        Stats: mean={data.mean():.8f}, std={data.std():.8f}")
-    elif isinstance(data, pd.DataFrame):
-        try:
-            print(f"        Stats: shape={data.shape}, dtypes={data.dtypes.value_counts().to_dict()}")
-            # Show summary stats for numeric columns only
-            numeric_cols = data.select_dtypes(include=[np.number]).columns
-            if len(numeric_cols) > 0:
-                print(f"        Numeric summary: mean={data[numeric_cols].mean().mean():.8f}")
-        except:
-            print(f"        Stats: Unable to compute")
-    
-    return hash_val
-
 def select_features(feat, ret, split_date, thresh=config["THRESH"], method=["rf"]):
-    print(f"\n{'='*60}")
-    print(f"DEBUGGING FEATURE SELECTION")
-    print(f"Split date: {split_date}")
-    print(f"Config: PRUNEWIN={config['PRUNEWIN']}, YWIN={config['YWIN']}, PRUNEDOWN={config['PRUNEDOWN']}")
-    print(f"{'='*60}")
+    """Comprehensive RandomForest settings inspection"""
     
-    if method is None: 
+    if method is None or method[0] != "rf": 
         return feat
     
-    # Debug environment info
-    print(f"[ENV] Python: {os.sys.version}")
-    print(f"[ENV] Pandas: {pd.__version__}")
-    print(f"[ENV] Numpy: {np.__version__}")
-    print(f"[ENV] Random seed: {config['SEED']}")
+    print(f"\n{'='*80}")
+    print(f"COMPLETE RANDOMFOREST SETTINGS INSPECTION")
+    print(f"{'='*80}")
     
-    # Set seeds
+    # Environment inspection
+    print(f"[ENVIRONMENT]")
+    print(f"  Python version: {os.sys.version}")
+    print(f"  Sklearn version: {sklearn.__version__}")
+    print(f"  Numpy version: {np.__version__}")
+    print(f"  Pandas version: {pd.__version__}")
+    print(f"  Platform: {os.sys.platform}")
+    print(f"  CPU count: {os.cpu_count()}")
+    print(f"  PYTHONHASHSEED: {os.environ.get('PYTHONHASHSEED', 'NOT SET')}")
+    
+    # Random state inspection
+    print(f"\n[RANDOM STATE BEFORE]")
+    print(f"  Numpy random state sample: {np.random.get_state()[1][:5]}")
+    print(f"  Config seed: {config['SEED']}")
+    
+    # Set seed
     np.random.seed(config["SEED"])
     
-    # Step 1: Date calculations
+    print(f"\n[RANDOM STATE AFTER SEED]")
+    print(f"  Numpy random state sample: {np.random.get_state()[1][:5]}")
+    
+    # Data preparation (same as your original)
     split_date_ts = pd.to_datetime(split_date)
     start = split_date_ts - pd.DateOffset(months=config["PRUNEWIN"])
     window = config["YWIN"]
-    
-    print(f"\n[STEP 1] Date Setup:")
-    print(f"  split_date_ts: {split_date_ts}")
-    print(f"  start: {start}")
-    print(f"  window: {window}")
-    
-    # Step 2: Input data hashing
-    print(f"\n[STEP 2] Input Data:")
-    debug_hash(ret, "ret (input)")
-    debug_hash(feat, "feat (input)")
-    
-    # Step 3: Mask creation
     mask = (ret.index >= start) & (ret.index < split_date_ts)
-    print(f"\n[STEP 3] Mask:")
-    print(f"  Mask sum: {mask.sum()} out of {len(mask)} rows")
-    print(f"  Date range: {ret.index[mask].min()} to {ret.index[mask].max()}")
-    
-    # Step 4: Portfolio returns calculation
-    ret_masked = ret.loc[mask]
-    debug_hash(ret_masked, "ret_masked")
-    
-    # Test different mean calculation methods
-    portfolio_ret_v1 = ret_masked.mean(axis=1, skipna=True)
-    portfolio_ret_v2 = ret_masked.mean(axis=1, skipna=False)
-    portfolio_ret_v3 = ret_masked.fillna(0).mean(axis=1)
-    
-    print(f"\n[STEP 4] Portfolio Returns (different methods):")
-    debug_hash(portfolio_ret_v1, "portfolio_ret (skipna=True)")
-    debug_hash(portfolio_ret_v2, "portfolio_ret (skipna=False)")  
-    debug_hash(portfolio_ret_v3, "portfolio_ret (fillna(0))")
-    
-    # Use the most likely method (skipna=True)
-    portfolio_ret = portfolio_ret_v1
-    
-    # Step 5: Shift operation
-    shifted_ret = portfolio_ret.shift(-window)
-    print(f"\n[STEP 5] Shift Operation:")
-    debug_hash(shifted_ret, f"shifted_ret (shift -{window})")
-    
-    # Step 6: Rolling mean
-    rolling_mean = shifted_ret.rolling(window).mean()
-    print(f"\n[STEP 6] Rolling Mean:")
-    debug_hash(rolling_mean, f"rolling_mean (window={window})")
-    
-    # Step 7: Max drawdown calculation
-    def max_drawdown_v1(returns):
-        """Original version"""
+
+    def max_drawdown(returns): 
         cum = (1 + returns).cumprod()
         drawdown = (cum - cum.cummax()) / cum.cummax()
         return drawdown.min()
+
+    y = (ret.loc[mask].mean(axis=1).shift(-window).rolling(window).mean() - 
+         config["PRUNEDOWN"]*(ret.loc[mask].mean(axis=1).shift(-window).rolling(window).apply(max_drawdown, raw=False) + 1e-10)).dropna()
     
-    def max_drawdown_v2(returns):
-        """Version with explicit NaN handling"""
-        returns_clean = returns.fillna(0)
-        cum = (1 + returns_clean).cumprod()
-        drawdown = (cum - cum.cummax()) / cum.cummax()
-        return drawdown.min()
-    
-    print(f"\n[STEP 7] Rolling Drawdown Calculation:")
-    
-    # Test both versions
-    rolling_dd_v1 = shifted_ret.rolling(window).apply(max_drawdown_v1, raw=False)
-    rolling_dd_v2 = shifted_ret.rolling(window).apply(max_drawdown_v2, raw=False)
-    
-    debug_hash(rolling_dd_v1, "rolling_drawdown_v1 (original)")
-    debug_hash(rolling_dd_v2, "rolling_drawdown_v2 (fillna)")
-    
-    # Use original version
-    rolling_drawdown = rolling_dd_v1
-    
-    # Step 8: Final y calculation
-    print(f"\n[STEP 8] Final Y Calculation:")
-    
-    # Test the exact original calculation
-    y_original = (ret.loc[mask].mean(axis=1).shift(-window).rolling(window).mean() - 
-                  config["PRUNEDOWN"]*(ret.loc[mask].mean(axis=1).shift(-window).rolling(window).apply(max_drawdown_v1, raw=False) + 1e-10)).dropna()
-    
-    # Test step-by-step calculation
-    y_stepwise = (rolling_mean - config["PRUNEDOWN"]*(rolling_drawdown + 1e-10)).dropna()
-    
-    debug_hash(y_original, "y_original (chained)")
-    debug_hash(y_stepwise, "y_stepwise (explicit)")
-    
-    # Compare the two
-    if len(y_original) == len(y_stepwise):
-        diff = (y_original - y_stepwise).abs().max()
-        print(f"  Max difference between methods: {diff}")
-    
-    # Use original method to match Kaggle
-    y = y_original
-    
-    # Step 9: Feature alignment
-    print(f"\n[STEP 9] Feature Alignment:")
     X = feat.loc[y.index]
-    debug_hash(X, "X (aligned features)")
-    debug_hash(y, "y (final target)")
     
-    # Step 10: Sort consistency check
-    X_sorted = X.sort_index()
-    y_sorted = y.sort_index()
+    # Data inspection
+    print(f"\n[DATA INSPECTION]")
+    print(f"  X shape: {X.shape}")
+    print(f"  y shape: {y.shape}")
+    print(f"  X dtypes: {X.dtypes.value_counts().to_dict()}")
+    print(f"  y dtype: {y.dtype}")
+    print(f"  X memory usage: {X.memory_usage(deep=True).sum() / 1024**2:.2f} MB")
+    print(f"  X has NaN: {X.isnull().any().any()}")
+    print(f"  y has NaN: {y.isnull().any()}")
+    print(f"  X min/max: {X.min().min():.6f} / {X.max().max():.6f}")
+    print(f"  y min/max: {y.min():.6f} / {y.max():.6f}")
     
-    print(f"\n[STEP 10] Sorting Check:")
-    debug_hash(X_sorted, "X_sorted")
-    debug_hash(y_sorted, "y_sorted")
+    # Create RandomForest with YOUR current settings
+    print(f"\n[RANDOMFOREST CREATION]")
+    print(f"  n_estimators from config: {config['NESTIM']}")
+    print(f"  random_state from config: {config['SEED']}")
     
-    # Check if sorting changes anything
-    if not X.index.equals(X_sorted.index):
-        print("  WARNING: X index was not sorted!")
-    if not y.index.equals(y_sorted.index):
-        print("  WARNING: y index was not sorted!")
+    model = RandomForestRegressor(
+        n_estimators=config["NESTIM"], 
+        random_state=config["SEED"],
+        n_jobs=1  # Your current setting
+    )
     
-    # Feature preprocessing
-    print(f"\n[STEP 11] Feature Preprocessing:")
-    constant_features = X.nunique(dropna=True)[X.nunique(dropna=True) <= 1].index.tolist()
-    sparse_features = X.columns[X.isna().sum() > (len(X) - int(0.9 * len(X)))].tolist()
-    dropped_features = constant_features + sparse_features
+    # INSPECT ALL MODEL PARAMETERS
+    print(f"\n[RANDOMFOREST PARAMETERS - BEFORE FIT]")
+    params = model.get_params()
+    for key in sorted(params.keys()):
+        print(f"  {key}: {params[key]}")
     
-    print(f"  Constant features: {len(constant_features)}")
-    print(f"  Sparse features: {len(sparse_features)}")
-    print(f"  Total dropped: {len(dropped_features)}")
+    # Check what sklearn defaults are
+    print(f"\n[SKLEARN DEFAULTS COMPARISON]")
+    default_rf = RandomForestRegressor()
+    default_params = default_rf.get_params()
     
-    if X.empty or len(X) < 10: 
-        print("[ERROR] Not enough data for feature selection.")
-        return feat
-
-    # Random Forest
-    if method[0] == "rf":
-        print(f"\n[STEP 12] Random Forest:")
-        print(f"  n_estimators: {config['NESTIM']}")
-        print(f"  random_state: {config['SEED']}")
+    for key in sorted(default_params.keys()):
+        if params[key] != default_params[key]:
+            print(f"  {key}: YOUR={params[key]} vs DEFAULT={default_params[key]} *** DIFFERENT")
+        else:
+            print(f"  {key}: {params[key]} (same as default)")
+    
+    # Fit the model
+    print(f"\n[RANDOMFOREST FITTING]")
+    print(f"  Fitting with X shape {X.shape}, y shape {y.shape}")
+    
+    # Random state just before fitting
+    pre_fit_state = np.random.get_state()[1][:5]
+    print(f"  Random state just before fit: {pre_fit_state}")
+    
+    model.fit(X, y)
+    
+    # Random state after fitting
+    post_fit_state = np.random.get_state()[1][:5]
+    print(f"  Random state just after fit: {post_fit_state}")
+    
+    # INSPECT FITTED MODEL
+    print(f"\n[RANDOMFOREST AFTER FITTING]")
+    print(f"  n_estimators (actual): {model.n_estimators}")
+    print(f"  n_features_in_: {model.n_features_in_}")
+    print(f"  feature_names_in_: {getattr(model, 'feature_names_in_', 'NOT AVAILABLE')}")
+    print(f"  estimators count: {len(model.estimators_)}")
+    
+    # Check first few estimators' random states
+    print(f"\n[INDIVIDUAL TREE INSPECTION]")
+    for i in range(min(3, len(model.estimators_))):
+        tree = model.estimators_[i]
+        print(f"  Tree {i}: random_state={tree.random_state}, max_depth={tree.tree_.max_depth}, n_leaves={tree.tree_.n_leaves}")
+    
+    # Get feature importances
+    scores = pd.Series(model.feature_importances_, index=X.columns)
+    
+    print(f"\n[FEATURE IMPORTANCE ANALYSIS]")
+    print(f"  Total features: {len(scores)}")
+    print(f"  Feature importance sum: {scores.sum():.10f}")
+    print(f"  Feature importance mean: {scores.mean():.10f}")
+    print(f"  Feature importance std: {scores.std():.10f}")
+    print(f"  Non-zero importances: {(scores > 0).sum()}")
+    print(f"  Zero importances: {(scores == 0).sum()}")
+    
+    # Show top 10 features with high precision
+    print(f"\n[TOP 10 FEATURES - HIGH PRECISION]")
+    top_scores = scores.sort_values(ascending=False).head(10)
+    for i, (feat_name, score) in enumerate(top_scores.items()):
+        print(f"  {i+1:2d}. {feat_name}: {score:.12f}")
+    
+    # Check if there are ties around the 175th position
+    print(f"\n[FEATURE SELECTION ANALYSIS]")
+    sorted_scores = scores.sort_values(ascending=False)
+    
+    if thresh > 1:
+        thresh_int = int(thresh)
+        print(f"  Selecting top {thresh_int} features")
         
-        model = RandomForestRegressor(
-            n_estimators=config["NESTIM"], 
-            random_state=config["SEED"],
-            n_jobs=1
-        )
+        # Show features around the cutoff
+        start_idx = max(0, thresh_int - 5)
+        end_idx = min(len(sorted_scores), thresh_int + 5)
         
-        # Final data check before fitting
-        print(f"  Final X shape: {X.shape}")
-        print(f"  Final y shape: {y.shape}")
-        print(f"  X dtypes: {X.dtypes.value_counts().to_dict()}")
-        print(f"  y dtype: {y.dtype}")
+        print(f"  Features around position {thresh_int}:")
+        for i in range(start_idx, end_idx):
+            marker = " >>> CUTOFF <<<" if i == thresh_int else ""
+            score = sorted_scores.iloc[i]
+            feat_name = sorted_scores.index[i]
+            print(f"    {i+1:3d}. {feat_name}: {score:.12f}{marker}")
         
-        model.fit(X, y)
-        scores = pd.Series(model.feature_importances_, index=X.columns)
-        debug_hash(scores, "feature_scores")
-        
-    else: 
-        return feat
-
-    # Feature selection
+        # Check for ties
+        cutoff_score = sorted_scores.iloc[thresh_int-1]
+        ties = (sorted_scores == cutoff_score).sum()
+        if ties > 1:
+            print(f"  WARNING: {ties} features have the same score as the {thresh_int}th feature!")
+            print(f"  Cutoff score: {cutoff_score:.12f}")
+    
+    # Memory and performance info
+    print(f"\n[PERFORMANCE INFO]")
+    print(f"  Model memory usage: ~{model.estimators_[0].tree_.capacity * len(model.estimators_) * 8 / 1024**2:.2f} MB (estimated)")
+    
+    # Final random state
+    final_state = np.random.get_state()[1][:5]
+    print(f"  Final random state: {final_state}")
+    
+    # FEATURE SELECTION (like original function)
     combined_scores = scores.sort_values(ascending=False)
     
     if thresh > 1:
         selected_features = combined_scores.nlargest(int(thresh)).index
-        print(f"\n[FINAL] Selected top {int(thresh)} features")
+        print(f"\n[FINAL SELECTION] Selected top {int(thresh)} features by {method[0]} from {start.date()}–{split_date_ts.date()}")
     elif 0 < thresh <= 1:
         selected_features = combined_scores[combined_scores > thresh].index
-        print(f"\n[FINAL] Selected {len(selected_features)} features with score > {thresh}")
+        print(f"\n[FINAL SELECTION] Selected {len(selected_features)} features with {method[0]} > {thresh} from {start.date()}–{split_date_ts.date()}")
     else: 
         return feat
 
-    print(f"Selected features: {len(selected_features)}")
-    print(f"Top 5 features: {list(selected_features[:5])}")
-    print(f"Top 5 scores: {combined_scores.head().round(6).tolist()}")
+    print(f"[FINAL SELECTION] Top feature score: {combined_scores.loc[selected_features].head(1).to_string()}")
     
+    # RETURN SELECTED FEATURES LIKE ORIGINAL
     return feat[selected_features]
 
-# Usage:
-# selected_feat = debug_select_features(feat, ret, split_date)
+# Usage - add this to your debug script:
+# scores, model = inspect_rf_settings(feat, ret, split_date)
