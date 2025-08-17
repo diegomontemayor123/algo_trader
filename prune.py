@@ -22,9 +22,23 @@ def debug_hash(data, name):
     
     if hasattr(data, 'index'):
         print(f"        Index range: {data.index.min()} to {data.index.max()}")
-    if hasattr(data, 'describe'):
-        stats = data.describe()
-        print(f"        Stats: mean={stats['mean']:.8f}, std={stats['std']:.8f}")
+    
+    # Handle stats differently for Series vs DataFrame
+    if isinstance(data, pd.Series) and hasattr(data, 'describe'):
+        try:
+            stats = data.describe()
+            print(f"        Stats: mean={stats['mean']:.8f}, std={stats['std']:.8f}")
+        except:
+            print(f"        Stats: mean={data.mean():.8f}, std={data.std():.8f}")
+    elif isinstance(data, pd.DataFrame):
+        try:
+            print(f"        Stats: shape={data.shape}, dtypes={data.dtypes.value_counts().to_dict()}")
+            # Show summary stats for numeric columns only
+            numeric_cols = data.select_dtypes(include=[np.number]).columns
+            if len(numeric_cols) > 0:
+                print(f"        Numeric summary: mean={data[numeric_cols].mean().mean():.8f}")
+        except:
+            print(f"        Stats: Unable to compute")
     
     return hash_val
 
