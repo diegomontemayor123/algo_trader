@@ -127,8 +127,14 @@ def comp_feat(TICK, FEAT, cached_data, macro_keys, thresh=config["THRESH"], spli
     feat = select_features(feat, ret, split_date, thresh=thresh, method=method)
     #feat = select_features(feat, use_predefined=True)
 
-    feat.to_csv("csv/feat_all.csv")
-    return feat, ret
+    feat_file = "csv/feat_all.csv"
+    if os.path.exists(feat_file):
+        current_feat = pd.read_csv(feat_file, index_col=0, parse_dates=True)
+        common_cols = current_feat.columns.intersection(feat.columns)
+        diff_count = sum(not current_feat[col].equals(feat[col]) for col in common_cols)
+        pct_diff = diff_count / len(feat.columns) * 100
+        print(f"[Feat] {pct_diff:.2f}% of columns are new or changed ({diff_count}/{len(feat.columns)})")
+    return feat, ret    
 
 class RollingScaler:
     def __init__(self, eps=1e-10):
