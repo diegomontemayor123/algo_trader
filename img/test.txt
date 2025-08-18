@@ -1,46 +1,46 @@
 =Combined Perf Over Full Per=
-Cagr: Strat 26.23%, Bench 24.55%
-Sharpe: Strat 102.53%, Bench 107.06%
-Max_Down: Strat -31.04%, Bench -30.07%
+Cagr: Strat 27.13%, Bench 24.55%
+Sharpe: Strat 90.72%, Bench 107.06%
+Max_Down: Strat -45.30%, Bench -30.07%
 
 =Per-Chunk Metrics=
 
 -Chunk 1 (2017-01-01 to 2017-12-31)-
-Cagr: Strat 25.39%, Bench 43.41%
-Sharpe: Strat 193.70%, Bench 365.48%
-Max_Down: Strat -5.67%, Bench -2.75%
+Cagr: Strat 122.27%, Bench 43.41%
+Sharpe: Strat 297.88%, Bench 365.48%
+Max_Down: Strat -10.66%, Bench -2.75%
 
 -Chunk 2 (2018-01-01 to 2018-12-31)-
-Cagr: Strat 16.50%, Bench 6.05%
-Sharpe: Strat 64.01%, Bench 37.56%
-Max_Down: Strat -24.19%, Bench -21.95%
+Cagr: Strat 11.80%, Bench 6.05%
+Sharpe: Strat 51.99%, Bench 37.56%
+Max_Down: Strat -26.41%, Bench -21.95%
 
 -Chunk 3 (2019-01-01 to 2019-12-31)-
-Cagr: Strat 88.65%, Bench 43.37%
-Sharpe: Strat 236.17%, Bench 240.98%
-Max_Down: Strat -15.90%, Bench -9.59%
+Cagr: Strat 42.84%, Bench 43.37%
+Sharpe: Strat 230.21%, Bench 240.98%
+Max_Down: Strat -7.06%, Bench -9.59%
 
 -Chunk 4 (2020-01-01 to 2020-12-31)-
-Cagr: Strat 53.57%, Bench 36.02%
-Sharpe: Strat 151.10%, Bench 102.23%
-Max_Down: Strat -19.98%, Bench -30.07%
+Cagr: Strat 36.09%, Bench 36.02%
+Sharpe: Strat 172.31%, Bench 102.23%
+Max_Down: Strat -11.27%, Bench -30.07%
 
 -Chunk 5 (2021-01-01 to 2021-12-31)-
-Cagr: Strat 36.79%, Bench 44.28%
-Sharpe: Strat 143.83%, Bench 245.31%
-Max_Down: Strat -15.62%, Bench -5.68%
+Cagr: Strat 11.44%, Bench 44.28%
+Sharpe: Strat 54.04%, Bench 245.31%
+Max_Down: Strat -21.32%, Bench -5.68%
 
 -Chunk 6 (2022-01-01 to 2022-12-31)-
-Cagr: Strat -23.27%, Bench -10.22%
-Sharpe: Strat -112.47%, Bench -25.93%
-Max_Down: Strat -28.58%, Bench -22.34%
+Cagr: Strat -16.59%, Bench -10.22%
+Sharpe: Strat -4.58%, Bench -25.93%
+Max_Down: Strat -42.30%, Bench -22.34%
 
 =SD - Metrics Across Chunks=
-Cagr: ±37.50%
-Sharpe: ±124.36%
-Max_Down: ±7.95%
+Cagr: ±47.82%
+Sharpe: ±118.24%
+Max_Down: ±13.20%
 
 =Average Outperf Across Chunks (Strat - Bench)=
-Cagr: 5.79%
-Sharpe: -48.22%
-Max_Down: -2.92%
+Cagr: 7.49%
+Sharpe: -27.30%
+Max_Down: -4.44%
