@@ -146,3 +146,27 @@ def is_duplicate_trial(study, params):
             continue
         if t.params == params:
             print(f"[DUPLICATE] Found duplicate trial #{t.number}, skipping...")
+            return t.value
+    return None
+
+
+def main():
+    from load import load_config
+    config = load_config()
+    sampler = TPESampler(seed=config["SEED"])
+    study = optuna.create_study(direction="maximize", sampler=sampler)
+    study.optimize(lambda trial: run_experiment(trial, study), n_trials=TRIALS, n_jobs=1)
+
+    best = study.best_trial
+    best_params = best.params.copy()
+    with open("hyparams.json", "w") as f:
+        json.dump(best_params, f, indent=4)
+    print("\n=== Best trial parameters ===")
+    for k, v in best_params.items():
+        print(f"{k}: {v}")
+    for m in ["sharpe", "down", "CAGR", "avg_outperf", "exp_delta"]:
+        print(f"{m}: {best.user_attrs.get(m, float('nan')):.4f}")
+
+
+if __name__ == "__main__":
+    main()
