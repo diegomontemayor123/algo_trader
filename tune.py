@@ -6,60 +6,52 @@ TRIALS = 400
 
 def run_experiment(trial, study=None):
     config = {
-        "START": trial.suggest_categorical("START", ["2012-01-01"]),
-        "END": trial.suggest_categorical("END", ["2023-01-01"]),
-        "SPLIT": trial.suggest_categorical("SPLIT", ["2017-01-01"]),
-        "TICK": trial.suggest_categorical("TICK", [
-            "JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"
-        ]),
-        "MACRO": trial.suggest_categorical("MACRO", [
-            "^GSPC,CL=F,SI=F,NG=F,HG=F,ZC=F,^IRX,TLT,IEF,UUP,HYG,EEM,VEA,FXI,^RUT,^FTSE,^TYX,AUDUSD=X,USDJPY=X,EURUSD=X,GBPUSD=X,ZW=F,GC=F"
-        ]),
-        "FEAT": trial.suggest_categorical("FEAT", [
-            "ret,price,logret,rollret,sma,ema,momentum,macd,pricevshigh,vol,atr,range,volchange,volptile,zscore,rsi,cmo,williams,stoch,priceptile,adx,meanabsret,boll,donchian,volume,lag,retcrossz,crossmomentumz,crossvolz,crossretrank",
-            "ret,price,logret,rollret,sma,ema,momentum,macd,pricevshigh,vol,atr,range,volchange,volptile,zscore,rsi,cmo,williams,stoch,priceptile,meanabsret,boll,donchian,volume,lag,retcrossz,crossmomentumz,crossvolz,crossretrank"
-        ]),
-        "YWIN": trial.suggest_categorical("YWIN", [21, 22]),
-        "PRUNEWIN": trial.suggest_categorical("PRUNEWIN", [22, 24]),
-        "PRUNEDOWN": trial.suggest_categorical("PRUNEDOWN", [
-            1.3204761367650948, 1.3158661801381064, 1.319847065
-        ]),
-        "THRESH": trial.suggest_categorical("THRESH", [175, 178, 184]),
-        "NESTIM": trial.suggest_categorical("NESTIM", [192, 172, 194]),
-        "BATCH": trial.suggest_categorical("BATCH", [57, 53, 55]),
-        "LBACK": trial.suggest_categorical("LBACK", [84, 86, 85]),
-        "PRED_DAYS": trial.suggest_categorical("PRED_DAYS", [6]),
-        "DROPOUT": trial.suggest_categorical("DROPOUT", [
-            0.03771491690014621, 0.03658746843771413, 0.03697562924
-        ]),
-        "DECAY": trial.suggest_categorical("DECAY", [
-            0.003190861119627664, 0.0034914751575741763, 0.003187759847
-        ]),
-        "SHORT_PER": trial.suggest_categorical("SHORT_PER", [14, 12]),
-        "MED_PER": trial.suggest_categorical("MED_PER", [21]),
-        "LONG_PER": trial.suggest_categorical("LONG_PER", [69, 75]),
-        "INIT_LR": trial.suggest_categorical("INIT_LR", [
-            0.005430727411696868, 0.00590976122344214, 0.005735386937
-        ]),
-        "EXP_PEN": trial.suggest_categorical("EXP_PEN", [
-            0.23428392297076622, 0.23713007845543724, 0.2350373747
-        ]),
-        "EXP_EXP": trial.suggest_categorical("EXP_EXP", [1.8]),
-        "RETURN_PEN": trial.suggest_categorical("RETURN_PEN", [0.073]),
-        "RETURN_EXP": trial.suggest_categorical("RETURN_EXP", [0.28]),
-        "SD_PEN": trial.suggest_categorical("SD_PEN", [0.17]),
-        "SD_EXP": trial.suggest_categorical("SD_EXP", [0.76]),
-        "Z_ALPHA": trial.suggest_categorical("Z_ALPHA", [
-            0.779364634605418, 0.8373216445088016, 0.8110284829
-        ]),
-        "SEED": trial.suggest_categorical("SEED", [42]),
-        "MAX_HEADS": trial.suggest_categorical("MAX_HEADS", [1, 2]),
-        "LAYERS": trial.suggest_categorical("LAYERS", [5, 3]),
-        "EARLY_FAIL": trial.suggest_categorical("EARLY_FAIL", [5, 4]),
-        "VAL_SPLIT": trial.suggest_categorical("VAL_SPLIT", [0.15]),
-        "TEST_CHUNK": trial.suggest_categorical("TEST_CHUNK", [12]),
-        "ATTENT": trial.suggest_categorical("ATTENT", [1])
-    }
+    "START": trial.suggest_categorical("START", ["2012-01-01"]),
+    "END": trial.suggest_categorical("END", ["2023-01-01"]),
+    "SPLIT": trial.suggest_categorical("SPLIT", ["2017-01-01"]),
+    "TICK": trial.suggest_categorical(
+        "TICK",
+        ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]
+    ),
+    "MACRO": trial.suggest_categorical(
+        "MACRO",
+        ["^GSPC,CL=F,SI=F,NG=F,HG=F,ZC=F,^IRX,TLT,IEF,UUP,HYG,EEM,VEA,FXI,^RUT,^FTSE,^TYX,AUDUSD=X,USDJPY=X,EURUSD=X,GBPUSD=X,ZW=F,GC=F"]
+    ),
+    "FEAT": trial.suggest_categorical(
+        "FEAT",
+        ["ret,price,logret,rollret,sma,ema,momentum,macd,pricevshigh,vol,atr,range,volchange,volptile,zscore,rsi,cmo,williams,stoch,priceptile,adx,meanabsret,boll,donchian,volume,lag,retcrossz,crossmomentumz,crossvolz,crossretrank"]
+    ),
+    "YWIN": trial.suggest_categorical("YWIN", [21, 22]),
+    "PRUNEWIN": trial.suggest_categorical("PRUNEWIN", [22, 24]),
+    "PRUNEDOWN": trial.suggest_categorical("PRUNEDOWN", [1.3158661801381064, 1.3204761367650948]),
+    "THRESH": trial.suggest_categorical("THRESH", [175, 184]),
+    "NESTIM": trial.suggest_categorical("NESTIM", [172, 192]),
+    "BATCH": trial.suggest_categorical("BATCH", [53, 57]),
+    "LBACK": trial.suggest_categorical("LBACK", [84, 86]),
+    "PRED_DAYS": trial.suggest_categorical("PRED_DAYS", [6]),
+    "DROPOUT": trial.suggest_categorical("DROPOUT", [0.03658746843771413, 0.03771491690014621]),
+    "DECAY": trial.suggest_categorical("DECAY", [0.003190861119627664, 0.0034914751575741763]),
+    "SHORT_PER": trial.suggest_categorical("SHORT_PER", [12, 14]),
+    "MED_PER": trial.suggest_categorical("MED_PER", [21]),
+    "LONG_PER": trial.suggest_categorical("LONG_PER", [69, 75]),
+    "INIT_LR": trial.suggest_categorical("INIT_LR", [0.005430727411696868, 0.00590976122344214]),
+    "EXP_PEN": trial.suggest_categorical("EXP_PEN", [0.23428392297076622, 0.23713007845543724]),
+    "EXP_EXP": trial.suggest_categorical("EXP_EXP", [1.8]),
+    "RETURN_PEN": trial.suggest_categorical("RETURN_PEN", [0.073]),
+    "RETURN_EXP": trial.suggest_categorical("RETURN_EXP", [0.28]),
+    "SD_PEN": trial.suggest_categorical("SD_PEN", [0.17]),
+    "SD_EXP": trial.suggest_categorical("SD_EXP", [0.76]),
+    "Z_ALPHA": trial.suggest_categorical("Z_ALPHA", [0.779364634605418, 0.8373216445088016]),
+    "SEED": trial.suggest_categorical("SEED", [42]),
+    "MAX_HEADS": trial.suggest_categorical("MAX_HEADS", [1, 2]),
+    "LAYERS": trial.suggest_categorical("LAYERS", [5]),
+    "EARLY_FAIL": trial.suggest_categorical("EARLY_FAIL", [4, 5]),
+    "VAL_SPLIT": trial.suggest_categorical("VAL_SPLIT", [0.15]),
+    "TEST_CHUNK": trial.suggest_categorical("TEST_CHUNK", [12]),
+    "ATTENT": trial.suggest_categorical("ATTENT", [1])
+}
+
+
 
     env = os.environ.copy()
     for k, v in config.items():
