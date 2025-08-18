@@ -1,7 +1,7 @@
 import os, subprocess, re, json, csv
 
 # List of seeds you want to sweep
-SEEDS = [0, 1, 2, 3, 4, 5, 7, 11, 21, 42, 77, 101, 123, 999]
+SEEDS = [42, 1, 2, 3, 4, 5, 7, 11, 21, 0, 77, 101, 123, 999]
 
 def extract_metric(label, out):
     pattern = rf"{re.escape(label)}:\s*Strat:\s*([-+]?\d+(?:\.\d+)?)%"
