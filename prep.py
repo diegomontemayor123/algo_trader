@@ -102,11 +102,15 @@ def prep_data(feat, ret, config, anchor_date=None):
         if len(anchor_seqs) == 0:
             print(f"[Prep] No sequences found for anchor date {anchor_date}. Using global mean as anchor.")
             anchor_seq = np.zeros_like(np.vstack(train_seq)[0])
-        else: anchor_seq = compute_anchor_with_decay(anchor_seqs, decay=config["Z_DECAY"])
-        seq_for_fit = anchor_seqs
+        else:
+            anchor_seq = compute_anchor_with_decay(anchor_seqs, decay=config["Z_DECAY"])
     else:
         anchor_seq = np.zeros_like(np.vstack(train_seq)[0])
-        seq_for_fit = train_seq
+
+    # ALWAYS use full training sequences for the scaler
+    seq_for_fit = train_seq
+
+
 
     scaler = RollingScaler()
     scaler.fit(np.vstack(seq_for_fit))
