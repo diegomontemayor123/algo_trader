@@ -57,9 +57,10 @@ def train_model(model, train_loader, val_loader, config, asset_sd):
             if patience_counter >= config["EARLY_FAIL"]: break
     return model
 
+
 def train(config, feat, ret):
     from prep import prep_data
-    train_data, val_data, test_data, scaler, anchor_seq = prep_data(feat, ret, config, anchor_date=None)
+    train_data, val_data, test_data, scaler, anchor_seq  = prep_data(feat, ret, config, anchor_date=None)
     num_workers = min(2, multiprocessing.cpu_count())
     train_loader = DataLoader(train_data, batch_size=config["BATCH"], shuffle=True, num_workers=num_workers,pin_memory=True, persistent_workers=True)
     val_loader = DataLoader(val_data, batch_size=config["BATCH"], shuffle=False, num_workers=num_workers,pin_memory=True, persistent_workers=True)
