@@ -79,7 +79,7 @@ def process_macro_feat(cached_data, index, macro_keys, min_non_na_ratio=0.1):
         macro_feat[col] = pct_series
     return pd.DataFrame(macro_feat, index=index)
 
-def comp_feat(TICK, FEAT, cached_data, macro_keys, thresh=config["THRESH"], split_date=None, method=None):
+def comp_feat(TICK, FEAT, cached_data, macro_keys, thresh=config["THRESH"], split_date=None, method=None, importance_features=None):
     price_cols = [col for col in cached_data.columns if not col.endswith(("_volume", "_high", "_low")) and col in TICK]
     volume_cols = [f"{ticker}_volume" for ticker in TICK if f"{ticker}_volume" in cached_data.columns]
     high_cols = {ticker: f"{ticker}_high" for ticker in TICK if f"{ticker}_high" in cached_data.columns}
@@ -124,7 +124,7 @@ def comp_feat(TICK, FEAT, cached_data, macro_keys, thresh=config["THRESH"], spli
     feat = pd.concat([feat, macro_df], axis=1)
     feat['day_of_week'] = feat.index.dayofweek
     feat['month'] = feat.index.month - 1
-    feat = select_features(feat, ret, split_date, thresh=thresh, method=method)
+    feat = select_features(feat, ret, split_date, thresh=thresh, method=method, importance_features=importance_features)
     #feat = select_features(feat, use_predefined=True)
 
     feat_file = "csv/feat_all.csv"
@@ -135,33 +135,3 @@ def comp_feat(TICK, FEAT, cached_data, macro_keys, thresh=config["THRESH"], spli
         pct_diff = diff_count / len(feat.columns) * 100
         print(f"[Feat] {pct_diff:.2f}% of columns are new or changed ({diff_count}/{len(feat.columns)})")
     return feat, ret    
-
-class RollingScaler:
-    def __init__(self, eps=1e-10):
-        self.mean_ = None
-        self.std_ = None
-        self.eps = eps
-
-    def fit(self, X):
-        X = np.asarray(X)
-        if X.ndim == 3:  X = X.reshape(-1, X.shape[-1])
-        if X.ndim != 2:
-            raise ValueError("Expected 2D array for fit")
-        self.mean_ = np.nanmean(X, axis=0)
-        self.std_ = np.nanstd(X, axis=0)
-        self.std_[self.std_ < self.eps] = 1.0
-
-    def transform(self, X):
-        X = np.asarray(X)
-        if X.ndim == 2: return (X - self.mean_) / self.std_
-        elif X.ndim == 3:
-            shp = X.shape
-            flat = X.reshape(-1, shp[-1])
-            flat = (flat - self.mean_) / self.std_
-            return flat.reshape(shp)
-        else:
-            raise ValueError("Unsupported shape for transform")
-
-    def fit_transform(self, X):
-        self.fit(X)
-        return self.transform(X)

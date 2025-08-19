@@ -6,6 +6,7 @@ from model import train
 from load import load_config
 from perf import calc_perf_metrics  
 from minitune import minitune_for_chunk
+from importance import track_importance_during_training
 np.seterr(all='raise')
 
 SEED = load_config()["SEED"]
@@ -17,7 +18,7 @@ if torch.cuda.is_available(): torch.cuda.manual_seed_all(SEED)
 
 
 def run_training_chunks(chunks, lback, TICK, comp_feat, macro_keys, config, start, device, initial_capital):
-    pfo_values = [initial_capital];bench_values = [initial_capital]; daily_weight = []; all_pfo_metrics = []; all_bench_metrics = []
+    pfo_values = [initial_capital];bench_values = [initial_capital]; daily_weight = []; all_pfo_metrics = []; all_bench_metrics = [] ; top_importance_feats = None
     
     for idx, (chunk_start, chunk_end) in enumerate(chunks):
         train_end = chunk_start - pd.Timedelta(days=1)
@@ -29,8 +30,10 @@ def run_training_chunks(chunks, lback, TICK, comp_feat, macro_keys, config, star
         chunk_config["START"] = str(train_start.date()); chunk_config["END"] = str(chunk_end.date()); chunk_config["SPLIT"] = str(chunk_start.date())
 
         cached_chunk_data = load_prices(chunk_config["START"], chunk_config["END"], macro_keys)
-        feat_train, ret_train = comp_feat(TICK, config["FEAT"], cached_chunk_data, macro_keys, split_date=chunk_config["SPLIT"], method=["rf"])
+        feat_train, ret_train = comp_feat(TICK, config["FEAT"], cached_chunk_data, macro_keys, split_date=chunk_config["SPLIT"], method=["rf"],importance_features=top_importance_feats)
         current_model, scaler = train(chunk_config, feat_train, ret_train)
+        importance_result = track_importance_during_training(current_model, feat_train, ret_train, scaler, chunk_config, top_n=config["TOPIMP"])
+        top_importance_feats = importance_result['feature_names'].tolist()
         current_model.eval()       
         start_idx = feat_train.index.get_indexer([chunk_start], method='bfill')[0]
         end_idx = feat_train.index.get_indexer([chunk_end], method='ffill')[0]
@@ -63,7 +66,7 @@ def run_training_chunks(chunks, lback, TICK, comp_feat, macro_keys, config, star
         all_bench_metrics.append(bench_metrics)
         print(f"[Train] Chunk {idx+1}: Performance Metrics: {pfo_metrics} Bench: {bench_metrics}\n")
         if pfo_metrics["max_down"] < - 0.4 and (idx + 1) < 5 : print("KILLRUN - pfo sharpe below threshold.")
-        #if pfo_metrics["cagr"] <  .48 and (idx + 1) < 2 : print("KILLRUN - pfo sharpe below threshold.")
+        if pfo_metrics["cagr"] <  .35 and (idx + 1) < 2 : print("KILLRUN - pfo sharpe below threshold.")
 
     avg_outperf = {}
     if all_pfo_metrics and all_bench_metrics:

@@ -5,7 +5,7 @@ from load import load_config
 
 config = load_config()
 
-def select_features(feat, ret, split_date, thresh=config["THRESH"], method=["rf"]):
+def select_features(feat, ret, split_date, thresh=config["THRESH"], method=["rf"], importance_features=None):
     if method is None: return feat
     split_date_ts = pd.to_datetime(split_date)
     start = split_date_ts - pd.DateOffset(months=config["PRUNEWIN"])
@@ -49,6 +49,18 @@ def select_features(feat, ret, split_date, thresh=config["THRESH"], method=["rf"
         print(f"[Prune] Selected {len(selected_features)} features with {method[0]} > {thresh} from {start.date()}–{split_date_ts.date()}")
     else: return feat
     #for f, s in combined_scores.loc[selected_features].items(): print(f" - {f}: {s:.6f}")
-    
+
+    if importance_features is not None and len(importance_features) > 0:
+        current_features = list(selected_features)
+        bottom_features = combined_scores.loc[current_features].nsmallest(config["TOPIMP"]).index
+        new_candidates = [f for f in importance_features if f not in current_features and f in feat.columns]
+        if new_candidates:
+            replace_count = min(len(bottom_features), len(new_candidates))
+            features_to_remove = bottom_features[:replace_count]
+            features_to_add = new_candidates[:replace_count]
+            updated_features = [f for f in current_features if f not in features_to_remove] + features_to_add
+            selected_features = pd.Index(updated_features)
+            print(f"[Prune] Replaced {replace_count} bottom RF features with transformer importance")
+        
     print(f"[Prune] Top feature score: {combined_scores.loc[selected_features].head(1).to_string()}")
     return feat[selected_features]
