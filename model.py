@@ -96,6 +96,7 @@ def create_model(dimen, config):
     print(f"[Model] Creating TransformerTrader with dimen={dimen}, heads={heads}, device={DEVICE}")
     return TransformerTrader(dimen=dimen,num_heads=heads,num_layers=config["LAYERS"],dropout=config["DROPOUT"],seq_len=config["LBACK"],TICK=config["TICK"],feat_attent=config["ATTENT"]).to(DEVICE, non_blocking=True)
 
+
 def split_train_val(sequences, targets, valid_ratio):
     total_samples = len(sequences)
     val_size = int(total_samples * valid_ratio)
