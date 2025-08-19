@@ -4,7 +4,7 @@ from optuna.samplers import TPESampler
 TRIALS = 400
 
 
-def run_experiment(trial,study=None):
+def run_experiment(trial, study=None):
     config = { 
     "START": trial.suggest_categorical("START", ["2012-01-01"]),
     "END": trial.suggest_categorical("END", ["2023-01-01"]),
@@ -49,63 +49,107 @@ def run_experiment(trial,study=None):
 
 
     env = os.environ.copy()
-    for k, v in config.items():env[k] = str(v)
+    for k, v in config.items():
+        env[k] = str(v)
     dup_value = is_duplicate_trial(study, {k: str(v) for k, v in config.items()})
-    if dup_value is not None: return dup_value 
+    if dup_value is not None:
+        return dup_value
+
     try:
         python_exe = os.path.join(env.get("VIRTUAL_ENV", ""), "Scripts", "python.exe") if "VIRTUAL_ENV" in env else "python"
-        result = subprocess.run([python_exe, "model.py"], capture_output=True, text=True, env=env, timeout=1800)
 
-        if result.returncode != 0:print(f"  Subprocess failed: {result.stdout} / {result.stderr}")
-        output = result.stdout + result.stderr
-        if not output.strip():print("[error] Empty subprocess output.");return -float("inf")
-        if "KILLRUN" in output:print("[KILLRUN] — aborting trial.");return -float("inf")
+        # --- NEW: stream subprocess and kill early on KILLRUN ---
+        proc = subprocess.Popen([python_exe, "model.py"],
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT,
+                                text=True,
+                                env=env,
+                                bufsize=1)
+
+        output_lines = []
+        for line in proc.stdout:
+            print(line, end="")  # live streaming
+            output_lines.append(line)
+            if "KILLRUN" in line:
+                print("[KILLRUN] — aborting trial early.")
+                proc.kill()
+                proc.wait()
+                return -float("inf")
+
+        proc.wait()
+        output = "".join(output_lines)
+
+        if proc.returncode != 0:
+            print(f"  Subprocess failed: {output}")
+
+        if not output.strip():
+            print("[error] Empty subprocess output.")
+            return -float("inf")
+
+        # --- rest unchanged ---
         def extract_metric(label, out):
             pattern = rf"{re.escape(label)}:\s*Strat:\s*([-+]?\d+(?:\.\d+)?)%"
             match = re.search(pattern, out, re.IGNORECASE)
             return float(match.group(1)) / 100 if match else None
+
         def extract_avgoutperf(output):
             match = re.search(r"Avg Bench Outperf(?: thru Chunks)?:\s*\ncagr:\s*([-+]?\d+(?:\.\d+)?)%", output, re.MULTILINE)
-            if match:return float(match.group(1)) / 100.0
+            if match:
+                return float(match.group(1)) / 100.0
             matches = re.findall(r"Avg Bench Outperf(?: thru Chunks)?:\s*([-+]?\d+(?:\.\d+)?)%", output)
             for val in reversed(matches):
-                try:return float(val) / 100.0
-                except:pass
+                try:
+                    return float(val) / 100.0
+                except:
+                    pass
             return 0.0
+
         def extract_exp_delta(output):
             match = re.search(r"Total Exp Delta:\s*([-+]?\d+(?:\.\d+)?)", output)
             return float(match.group(1)) if match else None
+
         sharpe = extract_metric("Sharpe Ratio", output)
         down = extract_metric("Max Down", output)
         cagr = extract_metric("CAGR", output)
         avg_outperf = extract_avgoutperf(output)
         exp_delta = extract_exp_delta(output)
+
         if sharpe is None or down is None or exp_delta is None:
             print("[error] Missing metric(s) — skipping trial.")
             return -float("inf")
 
+        score = 1 * sharpe - 6 * abs(down) + 1 * cagr
+        if avg_outperf > 0:
+            score += 10
+        if exp_delta > 100:
+            score += 90
 
-        score = 1 * sharpe - 6 * abs(down) + 1 * cagr 
-        if avg_outperf>0: score += 10
-        if exp_delta > 100: score += 90
-
-        print(f"  Sharpe: {sharpe}");print(f"  Down: {down}");print(f"  CAGR: {cagr}")
-        print(f"  Exp Delta: {exp_delta}");print(f"  Avg Outperf: {avg_outperf}");print(f"  Score: {score}")
+        print(f"  Sharpe: {sharpe}")
+        print(f"  Down: {down}")
+        print(f"  CAGR: {cagr}")
+        print(f"  Exp Delta: {exp_delta}")
+        print(f"  Avg Outperf: {avg_outperf}")
+        print(f"  Score: {score}")
 
         trial.set_user_attr("sharpe", sharpe)
         trial.set_user_attr("down", down)
         trial.set_user_attr("CAGR", cagr)
         trial.set_user_attr("avg_outperf", avg_outperf)
         trial.set_user_attr("exp_delta", exp_delta)
+
         fieldnames = ["trial"] + list(trial.params.keys()) + ["sharpe", "down", "CAGR", "avg_bench_perf", "exp_delta", "score"]
-        row = {"trial": trial.number,"sharpe": sharpe,"down": down,"CAGR": cagr,"avg_bench_perf": avg_outperf,"exp_delta": exp_delta,"score": score,**trial.params}
+        row = {"trial": trial.number, "sharpe": sharpe, "down": down, "CAGR": cagr,
+               "avg_bench_perf": avg_outperf, "exp_delta": exp_delta, "score": score, **trial.params}
         log_path = "csv/tune_log.csv"
         write_header = not os.path.exists(log_path)
         with open(log_path, mode="a", newline="") as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-            if write_header: writer.writeheader()
+            if write_header:
+                writer.writeheader()
             writer.writerow(row)
+
         return score
+
     except subprocess.TimeoutExpired:
         print(f"[Tune] Trial failed for config: {config}")
         return -float("inf")
@@ -116,25 +160,30 @@ def run_experiment(trial,study=None):
 
 def is_duplicate_trial(study, params):
     for t in study.trials:
-        if t.state != optuna.trial.TrialState.COMPLETE: continue
+        if t.state != optuna.trial.TrialState.COMPLETE:
+            continue
         if t.params == params:
             print(f"[DUPLICATE] Found duplicate trial #{t.number}, skipping...")
-            return t.value  
+            return t.value
     return None
 
 
 def main():
-    from load import load_config; config = load_config()
+    from load import load_config
+    config = load_config()
     sampler = TPESampler(seed=config["SEED"])
     study = optuna.create_study(direction="maximize", sampler=sampler)
     study.optimize(lambda trial: run_experiment(trial, study), n_trials=TRIALS, n_jobs=1)
     best = study.best_trial
     best_params = best.params.copy()
-    with open("hyparams.json", "w") as f: json.dump(best_params, f, indent=4)
+    with open("hyparams.json", "w") as f:
+        json.dump(best_params, f, indent=4)
     print("\n=== Best trial parameters ===")
-    for k, v in best_params.items(): print(f"{k}: {v}")
+    for k, v in best_params.items():
+        print(f"{k}: {v}")
     for m in ["sharpe", "down", "CAGR", "avg_outperf", "exp_delta"]:
         print(f"{m}: {best.user_attrs.get(m, float('nan')):.4f}")
 
-if __name__ == "__main__": main()
 
+if __name__ == "__main__":
+    main()
