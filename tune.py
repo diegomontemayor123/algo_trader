@@ -6,12 +6,13 @@ TRIALS = 400
 
 def run_experiment(trial, study=None):
     config = { 
-    "START": trial.suggest_categorical("START", ["2010-01-01"]),
+    "START": trial.suggest_categorical("START", ["2012-01-01"]),
     "END": trial.suggest_categorical("END", ["2023-01-01"]),
     "SPLIT": trial.suggest_categorical("SPLIT", ["2015-01-01"]),
+    "ANCHOR": trial.suggest_categorical("ANCHOR", ["2011-10-01"]),
     "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
     "MACRO": trial.suggest_categorical("MACRO", ["^GSPC,CL=F,SI=F,NG=F,HG=F,ZC=F,^IRX,TLT,IEF,UUP,HYG,EEM,VEA,FXI,^RUT,^FTSE,^TYX,AUDUSD=X,USDJPY=X,EURUSD=X,GBPUSD=X,ZW=F,GC=F"]),
-    "FEAT": trial.suggest_categorical("FEAT", ["ret,price,logret,rollret,sma,ema,momentum,macd,pricevshigh,vol,atr,range,volchange,volptile,zscore,rsi,cmo,williams,stoch,priceptile,adx,meanabsret,boll,donchian,volume,lag,retcrossz,crossmomentumz,crossvolz,crossretrank"]),
+    "FEAT": trial.suggest_categorical("FEAT", ["ret,price,logret,rollret,sma,ema,momentum,macd,pricevshigh,vol,atr,range,volchange,volptile,zscore,rsi,cmo,williams,stoch,priceptile,meanabsret,boll,donchian,volume,lag,retcrossz,crossmomentumz,crossvolz,crossretrank"]),
     "YWIN": trial.suggest_int("YWIN", 21, 21),
     "PRUNEWIN": trial.suggest_int("PRUNEWIN", 24, 24),
     "PRUNEDOWN": trial.suggest_float("PRUNEDOWN", 1.3204761367650948, 1.3204761367650948),

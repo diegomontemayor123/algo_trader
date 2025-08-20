@@ -60,7 +60,7 @@ def train_model(model, train_loader, val_loader, config, asset_sd):
 
 def train(config, feat, ret):
     from prep import prep_data
-    train_data, val_data, test_data, scaler, anchor_seq  = prep_data(feat, ret, config, anchor_date=config["START"])
+    train_data, val_data, test_data, scaler, anchor_seq  = prep_data(feat, ret, config, anchor_date=config["ANCHOR"])
     num_workers = min(2, multiprocessing.cpu_count())
     train_loader = DataLoader(train_data, batch_size=config["BATCH"], shuffle=True, num_workers=num_workers,pin_memory=True, persistent_workers=True)
     val_loader = DataLoader(val_data, batch_size=config["BATCH"], shuffle=False, num_workers=num_workers,pin_memory=True, persistent_workers=True)
@@ -123,7 +123,7 @@ class DifferentiableSharpeLoss(nn.Module):
 
 if __name__ == "__main__":
     from test import run_btest
-    load_prices(START=config["START"], END=config["END"], macro_keys=config["MACRO"])
+    load_prices(START=min(config["START"],config["ANCHOR"]), END=config["END"], macro_keys=config["MACRO"])
     print(f"Configured TICK: {config['TICK']} (count: {len(config['TICK'])})")
     TICK = config["TICK"]; feat_list = config["FEAT"]; macro_keys = config["MACRO"]
     if isinstance(macro_keys, str): macro_keys = [k.strip() for k in macro_keys.split(",") if k.strip()]
