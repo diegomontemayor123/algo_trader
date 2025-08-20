@@ -6,7 +6,7 @@ TRIALS = 400
 
 def run_experiment(trial, study=None):
     config = { 
-    "START": trial.suggest_categorical("START", ["2012-01-01"]),
+    "START": trial.suggest_categorical("START", ["2010-01-01"]),
     "END": trial.suggest_categorical("END", ["2023-01-01"]),
     "SPLIT": trial.suggest_categorical("SPLIT", ["2017-01-01"]),
     "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
@@ -15,10 +15,10 @@ def run_experiment(trial, study=None):
     "YWIN": trial.suggest_int("YWIN", 21, 21),
     "PRUNEWIN": trial.suggest_int("PRUNEWIN", 24, 24),
     "PRUNEDOWN": trial.suggest_float("PRUNEDOWN", 1.3204761367650948, 1.3204761367650948),
-    "THRESH": trial.suggest_int("THRESH", 175, 175),
+    "THRESH": trial.suggest_int("THRESH", 150, 200),
     "NESTIM": trial.suggest_int("NESTIM", 192, 192),
-    "TOPIMP": trial.suggest_int("TOPIMP", 0, 50),
-    "IMPDECAY": trial.suggest_float("IMPDECAY", 0.95, 1),
+    "TOPIMP": trial.suggest_int("TOPIMP", 0, 80),
+    "IMPDECAY": trial.suggest_float("IMPDECAY", 0.94, 1),
     "BATCH": trial.suggest_int("BATCH", 57, 57),
     "LBACK": trial.suggest_int("LBACK", 84, 84),
     "PRED_DAYS": trial.suggest_int("PRED_DAYS", 6, 6),
@@ -34,8 +34,8 @@ def run_experiment(trial, study=None):
     "RETURN_EXP": trial.suggest_float("RETURN_EXP", 0.28, 0.28),
     "SD_PEN": trial.suggest_float("SD_PEN", 0.17, 0.17),
     "SD_EXP": trial.suggest_float("SD_EXP", 0.76, 0.76),
-    "Z_ALPHA": trial.suggest_float("Z_ALPHA", 0.779364634605418, 0.779364634605418),
-    "Z_BETA": trial.suggest_float("Z_BETA", 0, 0.2),
+    "Z_ALPHA": trial.suggest_float("Z_ALPHA", 0.7, 0.8),
+    "Z_BETA": trial.suggest_float("Z_BETA", 0, 1),
     "Z_DECAY": trial.suggest_float("Z_DECAY", 0.95, 1),
     "SEED": trial.suggest_categorical("SEED", [42]),
     "MAX_HEADS": trial.suggest_categorical("MAX_HEADS", [2]),
