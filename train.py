@@ -65,8 +65,8 @@ def run_training_chunks(chunks, lback, TICK, comp_feat, macro_keys, config, star
         all_pfo_metrics.append(pfo_metrics)
         all_bench_metrics.append(bench_metrics)
         print(f"[Train] Chunk {idx+1}: Performance Metrics: {pfo_metrics} Bench: {bench_metrics}\n")
-        if pfo_metrics["max_down"] < - 0.3 and (idx + 1) < 5 : print("KILLRUN - pfo sharpe below threshold.")
-        if pfo_metrics["cagr"] <  1 and (idx + 1) < 2 : print("KILLRUN - pfo sharpe below threshold.")
+        if pfo_metrics["max_down"] < - 0.3 and (idx + 1) < 5 : print("KILLRUN - below threshold.")
+        if pfo_metrics["cagr"] <  0.3 and (idx + 1) < 2 : print("KILLRUN - below threshold.")
 
     avg_outperf = {}
     if all_pfo_metrics and all_bench_metrics:
@@ -76,5 +76,4 @@ def run_training_chunks(chunks, lback, TICK, comp_feat, macro_keys, config, star
             bench_vals = [m[key] for m in all_bench_metrics]
             diffs = [p - b for p, b in zip(port_vals, bench_vals)]
             avg_outperf[key] = np.mean(diffs)
-            
     return pfo_values, bench_values, daily_weight, all_pfo_metrics, all_bench_metrics, avg_outperf
