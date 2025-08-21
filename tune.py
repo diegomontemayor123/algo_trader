@@ -16,7 +16,7 @@ def run_experiment(trial, study=None):
     "YWIN": trial.suggest_int("YWIN", 21, 21),
     "PRUNEWIN": trial.suggest_int("PRUNEWIN", 24, 24),
     "PRUNEDOWN": trial.suggest_float("PRUNEDOWN", 1.3204761367650948, 1.3204761367650948),
-    "THRESH": trial.suggest_int("THRESH", 175, 175),
+    "THRESH": trial.suggest_int("THRESH", 128, 256),
     "NESTIM": trial.suggest_int("NESTIM", 192, 192),
     "TOPIMP": trial.suggest_int("TOPIMP", 0, 100),
     "IMPDECAY": trial.suggest_float("IMPDECAY", 0.92, 1),
@@ -41,8 +41,8 @@ def run_experiment(trial, study=None):
     "Z_BETA": trial.suggest_float("Z_BETA", 0.009225981423079288, 0.009225981423079288),
     "Z_DECAY": trial.suggest_float("Z_DECAY", 0.99737139944604, 0.99737139944604),
     "SEED": trial.suggest_categorical("SEED", [42]),
-    "MAX_HEADS": trial.suggest_categorical("MAX_HEADS", [2]),
-    "LAYERS": trial.suggest_categorical("LAYERS", [5]),
+    "MAX_HEADS": trial.suggest_categorical("MAX_HEADS", [1,2,4]),
+    "LAYERS": trial.suggest_categorical("LAYERS", [1,2,3,4,5]),
     "EARLY_FAIL": trial.suggest_categorical("EARLY_FAIL", [5]),
     "VAL_SPLIT": trial.suggest_categorical("VAL_SPLIT", [0.15]),
     "TEST_CHUNK": trial.suggest_categorical("TEST_CHUNK", [12]),
@@ -133,7 +133,7 @@ def run_experiment(trial, study=None):
                "avg_bench_perf": avg_outperf, "exp_delta": exp_delta, "score": score, **trial.params}
         log_path = "csv/tune_log.csv"
         write_header = not os.path.exists(log_path)
-        with open(log_path, mode="RF_WEIGHT", newline="") as csvfile:
+        with open(log_path, mode="a", newline="") as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             if write_header:
                 writer.writeheader()
