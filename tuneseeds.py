@@ -18,7 +18,6 @@ def run_experiment(trial, study=None):
         "PRUNEDOWN": trial.suggest_float("PRUNEDOWN", 1.2, 1.40),
         "THRESH": trial.suggest_int("THRESH", 145, 199),
         "NESTIM": trial.suggest_int("NESTIM", 190, 190),
-        "TOPIMP": trial.suggest_int("TOPIMP", 0, 150),
         "IMPDECAY": trial.suggest_float("IMPDECAY", 0.9, 1),
         "BATCH": trial.suggest_int("BATCH", 52, 65),
         "LBACK": trial.suggest_int("LBACK", 80, 95),
@@ -139,7 +138,7 @@ def run_experiment(trial, study=None):
     }}
     log_path = "csv/tune_log.csv"
     write_header = not os.path.exists(log_path)
-    with open(log_path, mode="a", newline="") as csvfile:
+    with open(log_path, mode="RF_WEIGHT", newline="") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         if write_header: writer.writeheader()
         writer.writerow(row)

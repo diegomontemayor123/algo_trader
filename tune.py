@@ -5,11 +5,11 @@ TRIALS = 400
 
 
 def run_experiment(trial, study=None):
-    config = { 
+    config = {
     "START": trial.suggest_categorical("START", ["2012-01-01"]),
     "END": trial.suggest_categorical("END", ["2023-01-01"]),
     "SPLIT": trial.suggest_categorical("SPLIT", ["2017-01-01"]),
-    "ANCHOR": trial.suggest_categorical("ANCHOR", ["2012-01-01","2011-01-01","2010-07-01"]),
+    "ANCHOR": trial.suggest_categorical("ANCHOR", ["2010-07-01"]),
     "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
     "MACRO": trial.suggest_categorical("MACRO", ["^GSPC,CL=F,SI=F,NG=F,HG=F,ZC=F,^IRX,TLT,IEF,UUP,HYG,EEM,VEA,FXI,^RUT,^FTSE,^TYX,AUDUSD=X,USDJPY=X,EURUSD=X,GBPUSD=X,ZW=F,GC=F"]),
     "FEAT": trial.suggest_categorical("FEAT", ["ret,price,logret,rollret,sma,ema,momentum,macd,pricevshigh,vol,atr,range,volchange,volptile,zscore,rsi,cmo,williams,stoch,priceptile,meanabsret,boll,donchian,volume,lag,retcrossz,crossmomentumz,crossvolz,crossretrank"]),
@@ -18,26 +18,28 @@ def run_experiment(trial, study=None):
     "PRUNEDOWN": trial.suggest_float("PRUNEDOWN", 1.3204761367650948, 1.3204761367650948),
     "THRESH": trial.suggest_int("THRESH", 175, 175),
     "NESTIM": trial.suggest_int("NESTIM", 192, 192),
-    "TOPIMP": trial.suggest_int("TOPIMP", 0, 0),
+    "TOPIMP": trial.suggest_int("TOPIMP", 0, 100),
     "IMPDECAY": trial.suggest_float("IMPDECAY", 0.92, 1),
+    "RF_WEIGHT": trial.suggest_float("RF_WEIGHT", 0, 1),
+    "TRANS_WEIGHT": trial.suggest_float("TRANS_WEIGHT", 0, 1),
     "BATCH": trial.suggest_int("BATCH", 57, 57),
     "LBACK": trial.suggest_int("LBACK", 84, 84),
     "PRED_DAYS": trial.suggest_int("PRED_DAYS", 6, 6),
-    "DROPOUT": trial.suggest_float("DROPOUT", 0.03771491690014621, 0.03771491690014621,log=True),
-    "DECAY": trial.suggest_float("DECAY", 0.003190861119627664, 0.003190861119627664,log=True),
+    "DROPOUT": trial.suggest_float("DROPOUT", 0.03771491690014621, 0.03771491690014621, log=True),
+    "DECAY": trial.suggest_float("DECAY", 0.003190861119627664, 0.003190861119627664, log=True),
     "SHORT_PER": trial.suggest_int("SHORT_PER", 14, 14),
     "MED_PER": trial.suggest_int("MED_PER", 21, 21),
     "LONG_PER": trial.suggest_int("LONG_PER", 69, 69),
-    "INIT_LR": trial.suggest_float("INIT_LR", 0.005430727411696868, 0.005430727411696868,log=True),
+    "INIT_LR": trial.suggest_float("INIT_LR", 0.005430727411696868, 0.005430727411696868, log=True),
     "EXP_PEN": trial.suggest_float("EXP_PEN", 0.23428392297076622, 0.23428392297076622),
     "EXP_EXP": trial.suggest_float("EXP_EXP", 1.8, 1.8),
     "RETURN_PEN": trial.suggest_float("RETURN_PEN", 0.073, 0.073),
     "RETURN_EXP": trial.suggest_float("RETURN_EXP", 0.28, 0.28),
     "SD_PEN": trial.suggest_float("SD_PEN", 0.17, 0.17),
     "SD_EXP": trial.suggest_float("SD_EXP", 0.76, 0.76),
-    "Z_ALPHA": trial.suggest_float("Z_ALPHA", 0.73, 0.83),
-    "Z_BETA": trial.suggest_float("Z_BETA", 0, 0.15 ),
-    "Z_DECAY": trial.suggest_float("Z_DECAY", 0.97, 1),
+    "Z_ALPHA": trial.suggest_float("Z_ALPHA", 0.8195600506358935, 0.8195600506358935),
+    "Z_BETA": trial.suggest_float("Z_BETA", 0.009225981423079288, 0.009225981423079288),
+    "Z_DECAY": trial.suggest_float("Z_DECAY", 0.99737139944604, 0.99737139944604),
     "SEED": trial.suggest_categorical("SEED", [42]),
     "MAX_HEADS": trial.suggest_categorical("MAX_HEADS", [2]),
     "LAYERS": trial.suggest_categorical("LAYERS", [5]),
@@ -45,28 +47,16 @@ def run_experiment(trial, study=None):
     "VAL_SPLIT": trial.suggest_categorical("VAL_SPLIT", [0.15]),
     "TEST_CHUNK": trial.suggest_categorical("TEST_CHUNK", [12]),
     "ATTENT": trial.suggest_categorical("ATTENT", [1]),
+    "D": trial.suggest_float("D", 9999, 9999),
 }
-
-
-
+    
     env = os.environ.copy()
-    for k, v in config.items():
-        env[k] = str(v)
+    for k, v in config.items(): env[k] = str(v)
     dup_value = is_duplicate_trial(study, {k: str(v) for k, v in config.items()})
-    if dup_value is not None:
-        return dup_value
-
+    if dup_value is not None: return dup_value
     try:
         python_exe = os.path.join(env.get("VIRTUAL_ENV", ""), "Scripts", "python.exe") if "VIRTUAL_ENV" in env else "python"
-
-        # --- NEW: stream subprocess and kill early on KILLRUN ---
-        proc = subprocess.Popen([python_exe, "model.py"],
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.STDOUT,
-                                text=True,
-                                env=env,
-                                bufsize=1)
-
+        proc = subprocess.Popen([python_exe, "model.py"],stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,env=env,bufsize=1)
         output_lines = []
         for line in proc.stdout:
             print(line, end="")  # live streaming
@@ -143,7 +133,7 @@ def run_experiment(trial, study=None):
                "avg_bench_perf": avg_outperf, "exp_delta": exp_delta, "score": score, **trial.params}
         log_path = "csv/tune_log.csv"
         write_header = not os.path.exists(log_path)
-        with open(log_path, mode="a", newline="") as csvfile:
+        with open(log_path, mode="RF_WEIGHT", newline="") as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             if write_header:
                 writer.writeheader()
