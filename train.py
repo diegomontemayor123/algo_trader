@@ -5,7 +5,6 @@ from feat import load_prices
 from model import train
 from load import load_config
 from perf import calc_perf_metrics  
-from minitune import minitune_for_chunk
 from importance import track_importance_during_training
 np.seterr(all='raise')
 
@@ -26,9 +25,7 @@ def run_training_chunks(chunks, lback, TICK, comp_feat, macro_keys, config, star
         training_days = (train_end - train_start).days
         if training_days < (chunks[0][0] - pd.to_datetime(start)).days - 30: print(f"Skipping chunk {idx+1} due to short training window: {training_days} days"); continue
         chunk_config = copy.deepcopy(config)
-        #chunk_config = minitune_for_chunk(chunk_start)
         chunk_config["START"] = str(train_start.date()); chunk_config["END"] = str(chunk_end.date()); chunk_config["SPLIT"] = str(chunk_start.date())
-
         cached_chunk_data = load_prices(chunk_config["START"], chunk_config["END"], macro_keys)
         feat_train, ret_train = comp_feat(TICK, config["FEAT"], cached_chunk_data, macro_keys, split_date=chunk_config["SPLIT"], method=["rf"],importance_features=top_importance_feats)
         current_model, scaler = train(chunk_config, feat_train, ret_train)
@@ -65,8 +62,8 @@ def run_training_chunks(chunks, lback, TICK, comp_feat, macro_keys, config, star
         all_pfo_metrics.append(pfo_metrics)
         all_bench_metrics.append(bench_metrics)
         print(f"[Train] Chunk {idx+1}: Performance Metrics: {pfo_metrics} Bench: {bench_metrics}\n")
-        if pfo_metrics["max_down"] < - 0.3 and (idx + 1) < 5 : print("KILLRUN - below threshold.")
-        if pfo_metrics["cagr"] <  0.4 and (idx + 1) < 2 : print("KILLRUN - below threshold.")
+        if pfo_metrics["max_down"] < - 0.28 and (idx + 1) < 5 : print("KILLRUN - below threshold.")
+        if pfo_metrics["cagr"] <  1 and (idx + 1) < 2 : print("KILLRUN - below threshold.")
 
     avg_outperf = {}
     if all_pfo_metrics and all_bench_metrics:

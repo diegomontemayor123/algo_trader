@@ -3,16 +3,16 @@ import json
 import pandas as pd
 
 keys = ["SPLIT", "VAL_SPLIT", "PRED_DAYS", "LBACK", "SEED","MAX_HEADS", "BATCH", "FEAT","LAYERS", "YWIN", "Z_BETA", "Z_DECAY",
-        "DROPOUT", "DECAY", "ATTENT", "EXP_PEN","RETURN_PEN","RETURN_EXP","INIT_LR", "EXP_EXP", "EARLY_FAIL", "ANCHOR",
-        "SD_PEN","SD_EXP", "TICK","START", "END", "TEST_CHUNK","MACRO", "PRUNEWIN","PRUNEDOWN","THRESH","NESTIM","SHORT_PER", 
+        "DROPOUT", "DECAY", "EXP_PEN","RETURN_PEN","RETURN_EXP","INIT_LR", "EXP_EXP", "EARLY_FAIL",
+        "SD_PEN","SD_EXP", "TICK","START", "TEST_CHUNK","MACRO", "PRUNEWIN","PRUNEDOWN","THRESH","NESTIM","SHORT_PER", 
         "MED_PER", "LONG_PER","Z_ALPHA", "IMPDECAY","RF_WEIGHT","TRANS_WEIGHT","TOPIMP","D",]
 
 def load_config():
     float_keys = {"VAL_SPLIT", "DROPOUT", "DECAY", "RETURN_PEN","RETURN_EXP", "EXP_EXP",  "SD_PEN","SD_EXP","EXP_PEN","INIT_LR",
                   "THRESH","PRUNEDOWN", "Z_ALPHA","IMPDECAY","Z_DECAY","Z_BETA","RF_WEIGHT","TRANS_WEIGHT","D",}
-    int_keys = {"PRED_DAYS", "LBACK", "SEED", "MAX_HEADS", "BATCH","LAYERS", "EARLY_FAIL", "TEST_CHUNK","ATTENT","PRUNEWIN","NESTIM","YWIN","SHORT_PER", "MED_PER", "LONG_PER","TOPIMP",}
+    int_keys = {"PRED_DAYS", "LBACK", "SEED", "MAX_HEADS", "BATCH","LAYERS", "EARLY_FAIL", "TEST_CHUNK","PRUNEWIN","NESTIM","YWIN","SHORT_PER", "MED_PER", "LONG_PER","TOPIMP",}
     list_keys = {"FEAT", "TICK"} 
-    date_keys = {"SPLIT", "START", "END", "ANCHOR",}
+    date_keys = {"SPLIT", "START"}
 
     def parse_value(key, val):
         if key == "MACRO":

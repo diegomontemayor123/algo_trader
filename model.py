@@ -8,7 +8,8 @@ warnings.filterwarnings("ignore",message="enable_nested_tensor is True, but self
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 INITIAL_CAPITAL = 100
 MAX_EPOCHS = 20 
-
+END = pd.Timestamp("2023-01-01")
+ANCHOR = pd.Timestamp("2010-07-01")
 
 def train_model(model, train_loader, val_loader, config, asset_sd):
     optimizer = torch.optim.Adam(model.parameters(), lr=config["INIT_LR"], weight_decay=config["DECAY"])
@@ -60,7 +61,7 @@ def train_model(model, train_loader, val_loader, config, asset_sd):
 
 def train(config, feat, ret):
     from prep import prep_data
-    train_data, val_data, test_data, scaler, anchor_seq  = prep_data(feat, ret, config, anchor_date=config["ANCHOR"])
+    train_data, val_data, test_data, scaler, anchor_seq  = prep_data(feat, ret, config, anchor_date=ANCHOR)
     num_workers = min(2, multiprocessing.cpu_count())
     train_loader = DataLoader(train_data, batch_size=config["BATCH"], shuffle=True, num_workers=num_workers,pin_memory=True, persistent_workers=True)
     val_loader = DataLoader(val_data, batch_size=config["BATCH"], shuffle=False, num_workers=num_workers,pin_memory=True, persistent_workers=True)
@@ -94,7 +95,7 @@ def calc_heads(dimen, max_heads):
 def create_model(dimen, config):
     heads = calc_heads(dimen, config["MAX_HEADS"])
     print(f"[Model] Creating TransformerTrader with dimen={dimen}, heads={heads}, device={DEVICE}")
-    return TransformerTrader(dimen=dimen,num_heads=heads,num_layers=config["LAYERS"],dropout=config["DROPOUT"],seq_len=config["LBACK"],TICK=config["TICK"],feat_attent=config["ATTENT"]).to(DEVICE, non_blocking=True)
+    return TransformerTrader(dimen=dimen,num_heads=heads,num_layers=config["LAYERS"],dropout=config["DROPOUT"],seq_len=config["LBACK"],TICK=config["TICK"],feat_attent=1).to(DEVICE, non_blocking=True)
 
 
 def split_train_val(sequences, targets, valid_ratio):
@@ -123,12 +124,12 @@ class DifferentiableSharpeLoss(nn.Module):
 
 if __name__ == "__main__":
     from test import run_btest
-    load_prices(START=min(config["START"],config["ANCHOR"]), END=config["END"], macro_keys=config["MACRO"])
+    load_prices(START=min(config["START"],ANCHOR), END=END, macro_keys=config["MACRO"])
     print(f"Configured TICK: {config['TICK']} (count: {len(config['TICK'])})")
     TICK = config["TICK"]; feat_list = config["FEAT"]; macro_keys = config["MACRO"]
     if isinstance(macro_keys, str): macro_keys = [k.strip() for k in macro_keys.split(",") if k.strip()]
     results = run_btest(device=DEVICE,initial_capital=INITIAL_CAPITAL, split=config["SPLIT"],lback=config["LBACK"],comp_feat=comp_feat,
-                        TICK=TICK,start=config["START"],end=config["END"], feat=feat_list,macro_keys=macro_keys,test_chunk=config["TEST_CHUNK"],
+                        TICK=TICK,start=config["START"],end=END, feat=feat_list,macro_keys=macro_keys,test_chunk=config["TEST_CHUNK"],
                         plot=True,config=config,)     
     pfo_sharpe = results["pfo"].get("sharpe", float('nan'));max_down = results["pfo"].get("max_down", float('nan'))
     cagr = results["pfo"].get("cagr", float('nan'));bench_sharpe = results["bench"].get("sharpe", float('nan'))

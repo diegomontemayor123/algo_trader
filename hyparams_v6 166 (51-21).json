@@ -1,10 +1,9 @@
 {
     "START": "2012-01-01",
-    "END": "2023-01-01",
+    
     "SPLIT": "2017-01-01",
-    "ANCHOR": null,
     "TICK": "JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE",
-    "MACRO": "^GSPC,CL=F,SI=F,NG=F,HG=F,ZC=F,^IRX,TLT,IEF,UUP,HYG,EEM,VEA,FXI,^RUT,^FTSE,^TYX,AUDUSD=X,USDJPY=X,EURUSD=X,GBPUSD=X,ZW=F,GC=F",
+    
     "FEAT": "ret,price,logret,rollret,sma,ema,momentum,macd,pricevshigh,vol,atr,range,volchange,volptile,zscore,rsi,cmo,williams,stoch,priceptile,adx,meanabsret,boll,donchian,volume,lag,retcrossz,crossmomentumz,crossvolz,crossretrank",
     "YWIN": 21,
     "PRUNEWIN": 24,
@@ -35,6 +34,5 @@
     "LAYERS": 5,
     "EARLY_FAIL": 5,
     "VAL_SPLIT": 0.15,
-    "TEST_CHUNK": 12,
-    "ATTENT": 1
+    "TEST_CHUNK": 12
 }

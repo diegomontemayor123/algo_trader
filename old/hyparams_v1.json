@@ -31,5 +31,5 @@
     "EARLY_FAIL": 2,
     "VAL_SPLIT": 0.15,
     "TEST_CHUNK": 24,
-    "ATTENT": 1
+    
 }

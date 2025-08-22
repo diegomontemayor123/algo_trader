@@ -1,6 +1,6 @@
 {
     "START": "2012-01-01",
-    "END": "2023-01-01",
+    
     "SPLIT": "2017-01-01",
     "TICK": "JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE",
     "MACRO": "^GSPC,CL=F,SI=F,NG=F,HG=F,ZC=F,^IRX,TLT,IEF,UUP,HYG,EEM,VEA,FXI,^RUT,^FTSE,^TYX,AUDUSD=X,USDJPY=X,EURUSD=X,GBPUSD=X,ZW=F,GC=F",
@@ -31,6 +31,6 @@
     "LAYERS": 2,
     "EARLY_FAIL": 8,
     "VAL_SPLIT": 0.15,
-    "TEST_CHUNK": 12,
-    "ATTENT": 1
+    "TEST_CHUNK": 12
+    
 }

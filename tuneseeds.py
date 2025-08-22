@@ -7,9 +7,7 @@ SEEDS_PER_TRIAL = 3  # Number of random seeds per trial
 def run_experiment(trial, study=None):
     base_config = {
         "START": trial.suggest_categorical("START", ["2012-01-01"]),
-        "END": trial.suggest_categorical("END", ["2023-01-01"]),
         "SPLIT": trial.suggest_categorical("SPLIT", ["2017-01-01"]),
-        "ANCHOR": trial.suggest_categorical("ANCHOR", ["2010-01-01"]),
         "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
         "MACRO": trial.suggest_categorical("MACRO", ["^GSPC,CL=F,SI=F,NG=F,HG=F,ZC=F,^IRX,TLT,IEF,UUP,HYG,EEM,VEA,FXI,^RUT,^FTSE,^TYX,AUDUSD=X,USDJPY=X,EURUSD=X,GBPUSD=X,ZW=F,GC=F"]),
         "FEAT": trial.suggest_categorical("FEAT", ["ret,price,logret,rollret,sma,ema,momentum,macd,pricevshigh,vol,atr,range,volchange,volptile,zscore,rsi,cmo,williams,stoch,priceptile,adx,meanabsret,boll,donchian,volume,lag,retcrossz,crossmomentumz,crossvolz,crossretrank"]),
@@ -40,7 +38,6 @@ def run_experiment(trial, study=None):
         "EARLY_FAIL": trial.suggest_categorical("EARLY_FAIL", [3, 4, 5, 6]),
         "VAL_SPLIT": trial.suggest_categorical("VAL_SPLIT", [0.15]),
         "TEST_CHUNK": trial.suggest_categorical("TEST_CHUNK", [12]),
-        "ATTENT": trial.suggest_categorical("ATTENT", [1]),
     }
 
     metrics = {"sharpe": [], "down": [], "CAGR": [], "avg_outperf": [], "exp_delta": []}
