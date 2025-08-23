@@ -49,9 +49,9 @@ def train_model(model, train_loader, val_loader, config, asset_sd):
                 val_pfo_ret.extend(pfo_ret.cpu().numpy())
         val_ret_array = np.array(val_pfo_ret)
         mean_ret = val_ret_array.mean();std_ret = val_ret_array.std() + 1e-6
-        avg_val_loss = -(mean_ret / std_ret)
-        if avg_val_loss < best_val_loss: 
-            best_val_loss = avg_val_loss
+        fail_sharpe = -(mean_ret / std_ret)
+        if fail_sharpe < best_val_loss: 
+            best_val_loss = fail_sharpe
             patience_counter = 0
         else:
             patience_counter += 1
@@ -96,7 +96,6 @@ def create_model(dimen, config):
     heads = calc_heads(dimen, config["MAX_HEADS"])
     print(f"[Model] Creating TransformerTrader with dimen={dimen}, heads={heads}, device={DEVICE}")
     return TransformerTrader(dimen=dimen,num_heads=heads,num_layers=config["LAYERS"],dropout=config["DROPOUT"],seq_len=config["LBACK"],TICK=config["TICK"],feat_attent=1).to(DEVICE, non_blocking=True)
-
 
 def split_train_val(sequences, targets, valid_ratio):
     total_samples = len(sequences)

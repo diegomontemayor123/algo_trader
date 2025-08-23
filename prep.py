@@ -49,10 +49,16 @@ def create_sequences(feat, ret, lback, pred_days, TICK):
     print(f"[Prep] Feature/Return DataFrame shape: {feat.shape} / {ret.shape}, num_seq: {len(sequences)} ")
     return sequences, targets, indices
 
+def zscore_shrink_old(local_seq, global_seq, anchor_seq, alpha=None, beta=None):
+    local_z = (local_seq - local_seq.mean(axis=0, keepdims=True)) / (local_seq.std(axis=0, keepdims=True) + 1e-8)
+    anchor_seq = np.broadcast_to(anchor_seq, local_seq.shape)
+    return alpha * local_z + (1 - alpha) * (1-beta) * global_seq + beta * anchor_seq
+
 def zscore_shrink(local_seq, global_seq, anchor_seq, alpha=None, beta=None):
     local_z = (local_seq - local_seq.mean(axis=0, keepdims=True)) / (local_seq.std(axis=0, keepdims=True) + 1e-8)
     anchor_z = (anchor_seq - anchor_seq.mean(axis=0, keepdims=True)) / (anchor_seq.std(axis=0, keepdims=True) + 1e-8)
     return alpha * local_z + (1 - alpha) * (1 - beta) * global_seq + beta * anchor_z
+
 
 def prep_data(feat, ret, config, anchor_date=None):
     print(f"[Prep] Feat/Ret date range: {feat.index[0].date()} - {feat.index[-1].date()} / {ret.index[0].date()} - {ret.index[-1].date()}")
@@ -76,7 +82,7 @@ def prep_data(feat, ret, config, anchor_date=None):
     train_seq, train_tgt, train_dates_adj = train_sequences[:train_size], train_targets[:train_size], train_dates[:train_size]
     val_seq, val_tgt = train_sequences[train_size:], train_targets[train_size:]
 
-    def compute_anchor_with_decay(anchor_seqs, decay=config["Z_DECAY"]):
+    def compute_anchor_with_decay(anchor_seqs, decay=config["ANCH_DECAY"]):
         if len(anchor_seqs) == 0:  return None 
         weights = np.array([decay**(len(anchor_seqs)-i-1) for i in range(len(anchor_seqs))])
         weights = weights / weights.sum() 
@@ -90,13 +96,13 @@ def prep_data(feat, ret, config, anchor_date=None):
         if len(anchor_seqs) == 0:
             print(f"[Prep] No sequences found for anchor date {anchor_date}. Using global mean as anchor.")
             anchor_seq = np.zeros_like(np.vstack(train_seq)[0])
-        else:anchor_seq = compute_anchor_with_decay(anchor_seqs, decay=config["Z_DECAY"])
+        else:anchor_seq = compute_anchor_with_decay(anchor_seqs, decay=config["ANCH_DECAY"])
     else:anchor_seq = np.zeros_like(np.vstack(train_seq)[0])
     seq_for_fit = train_seq
 
     scaler = RollingScaler()
     scaler.fit(np.vstack(seq_for_fit))
-    alpha = config.get("Z_ALPHA") ; beta =  config.get("Z_BETA")
+    alpha = config.get("Z_LOC") ; beta =  config.get("Z_ANCH")
     train_seq_scaled = np.array([
         zscore_shrink(local_seq, scaler.transform(local_seq), anchor_seq, alpha=alpha, beta=beta)
         for local_seq in train_seq])

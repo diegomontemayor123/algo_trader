@@ -32,7 +32,7 @@ def run_experiment(trial, study=None):
         "RETURN_EXP": trial.suggest_float("RETURN_EXP", 0.28, 0.28),
         "SD_PEN": trial.suggest_float("SD_PEN", 0.172, 0.172),
         "SD_EXP": trial.suggest_float("SD_EXP", 0.76, 0.76),
-        "Z_ALPHA": trial.suggest_float("Z_ALPHA", 0.5, 0.85),
+        "Z_LOC": trial.suggest_float("Z_LOC", 0.5, 0.85),
         "MAX_HEADS": trial.suggest_categorical("MAX_HEADS", [1, 2]),
         "LAYERS": trial.suggest_categorical("LAYERS", [1, 2]),
         "EARLY_FAIL": trial.suggest_categorical("EARLY_FAIL", [3, 4, 5, 6]),
