@@ -1,4 +1,7 @@
 venv/
+old/
+alternate/
+img/
 __pycache__/
 .DS_Store
 *.pyc
