@@ -49,16 +49,10 @@ def create_sequences(feat, ret, lback, pred_days, TICK):
     print(f"[Prep] Feature/Return DataFrame shape: {feat.shape} / {ret.shape}, num_seq: {len(sequences)} ")
     return sequences, targets, indices
 
-def zscore_shrink_old(local_seq, global_seq, anchor_seq, alpha=None, beta=None):
+def zscore_shrink(local_seq, global_seq, anchor_seq, alpha=None, beta=None):
     local_z = (local_seq - local_seq.mean(axis=0, keepdims=True)) / (local_seq.std(axis=0, keepdims=True) + 1e-8)
     anchor_seq = np.broadcast_to(anchor_seq, local_seq.shape)
     return alpha * local_z + (1 - alpha) * (1-beta) * global_seq + beta * anchor_seq
-
-def zscore_shrink(local_seq, global_seq, anchor_seq, alpha=None, beta=None):
-    local_z = (local_seq - local_seq.mean(axis=0, keepdims=True)) / (local_seq.std(axis=0, keepdims=True) + 1e-8)
-    anchor_z = (anchor_seq - anchor_seq.mean(axis=0, keepdims=True)) / (anchor_seq.std(axis=0, keepdims=True) + 1e-8)
-    return alpha * local_z + (1 - alpha) * (1 - beta) * global_seq + beta * anchor_z
-
 
 def prep_data(feat, ret, config, anchor_date=None):
     print(f"[Prep] Feat/Ret date range: {feat.index[0].date()} - {feat.index[-1].date()} / {ret.index[0].date()} - {ret.index[-1].date()}")

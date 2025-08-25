@@ -1,6 +1,5 @@
 {
     "START": "2019-01-01",
-    "END": "2025-07-01",
     "SPLIT": "2023-01-01",
     "TICK": "JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE",
     "MACRO": "GC=F,^IRX,^FTSE,HYG,EURUSD=X,HG=F,^GSPC,GBPUSD=X,UUP,EEM",
@@ -30,6 +29,6 @@
     "LAYERS": 1,
     "EARLY_FAIL": 2,
     "VAL_SPLIT": 0.15,
-    "TEST_CHUNK": 24,
+    "TEST_CHUNK": 24
     
 }

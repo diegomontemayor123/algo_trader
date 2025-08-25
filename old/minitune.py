@@ -19,7 +19,6 @@ def run_chunk_tune(trial, start_date, end_date, split_date, config_base, study=N
     config = copy.deepcopy(config_base)
     config.update({
 "START": str(start_date.date()),
-"END": str(end_date.date()),
 "SPLIT": str(split_date.date()),
 "SEED": trial.suggest_categorical("SEED", [config_base["SEED"]]),
 

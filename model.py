@@ -49,9 +49,9 @@ def train_model(model, train_loader, val_loader, config, asset_sd):
                 val_pfo_ret.extend(pfo_ret.cpu().numpy())
         val_ret_array = np.array(val_pfo_ret)
         mean_ret = val_ret_array.mean();std_ret = val_ret_array.std() + 1e-6
-        fail_sharpe = -(mean_ret / std_ret)
-        if fail_sharpe < best_val_loss: 
-            best_val_loss = fail_sharpe
+        avg_val_loss = -(mean_ret / std_ret)
+        if avg_val_loss < best_val_loss: 
+            best_val_loss = avg_val_loss
             patience_counter = 0
         else:
             patience_counter += 1

@@ -3,7 +3,6 @@ from optuna.samplers import TPESampler
 
 TRIALS = 400
 
-
 def run_experiment(trial, study=None):
     config = {
     "START": trial.suggest_categorical("START", ["2012-01-01"]),
@@ -16,10 +15,10 @@ def run_experiment(trial, study=None):
     "PRUNEDOWN": trial.suggest_float("PRUNEDOWN", 1.3204761367650948, 1.3204761367650948),
     "THRESH": trial.suggest_int("THRESH", 175, 175),
     "NESTIM": trial.suggest_int("NESTIM", 192, 192),
-    "TOPIMP": trial.suggest_int("TOPIMP", 0, 100),
-    "IMPDECAY": trial.suggest_float("IMPDECAY", 0.9, 1),
-    "RF_WEIGHT": trial.suggest_float("RF_WEIGHT", 0, 1),
-    "TRANS_WEIGHT": trial.suggest_float("TRANS_WEIGHT", 0, 0.3),
+    "TOPIMP": trial.suggest_int("TOPIMP", 58, 58),
+    "IMPDECAY": trial.suggest_float("IMPDECAY", 0.9013100206471696, 0.9013100206471696),
+    "RF_WEIGHT": trial.suggest_float("RF_WEIGHT", 0.26690375207555267, 0.26690375207555267),
+    "TRANS_WEIGHT": trial.suggest_float("TRANS_WEIGHT", 0.10649907804601254, 0.10649907804601254),
     "BATCH": trial.suggest_int("BATCH", 57, 57),
     "LBACK": trial.suggest_int("LBACK", 84, 84),
     "PRED_DAYS": trial.suggest_int("PRED_DAYS", 6, 6),
@@ -35,14 +34,14 @@ def run_experiment(trial, study=None):
     "RETURN_EXP": trial.suggest_float("RETURN_EXP", 0.28, 0.28),
     "SD_PEN": trial.suggest_float("SD_PEN", 0.17, 0.17),
     "SD_EXP": trial.suggest_float("SD_EXP", 0.76, 0.76),
-    "Z_LOC": trial.suggest_float("Z_LOC", 0.7799515162425443, 0.7799515162425443),
-    "Z_ANCH": trial.suggest_float("Z_ANCH", 0, 0.2),
-    "ANCH_DECAY": trial.suggest_float("ANCH_DECAY", 0.99, 1),
-    "SEED": trial.suggest_categorical("SEED", [42]),
-    "MAX_HEADS": trial.suggest_categorical("MAX_HEADS", [2]),
-    "LAYERS": trial.suggest_categorical("LAYERS", [5]),
-    "EARLY_FAIL": trial.suggest_categorical("EARLY_FAIL", [5]),
-    "VAL_SPLIT": trial.suggest_categorical("VAL_SPLIT", [0.15]),
+    "Z_LOC": trial.suggest_float("Z_LOC", 0.8195600506358935, 0.8195600506358935),
+    "Z_ANCH": trial.suggest_float("Z_ANCH", 0.009225981423079288, 0.009225981423079288),
+    "ANCH_DECAY": trial.suggest_float("ANCH_DECAY", 0.99737139944604, 0.99737139944604),
+    "SEED": trial.suggest_categorical("SEED", [42,3,850,17]),
+    "MAX_HEADS": trial.suggest_int("MAX_HEADS", 2,2),
+    "LAYERS": trial.suggest_int("LAYERS", 5,5),
+    "EARLY_FAIL": trial.suggest_int("EARLY_FAIL",5,5),
+    "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", 0.15,0.15),
     "TEST_CHUNK": trial.suggest_categorical("TEST_CHUNK", [12]),
     "D": trial.suggest_float("D", 999999, 999999),
 }
