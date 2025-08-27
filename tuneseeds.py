@@ -2,22 +2,17 @@ import os, subprocess, re, optuna, json, csv
 from optuna.samplers import TPESampler
 
 TRIALS = 400
-SEEDS = [42, 3, 850]  # seeds we will average across
+SEEDS = [38,3]
 
 def run_single(config, seed):
-    """Run one experiment for a specific seed and return metrics."""
     env = os.environ.copy()
     config["SEED"] = seed
-    for k, v in config.items():
-        env[k] = str(v)
-
+    for k, v in config.items():env[k] = str(v)
     python_exe = os.path.join(env.get("VIRTUAL_ENV", ""), "Scripts", "python.exe") if "VIRTUAL_ENV" in env else "python"
     proc = subprocess.Popen([python_exe, "model.py"],
                             stdout=subprocess.PIPE,
                             stderr=subprocess.STDOUT,
-                            text=True,
-                            env=env,
-                            bufsize=1)
+                            text=True,env=env,bufsize=1)
     output_lines = []
     for line in proc.stdout:
         print(line, end="")
@@ -30,8 +25,7 @@ def run_single(config, seed):
 
     proc.wait()
     output = "".join(output_lines)
-    if proc.returncode != 0 or not output.strip():
-        return None
+    if proc.returncode != 0 or not output.strip():return None
 
     def extract_metric(label, out):
         pattern = rf"{re.escape(label)}:\s*Strat:\s*([-+]?\d+(?:\.\d+)?)%"
@@ -40,14 +34,11 @@ def run_single(config, seed):
 
     def extract_avgoutperf(output):
         match = re.search(r"Avg Bench Outperf(?: thru Chunks)?:\s*\ncagr:\s*([-+]?\d+(?:\.\d+)?)%", output, re.MULTILINE)
-        if match:
-            return float(match.group(1)) / 100.0
+        if match:return float(match.group(1)) / 100.0
         matches = re.findall(r"Avg Bench Outperf(?: thru Chunks)?:\s*([-+]?\d+(?:\.\d+)?)%", output)
         for val in reversed(matches):
-            try:
-                return float(val) / 100.0
-            except:
-                pass
+            try:return float(val) / 100.0
+            except:pass
         return 0.0
 
     def extract_exp_delta(output):
@@ -59,9 +50,7 @@ def run_single(config, seed):
     cagr = extract_metric("CAGR", output)
     avg_outperf = extract_avgoutperf(output)
     exp_delta = extract_exp_delta(output)
-
-    if sharpe is None or down is None or exp_delta is None:
-        return None
+    if sharpe is None or down is None or exp_delta is None:return None
 
     score = 1 * sharpe - 6 * abs(down) + 1 * cagr
     if avg_outperf > 0:
@@ -69,16 +58,7 @@ def run_single(config, seed):
     if exp_delta > 100:
         score += 90
 
-    return {
-        "seed": seed,
-        "sharpe": sharpe,
-        "down": down,
-        "CAGR": cagr,
-        "avg_outperf": avg_outperf,
-        "exp_delta": exp_delta,
-        "score": score
-    }
-
+    return {"seed": seed,"sharpe": sharpe,"down": down,"CAGR": cagr,"avg_outperf": avg_outperf,"exp_delta": exp_delta,"score": score}
 
 def run_experiment(trial, study=None):
     config = {
@@ -91,7 +71,7 @@ def run_experiment(trial, study=None):
         "PRUNEWIN": trial.suggest_int("PRUNEWIN", 21, 24),
         "PRUNEDOWN": trial.suggest_float("PRUNEDOWN", 1.3, 1.35),
         "THRESH": trial.suggest_int("THRESH", 150, 200),
-        "NESTIM": trial.suggest_int("NESTIM", 192, 192),
+        "NESTIM": trial.suggest_int("NESTIM", 170, 220),
         "TOPIMP": trial.suggest_int("TOPIMP", 0, 150),
         "IMPDECAY": trial.suggest_float("IMPDECAY", 0.89, 0.95),
         "RF_WEIGHT": trial.suggest_float("RF_WEIGHT", 0, 0.4),
@@ -122,22 +102,15 @@ def run_experiment(trial, study=None):
         "D": trial.suggest_float("D", 999999, 999999),
     }
 
-    # run across seeds
     results = []
     for seed in SEEDS:
         res = run_single(config.copy(), seed)
-        if res:
-            results.append(res)
+        if res:results.append(res)
+    if not results:return -float("inf")
 
-    if not results:
-        return -float("inf")
-
-    # average across seeds
     avg_metrics = {k: sum(r[k] for r in results) / len(results) for k in ["sharpe", "down", "CAGR", "avg_outperf", "exp_delta", "score"]}
-
     print(f"\n[Trial {trial.number}] Averaged across seeds: {avg_metrics}")
 
-    # log averaged result
     trial.set_user_attr("sharpe", avg_metrics["sharpe"])
     trial.set_user_attr("down", avg_metrics["down"])
     trial.set_user_attr("CAGR", avg_metrics["CAGR"])
@@ -157,12 +130,9 @@ def run_experiment(trial, study=None):
     write_header = not os.path.exists(log_path)
     with open(log_path, mode="a", newline="") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        if write_header:
-            writer.writeheader()
+        if write_header:writer.writeheader()
         writer.writerow(row)
-
     return avg_metrics["score"]
-
 
 def main():
     from load import load_config
@@ -175,11 +145,6 @@ def main():
     with open("hyparams.json", "w") as f:
         json.dump(best_params, f, indent=4)
     print("\n=== Best trial parameters ===")
-    for k, v in best_params.items():
-        print(f"{k}: {v}")
-    for m in ["sharpe", "down", "CAGR", "avg_outperf", "exp_delta"]:
-        print(f"{m}: {best.user_attrs.get(m, float('nan')):.4f}")
-
-
-if __name__ == "__main__":
-    main()
+    for k, v in best_params.items():print(f"{k}: {v}")
+    for m in ["sharpe", "down", "CAGR", "avg_outperf", "exp_delta"]:print(f"{m}: {best.user_attrs.get(m, float('nan')):.4f}")
+if __name__ == "__main__": main()
