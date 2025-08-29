@@ -2,7 +2,7 @@ import os, subprocess, re, optuna, json, csv
 from optuna.samplers import TPESampler
 
 TRIALS = 400
-SEEDS = [38,3]
+SEEDS = [38,3,99]
 
 def run_single(config, seed):
     env = os.environ.copy()
@@ -62,24 +62,24 @@ def run_single(config, seed):
 
 def run_experiment(trial, study=None):
     config = {
-        "START": trial.suggest_categorical("START", ["2012-01-01"]),
-        "SPLIT": trial.suggest_categorical("SPLIT", ["2017-01-01"]),
+        "START": trial.suggest_categorical("START", ["2015-01-01"]),
+        "SPLIT": trial.suggest_categorical("SPLIT", ["2020-01-01"]),
         "TICK": trial.suggest_categorical("TICK", ["JPM, MSFT, NVDA, AVGO, LLY, COST, MA, XOM, UNH, AMZN, CAT, ADBE"]),
         "MACRO": trial.suggest_categorical("MACRO", ["^GSPC,CL=F,SI=F,NG=F,HG=F,ZC=F,^IRX,TLT,IEF,UUP,HYG,EEM,VEA,FXI,^RUT,^FTSE,^TYX,AUDUSD=X,USDJPY=X,EURUSD=X,GBPUSD=X,ZW=F,GC=F"]),
         "FEAT": trial.suggest_categorical("FEAT", ["ret,price,logret,rollret,sma,ema,momentum,macd,pricevshigh,vol,atr,range,volchange,volptile,zscore,rsi,cmo,williams,stoch,priceptile,meanabsret,boll,donchian,volume,lag,retcrossz,crossmomentumz,crossvolz,crossretrank"]),
-        "YWIN": trial.suggest_int("YWIN", 21, 24),
-        "PRUNEWIN": trial.suggest_int("PRUNEWIN", 21, 24),
+        "YWIN": trial.suggest_int("YWIN", 15, 24),
+        "PRUNEWIN": trial.suggest_int("PRUNEWIN", 15, 24),
         "PRUNEDOWN": trial.suggest_float("PRUNEDOWN", 1.3, 1.35),
-        "THRESH": trial.suggest_int("THRESH", 150, 200),
+        "THRESH": trial.suggest_int("THRESH", 50, 175),
         "NESTIM": trial.suggest_int("NESTIM", 170, 220),
         "TOPIMP": trial.suggest_int("TOPIMP", 0, 150),
         "IMPDECAY": trial.suggest_float("IMPDECAY", 0.89, 0.95),
         "RF_WEIGHT": trial.suggest_float("RF_WEIGHT", 0, 0.4),
         "TRANS_WEIGHT": trial.suggest_float("TRANS_WEIGHT", 0, 0.2),
-        "BATCH": trial.suggest_int("BATCH", 50, 64),
-        "LBACK": trial.suggest_int("LBACK", 80, 90),
+        "BATCH": trial.suggest_int("BATCH", 32, 64),
+        "LBACK": trial.suggest_int("LBACK", 50, 90),
         "PRED_DAYS": trial.suggest_int("PRED_DAYS", 6, 6),
-        "DROPOUT": trial.suggest_float("DROPOUT", 0.03, 0.4, log=True),
+        "DROPOUT": trial.suggest_float("DROPOUT", 0.03, 0.2, log=True),
         "DECAY": trial.suggest_float("DECAY", 0.003, 0.004, log=True),
         "SHORT_PER": trial.suggest_int("SHORT_PER", 12, 14),
         "MED_PER": trial.suggest_int("MED_PER", 21, 21),
@@ -91,13 +91,13 @@ def run_experiment(trial, study=None):
         "RETURN_EXP": trial.suggest_float("RETURN_EXP", 0.28, 0.28),
         "SD_PEN": trial.suggest_float("SD_PEN", 0.17, 0.17),
         "SD_EXP": trial.suggest_float("SD_EXP", 0.76, 0.76),
-        "Z_LOC": trial.suggest_float("Z_LOC", 0.7, 0.9),
+        "Z_LOC": trial.suggest_float("Z_LOC", 0.7, 1),
         "Z_ANCH": trial.suggest_float("Z_ANCH", 0, 0.02),
         "ANCH_DECAY": trial.suggest_float("ANCH_DECAY", 0.99737139944604, 0.99737139944604),
         "MAX_HEADS": trial.suggest_int("MAX_HEADS", 1, 4),
         "LAYERS": trial.suggest_int("LAYERS", 1, 5),
-        "EARLY_FAIL": trial.suggest_int("EARLY_FAIL", 2, 5),
-        "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", 0.15, 0.15),
+        "EARLY_FAIL": trial.suggest_int("EARLY_FAIL", 2, 10),
+        "VAL_SPLIT": trial.suggest_float("VAL_SPLIT", 0.15, 0.3),
         "TEST_CHUNK": trial.suggest_categorical("TEST_CHUNK", [12]),
         "D": trial.suggest_float("D", 999999, 999999),
     }

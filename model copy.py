@@ -7,7 +7,7 @@ np.seterr(all='raise')
 warnings.filterwarnings("ignore",message="enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.self_attn.num_heads is odd")
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 INITIAL_CAPITAL = 100
-MAX_EPOCHS = 25
+MAX_EPOCHS = 20
 END = pd.Timestamp("2023-01-01")
 ANCHOR = pd.Timestamp("2010-07-01")
 
@@ -45,14 +45,14 @@ def train_model(model, train_loader, val_loader, config, asset_sd):
                 batch_feat = batch_feat.to(DEVICE, non_blocking=True)
                 batch_ret = batch_ret.to(DEVICE, non_blocking=True)
                 norm_weight = model(batch_feat)
-                #pfo_ret = (norm_weight * batch_ret).sum(dim=1)
-                #val_losses.extend(pfo_ret.cpu().numpy())
-        #val_ret_array = np.array(val_losses)
-        #mean_ret = val_ret_array.mean();std_ret = val_ret_array.std() + 1e-6
-        #avg_val_loss = -(mean_ret / std_ret)
-                loss = loss_func(norm_weight, batch_ret, asset_sd=asset_sd, model=model)
-                if loss is not None and not (torch.isnan(loss) or torch.isinf(loss)):val_losses.append(loss.item())
-        avg_val_loss = np.mean(val_losses) if val_losses else float('inf')
+                pfo_ret = (norm_weight * batch_ret).sum(dim=1)
+                val_losses.extend(pfo_ret.cpu().numpy())
+        val_ret_array = np.array(val_losses)
+        mean_ret = val_ret_array.mean();std_ret = val_ret_array.std() + 1e-6
+        avg_val_loss = -(mean_ret / std_ret)
+                #loss = loss_func(norm_weight, batch_ret, asset_sd=asset_sd, model=model)
+                #if loss is not None and not (torch.isnan(loss) or torch.isinf(loss)):val_losses.append(loss.item())
+        #avg_val_loss = np.mean(val_losses) if val_losses else float('inf')
 
         if avg_val_loss < best_val_loss: 
             best_val_loss = avg_val_loss ; patience_counter = 0
