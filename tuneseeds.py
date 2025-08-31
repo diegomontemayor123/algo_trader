@@ -18,10 +18,10 @@ def run_single(config, seed):
         print(line, end="")
         output_lines.append(line)
         if "KILLRUN" in line:
-            print("[KILLRUN] — aborting trial early.")
+            print("[KILLRUN] — aborting entire trial.")
             proc.kill()
             proc.wait()
-            return None
+            raise optuna.exceptions.TrialPruned("KILLRUN triggered")
 
     proc.wait()
     output = "".join(output_lines)
@@ -103,10 +103,12 @@ def run_experiment(trial, study=None):
     }
 
     results = []
-    for seed in SEEDS:
-        res = run_single(config.copy(), seed)
-        if res:results.append(res)
-    if not results:return -float("inf")
+    try:
+        for seed in SEEDS:
+            res = run_single(config.copy(), seed)
+            if res:results.append(res)
+        if not results:return -float("inf")
+    except optuna.exceptions.TrialPruned: print(f"[Trial {trial.number}] Aborted due to KILLRUN.") ; raise
 
     avg_metrics = {k: sum(r[k] for r in results) / len(results) for k in ["sharpe", "down", "CAGR", "avg_outperf", "exp_delta", "score"]}
     print(f"\n[Trial {trial.number}] Averaged across seeds: {avg_metrics}")
