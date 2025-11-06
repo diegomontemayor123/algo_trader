@@ -106,19 +106,6 @@ You can adjust various hyperparameters in the `config` dictionary to fine-tune t
 
 ---
 
-## Example Output
-
-After training and backtesting, the following performance metrics will be printed:
-
-```
-Sharpe Ratio: Strat: 20.55%, Bench: 12.23%
-Max Drawdown: Strat: -12.40%, Bench: -23.55%
-CAGR: Strat: 15.65%, Bench: 10.87%
-Total Exp Delta: 0.0000
-```
-
----
-
 ## License
 
 This project is provided for educational purposes only and is not intended for live trading without further modifications and risk management.
