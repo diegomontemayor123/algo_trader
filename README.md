@@ -114,6 +114,3 @@ This project is provided for educational purposes only and is not intended for l
 
 Feel free to fork the repository, report issues, or submit pull requests for improvements or bug fixes. Please follow the existing code style and structure.
 
----
-
-This version avoids the fabricated Python code snippets and sticks strictly to the features, installation, and usage steps based on the actual code you provided. Let me know if you'd like to make any further edits!
